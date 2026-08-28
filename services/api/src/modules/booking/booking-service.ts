@@ -350,6 +350,12 @@ export async function quoteRiderBooking(
   let booking: BookingSummary;
   try {
     await assertBookingBooker(client, bookingId, actor.personId);
+    const deduplicated = await client.query<{ response_body: BookingQuoteResult }>(
+      `SELECT response_body FROM booking.command_deduplication
+        WHERE command_type = 'QuoteRiderBooking' AND idempotency_key = $1 AND booking_id = $2`,
+      [idempotencyKey, bookingId]
+    );
+    if (deduplicated.rowCount) return deduplicated.rows[0]!.response_body;
     booking = await readBookingSummary(client, bookingId);
   } finally {
     client.release();
@@ -367,7 +373,7 @@ export async function quoteRiderBooking(
   await transitionBooking(pool, bookingId, 'DRAFT', 'QUOTE_CREATED', actor, 'QUOTE_CREATED', correlationId);
   const updated = await transitionBooking(pool, bookingId, 'QUOTE_CREATED', 'AWAITING_CONFIRMATION', actor, 'QUOTE_PRESENTED', correlationId);
 
-  return {
+  const response: BookingQuoteResult = {
     booking: updated,
     quote: {
       quoteId,
@@ -379,6 +385,14 @@ export async function quoteRiderBooking(
       nonCommercialDevelopmentFixture: priced.nonCommercialDevelopmentFixture
     }
   };
+  await pool.query(
+    `INSERT INTO booking.command_deduplication
+       (command_id, idempotency_key, command_type, booking_id, response_status, response_body)
+     VALUES ($1, $2, 'QuoteRiderBooking', $3, 201, $4::jsonb)
+     ON CONFLICT (command_type, idempotency_key) DO NOTHING`,
+    [randomUUID(), idempotencyKey, bookingId, JSON.stringify(response)]
+  );
+  return response;
 }
 
 async function acceptQuote(
@@ -475,6 +489,12 @@ export async function confirmRiderBooking(
   let before: BookingSummary;
   try {
     await assertBookingBooker(checkClient, bookingId, actor.personId);
+    const deduplicated = await checkClient.query<{ response_body: ConfirmBookingResult }>(
+      `SELECT response_body FROM booking.command_deduplication
+        WHERE command_type = 'ConfirmRiderBooking' AND idempotency_key = $1 AND booking_id = $2`,
+      [idempotencyKey, bookingId]
+    );
+    if (deduplicated.rowCount) return deduplicated.rows[0]!.response_body;
     before = await readBookingSummary(checkClient, bookingId);
   } finally {
     checkClient.release();
@@ -491,7 +511,15 @@ export async function confirmRiderBooking(
   const scheduledFor = before.scheduledFor ? new Date(before.scheduledFor).getTime() : null;
   const nextStatus: BookingStatus = scheduledFor && scheduledFor > now ? 'SCHEDULED' : 'READY_FOR_DISPATCH';
   const booking = await transitionBooking(pool, bookingId, 'CONFIRMED', nextStatus, actor, 'BOOKING_DISPATCH_READINESS_CLASSIFIED', correlationId);
-  return { booking, fareAgreement };
+  const response: ConfirmBookingResult = { booking, fareAgreement };
+  await pool.query(
+    `INSERT INTO booking.command_deduplication
+       (command_id, idempotency_key, command_type, booking_id, response_status, response_body)
+     VALUES ($1, $2, 'ConfirmRiderBooking', $3, 200, $4::jsonb)
+     ON CONFLICT (command_type, idempotency_key) DO NOTHING`,
+    [randomUUID(), idempotencyKey, bookingId, JSON.stringify(response)]
+  );
+  return response;
 }
 
 export async function getRiderBooking(
