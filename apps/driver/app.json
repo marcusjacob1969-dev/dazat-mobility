@@ -1,0 +1,9 @@
+{
+  "expo": {
+    "name": "DAZAT Driver",
+    "slug": "dazat-driver",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic"
+  }
+}

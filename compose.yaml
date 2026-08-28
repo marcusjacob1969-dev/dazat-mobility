@@ -1,0 +1,33 @@
+name: dazat-mobility-local
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: dazat_mobility
+      POSTGRES_USER: dazat
+      POSTGRES_PASSWORD: dazat_local_only
+    ports:
+      - "5432:5432"
+    volumes:
+      - dazat_postgres_data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dazat -d dazat_mobility"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  dazat_postgres_data:

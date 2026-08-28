@@ -1,0 +1,20 @@
+{
+  "name": "dazat-mobility",
+  "version": "0.0.1",
+  "private": true,
+  "description": "DAZAT Mobility production engineering monorepo",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "verify:foundation": "node scripts/verify-foundation.mjs",
+    "build:core": "tsc -p packages/domain/tsconfig.json && tsc -p packages/contracts/tsconfig.json && tsc -p packages/design-system/tsconfig.json",
+    "test:domain": "npm run build:core && node --test tests/domain/*.test.mjs",
+    "check": "npm run verify:foundation && npm run test:domain"
+  }
+}

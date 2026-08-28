@@ -1,0 +1,39 @@
+openapi: 3.1.0
+info:
+  title: DAZAT Mobility API
+  version: 0.0.1
+  description: Engineering Phase 0 API baseline. Server owns authoritative business state.
+servers:
+  - url: http://localhost:3001
+paths:
+  /health/live:
+    get:
+      operationId: healthLive
+      responses:
+        '200':
+          description: Process is alive.
+  /health/ready:
+    get:
+      operationId: healthReady
+      responses:
+        '200':
+          description: Readiness state. Phase 0.1 deliberately reports NOT_READY until DB/provider checks exist.
+  /v1/build-info:
+    get:
+      operationId: getBuildInfo
+      responses:
+        '200':
+          description: Non-sensitive build checkpoint metadata.
+  /v1/bookings:
+    post:
+      operationId: createBooking
+      summary: Planned first vertical-slice command; not implemented in Phase 0.1.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '501':
+          description: Not implemented in Phase 0.1.

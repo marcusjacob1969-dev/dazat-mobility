@@ -1,0 +1,9 @@
+{
+  "expo": {
+    "name": "DAZAT Rider",
+    "slug": "dazat-rider",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic"
+  }
+}
