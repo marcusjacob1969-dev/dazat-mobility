@@ -2,54 +2,43 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.2 — Identity & Account Foundation**  
-Status: **SOURCE IMPLEMENTED / CORE DOMAIN TESTED / DATABASE & PROVIDER INTEGRATION NOT YET VERIFIED**
+**Engineering Phase 0.3 — Verified Authentication/Session Boundary + First Account-to-Booking Slice**
 
-DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
+Git baseline started from scratch from the DAZAT Mobility Master Blueprint v0.4.
 
-## Implemented in source
+### Implemented source
 
-- Monorepo foundation for Rider, Driver, Control Room, API, workers and shared packages.
-- PostgreSQL/PostGIS domain schema boundaries and canonical Booking foundation.
-- Transactional outbox and append-only Booking transition history.
+- Production monorepo skeleton: Rider, Driver, Control Room, API, workers, shared packages.
+- PostgreSQL/PostGIS canonical domain schemas and transactional outboxes.
 - Person / UserAccount / RiderProfile / DriverProfile separation.
-- Preferred-name history and typed ContactPoint model.
-- Separate contact verification records and contact permissions.
-- Passkey-ready Authenticator record storing verifier/public metadata only.
-- DeviceTrustRecord and independently revocable Session model.
-- Explicit AccountRecoveryCase states and account lifecycle transition history.
-- LIMITED account capability policy preserving essential safety/journey/support access while blocking risky changes.
-- Idempotent identity registration transaction creating PENDING accounts only.
-- Rider Create Account screen wired to the registration API.
-- Driver Start Application screen wired to the same canonical Identity service while retaining separate driver compliance/eligibility truth.
-- Provider-neutral passkey ceremony adapter boundary.
+- Contact verification challenge lifecycle with expiry, resend cooldown and attempt limits.
+- Raw verification codes are not persisted; one-way HMAC verifier material is stored.
+- Verified contact can activate pending account and create a revocable opaque bearer session.
+- Only session-token hashes are persisted; session secrets are returned once.
+- Optional DeviceTrustRecord is evidence/context only and is not automatically TRUSTED.
+- Passkey/WebAuthn boundary fails closed until a standards-compliant ceremony adapter is configured.
+- Authenticated Rider self-booking creates separate BOOKER / PASSENGER / PAYER party records.
+- Explicit pickup/drop-off snapshots; current GPS is not required.
+- Pricing Quote and FareAgreement ownership added.
+- Production pricing defaults to disabled; Phase 0.3 development quote is explicitly non-commercial and environment-configured.
+- First Rider vertical slice reaches `READY_FOR_DISPATCH` for an immediate confirmed booking without inventing a driver.
+- Rider Phase 0.3 UI wires registration → verification → session → Booking → Quote → confirmation.
+- Driver Phase 0.3 UI wires registration → verification → authenticated account while preserving separate operating eligibility.
 
-## Verified in this checkpoint
+### Verification status
 
-- TypeScript build for domain/contracts/design-system packages.
-- Canonical identity/account state vocabulary.
-- Account lifecycle transition guard.
-- Limited Account Mode capability rules.
-- Email/mobile normalisation and masking rules.
-- E.164 registration phone validation.
-- Rider + Driver dual-profile semantics.
-- Recovery state-machine transitions.
-- Session authority requires ACTIVE + unexpired.
-- Static persistence/security checks for passkey/session boundaries and registration truthfulness.
-
-## Not yet verified / deliberately not claimed
-
-- PostgreSQL migrations have not been executed in this tool environment because no PostgreSQL/Docker runtime is available here.
-- API runtime compilation/integration awaits installed workspace dependencies and a database runtime.
-- Email/SMS verification is not wired.
-- WebAuthn/passkey ceremonies are not yet implemented; only the secure model/adapter boundary exists.
-- Authenticated bearer sessions are not yet issued.
-- DAZAT Shield step-up / suspicious-session runtime integration is not yet wired.
-- Driver registration is not driver approval or online eligibility.
-- Booking creation remains the next vertical-slice build.
+- Core TypeScript domain/contracts/design-system compilation: **available**.
+- Domain tests: **available**.
+- Phase 0.3 static/security verification: **available**.
+- PostgreSQL/PostGIS migration runtime: **NOT EXECUTED in this environment**.
+- Fastify API dependency install/runtime integration: **NOT EXECUTED in this environment**.
+- Expo Rider/Driver runtime: **NOT EXECUTED in this environment**.
+- Real email/SMS verification delivery: **NOT CONFIGURED**.
+- WebAuthn/passkey cryptographic ceremony adapter: **NOT CONFIGURED; fails closed**.
+- Production pricing: **NOT CONFIGURED; fails closed**.
 
 ## Next checkpoint
 
-**Engineering Phase 0.3 — Verified Authentication & Session Boundary + First Account-to-Booking Slice**
+**Engineering Phase 0.4 — Dispatch Foundation + Driver Availability/Eligibility Boundary**
 
-Target: contact verification adapter, passkey ceremony implementation/adapter, session issuance/revocation enforcement, then authenticated Rider Profile -> Create Booking -> Quote placeholder -> Confirm -> READY_FOR_DISPATCH using the canonical Booking engine.
+Planned spine: verified Driver session → compliance/vehicle eligibility snapshot → online availability → DispatchAttempt → controlled DriverOffer → atomic DriverAssignment → Rider/Driver assignment projections.

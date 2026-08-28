@@ -1,6 +1,6 @@
 {
   "name": "dazat-mobility",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "description": "DAZAT Mobility production engineering monorepo",
   "engines": {
@@ -15,7 +15,8 @@
     "verify:foundation": "node scripts/verify-foundation.mjs",
     "build:core": "tsc -p packages/domain/tsconfig.json && tsc -p packages/contracts/tsconfig.json && tsc -p packages/design-system/tsconfig.json",
     "test:domain": "npm run build:core && node --test tests/domain/*.test.mjs",
-    "check": "npm run verify:foundation && npm run verify:phase-0-2 && npm run test:domain",
-    "verify:phase-0-2": "node scripts/verify-phase-0-2.mjs"
+    "check": "npm run verify:foundation && npm run verify:phase-0-2 && npm run verify:phase-0-3 && npm run test:domain",
+    "verify:phase-0-2": "node scripts/verify-phase-0-2.mjs",
+    "verify:phase-0-3": "node scripts/verify-phase-0-3.mjs"
   }
 }

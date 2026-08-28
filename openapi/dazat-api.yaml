@@ -1,133 +1,172 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.2
-  description: Engineering Phase 0.2 API baseline. Server/domain owners remain authoritative for business and authentication state.
+  version: 0.0.3
+  description: Engineering Phase 0.3 API. Server/domain owners remain authoritative for identity, Booking and Pricing state.
 servers:
   - url: http://localhost:3001
 paths:
   /health/live:
     get:
-      operationId: healthLive
       responses:
-        '200':
-          description: Process is alive.
+        '200': { description: Process is alive. }
   /health/ready:
     get:
-      operationId: healthReady
       responses:
-        '200':
-          description: Core Phase 0.2 identity path is ready, including database connectivity.
-        '503':
-          description: An authoritative dependency is unavailable.
-  /v1/build-info:
-    get:
-      operationId: getBuildInfo
-      responses:
-        '200':
-          description: Non-sensitive build checkpoint metadata.
+        '200': { description: Database reachable; feature dependency modes are reported explicitly. }
+        '503': { description: Authoritative database unavailable. }
   /v1/identity/registrations:
     post:
-      operationId: startAccountRegistration
-      summary: Start a DAZAT account registration without pretending the contact or authenticator is already verified.
-      description: >-
-        Atomically creates Person, pending UserAccount, typed ContactPoint and requested Rider/Driver profile(s).
-        It does not verify the contact, create an authenticated session, or make a Driver eligible to work.
+      summary: Create Person, pending UserAccount, contact and requested profile(s).
       parameters:
-        - name: Idempotency-Key
-          in: header
-          required: true
-          schema:
-            type: string
-            minLength: 8
-            maxLength: 200
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StartAccountRegistrationRequest' }
+      responses:
+        '202': { description: Registration started; contact remains unverified. }
+  /v1/identity/verifications/contact:
+    post:
+      summary: Issue a short-lived contact verification challenge.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StartContactVerificationRequest' }
+      responses:
+        '202': { description: Challenge committed; delivery may be DELIVERED or UNKNOWN. }
+        '429': { description: Resend cooldown active. }
+        '503': { description: Delivery provider is not configured. }
+  /v1/identity/verifications/contact/confirm:
+    post:
+      summary: Verify contact and establish a revocable authenticated session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ConfirmContactVerificationRequest' }
+      responses:
+        '200': { description: Verification succeeded; bearer session returned once. }
+        '400': { description: Invalid code. }
+        '410': { description: Verification expired. }
+        '423': { description: Verification locked/exhausted. }
+  /v1/identity/session:
+    get:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Current authoritative session summary. }
+        '401': { description: Missing/expired/revoked session. }
+    delete:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Session revoked. }
+  /v1/identity/passkeys/registrations/options:
+    post:
+      security: [{ bearerAuth: [] }]
+      responses:
+        '503': { description: Fails closed until a standards-compliant WebAuthn ceremony provider is configured. }
+  /v1/bookings:
+    post:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateRiderBookingRequest' }
+      responses:
+        '201': { description: Authoritative DRAFT Booking created for authenticated Rider. }
+  /v1/bookings/{bookingId}:
+    get:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+      responses:
+        '200': { description: Booking owned by authenticated booker. }
+  /v1/bookings/{bookingId}/quote:
+    post:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201': { description: Versioned Quote created and Booking moved to AWAITING_CONFIRMATION. }
+        '503': { description: Pricing policy/provider not configured. }
+  /v1/bookings/{bookingId}/confirm:
+    post:
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/StartAccountRegistrationRequest'
+              type: object
+              required: [quoteId]
+              properties:
+                quoteId: { type: string, format: uuid }
       responses:
-        '202':
-          description: Registration foundation created; contact verification is the required next action.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccountRegistrationResult'
-        '400':
-          description: Invalid request or missing idempotency key.
-        '500':
-          description: Registration could not be committed.
-  /v1/bookings:
-    post:
-      operationId: createBooking
-      summary: Planned first vertical-slice command; not implemented in Phase 0.2.
-      parameters:
-        - name: Idempotency-Key
-          in: header
-          required: true
-          schema:
-            type: string
-      responses:
-        '501':
-          description: Planned for the next vertical slice after authenticated identity is available.
+        '200': { description: FareAgreement created and immediate Booking reaches READY_FOR_DISPATCH. }
+        '409': { description: Booking/Quote state conflict. }
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 200 }
+    BookingId:
+      name: bookingId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
   schemas:
     StartAccountRegistrationRequest:
       type: object
-      additionalProperties: false
       required: [profileKind, preferredName, contact]
       properties:
-        profileKind:
-          type: string
-          enum: [RIDER, DRIVER, BOTH]
-        preferredName:
-          type: string
-          minLength: 1
-          maxLength: 100
+        profileKind: { type: string, enum: [RIDER, DRIVER, BOTH] }
+        preferredName: { type: string, minLength: 1, maxLength: 100 }
         contact:
           type: object
-          additionalProperties: false
           required: [type, value]
           properties:
-            type:
-              type: string
-              enum: [EMAIL, MOBILE]
-            value:
-              type: string
-              minLength: 3
-              maxLength: 320
-    AccountRegistrationResult:
+            type: { type: string, enum: [EMAIL, MOBILE] }
+            value: { type: string }
+    StartContactVerificationRequest:
       type: object
-      required: [accountId, accountStatus, nextAction, contact]
+      required: [accountId, contactPointId]
       properties:
-        accountId:
-          type: string
-          format: uuid
-        riderProfileId:
-          type: string
-          format: uuid
-        driverProfileId:
-          type: string
-          format: uuid
-        accountStatus:
-          type: string
-          const: PENDING
-        nextAction:
-          type: string
-          const: CONTACT_VERIFICATION_REQUIRED
-        contact:
-          type: object
-          required: [id, type, displayHint, verificationStatus]
-          properties:
-            id:
-              type: string
-              format: uuid
-            type:
-              type: string
-              enum: [EMAIL, MOBILE]
-            displayHint:
-              type: string
-            verificationStatus:
-              type: string
-              const: UNVERIFIED
+        accountId: { type: string, format: uuid }
+        contactPointId: { type: string, format: uuid }
+    ConfirmContactVerificationRequest:
+      type: object
+      required: [verificationId, code]
+      properties:
+        verificationId: { type: string, format: uuid }
+        code: { type: string, pattern: '^\\d{6}$' }
+    LocationInput:
+      type: object
+      required: [latitude, longitude, displayLabel]
+      properties:
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
+        displayLabel: { type: string }
+    CreateRiderBookingRequest:
+      type: object
+      required: [regionCode, pickup, dropoff]
+      properties:
+        regionCode: { type: string }
+        pickup: { $ref: '#/components/schemas/LocationInput' }
+        dropoff: { $ref: '#/components/schemas/LocationInput' }
+        scheduledFor: { type: string, format: date-time }

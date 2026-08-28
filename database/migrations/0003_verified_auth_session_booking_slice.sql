@@ -17,7 +17,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS identity_verified_contact_auth_unique
   ON identity.authenticator (user_account_id, type, provider_reference)
   WHERE type = 'VERIFIED_CONTACT' AND provider_reference IS NOT NULL;
 
-CREATE INDEX IF NOT EXISTS identity_session_token_hash_idx
+CREATE UNIQUE INDEX IF NOT EXISTS identity_session_token_hash_idx
   ON identity.session (session_token_hash)
   WHERE session_token_hash IS NOT NULL AND status IN ('ACTIVE','STEP_UP_REQUIRED');
 

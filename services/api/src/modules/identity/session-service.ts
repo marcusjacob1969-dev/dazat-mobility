@@ -48,7 +48,11 @@ export async function createVerifiedContactSession(
          platform = COALESCE(EXCLUDED.platform, identity.device_trust_record.platform),
          app_installation_id = COALESCE(EXCLUDED.app_installation_id, identity.device_trust_record.app_installation_id),
          credential_type = 'VERIFIED_CONTACT',
-         trust_status = CASE WHEN identity.device_trust_record.trust_status = 'REVOKED' THEN 'REVOKED' ELSE 'RECOGNISED' END,
+         trust_status = CASE
+           WHEN identity.device_trust_record.trust_status IN ('TRUSTED','RESTRICTED','REVOKED')
+             THEN identity.device_trust_record.trust_status
+           ELSE 'RECOGNISED'
+         END,
          last_successful_authentication_at = now(),
          last_seen_at = now()
        RETURNING id`,
