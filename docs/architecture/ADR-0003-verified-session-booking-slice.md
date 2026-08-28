@@ -1,6 +1,6 @@
 # ADR-0003 — Verified contact, revocable session and first Rider Booking slice
 
-Status: **Accepted for Engineering Phase 0.3**  
+Status: **Accepted for Engineering Phase 0.3**
 Implementation evidence: **source/static/domain-test evidence only; database/API/mobile runtime integration not yet executed in this environment**.
 
 ## Decision
