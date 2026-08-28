@@ -3,88 +3,122 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
 import type { RegistrationContactType } from '@dazat/contracts';
-import { startDriverRegistration } from './src/identity-api';
+import {
+  confirmDriverContactVerification,
+  startDriverContactVerification,
+  startDriverRegistration
+} from './src/identity-api';
 
 export default function DriverApp() {
   const [preferredName, setPreferredName] = useState('');
   const [contactType, setContactType] = useState<RegistrationContactType>('EMAIL');
   const [contact, setContact] = useState('');
-  const [status, setStatus] = useState<'IDLE' | 'SUBMITTING' | 'VERIFY_CONTACT' | 'ERROR'>('IDLE');
+  const [accountId, setAccountId] = useState('');
+  const [contactPointId, setContactPointId] = useState('');
   const [displayHint, setDisplayHint] = useState('');
+  const [verificationId, setVerificationId] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [developmentCode, setDevelopmentCode] = useState('');
+  const [status, setStatus] = useState<'REGISTER' | 'VERIFY' | 'AUTHENTICATED' | 'BUSY' | 'ERROR'>('REGISTER');
 
-  async function startApplication() {
-    setStatus('SUBMITTING');
-    try {
-      const result = await startDriverRegistration({
-        profileKind: 'DRIVER',
-        preferredName,
-        contact: { type: contactType, value: contact }
-      });
-      setDisplayHint(result.contact.displayHint);
-      setStatus('VERIFY_CONTACT');
-    } catch {
-      setStatus('ERROR');
-    }
+  async function run(action: () => Promise<void>) {
+    const previous = status;
+    setStatus('BUSY');
+    try { await action(); } catch { setStatus('ERROR'); }
+    if (status === 'BUSY') setStatus(previous);
   }
+
+  function startApplication() {
+    void (async () => {
+      setStatus('BUSY');
+      try {
+        const result = await startDriverRegistration({ profileKind: 'DRIVER', preferredName, contact: { type: contactType, value: contact } });
+        setAccountId(result.accountId);
+        setContactPointId(result.contact.id);
+        setDisplayHint(result.contact.displayHint);
+        setStatus('VERIFY');
+      } catch { setStatus('ERROR'); }
+    })();
+  }
+
+  function sendCode() {
+    void (async () => {
+      setStatus('BUSY');
+      try {
+        const result = await startDriverContactVerification(accountId, contactPointId);
+        setVerificationId(result.verificationId);
+        setDevelopmentCode(result.developmentCode ?? '');
+        setStatus('VERIFY');
+      } catch { setStatus('ERROR'); }
+    })();
+  }
+
+  function verify() {
+    void (async () => {
+      setStatus('BUSY');
+      try {
+        await confirmDriverContactVerification({ verificationId, code: verificationCode });
+        setStatus('AUTHENTICATED');
+      } catch { setStatus('ERROR'); }
+    })();
+  }
+
+  const busy = status === 'BUSY';
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <View style={styles.container}>
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.2</Text>
-        <Text style={styles.title}>Start your DAZAT Driver application</Text>
-        <Text style={styles.body}>Creating a Driver profile does not make a driver eligible to work. Licensing, vehicle and compliance checks stay separate.</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.3</Text>
+        <Text style={styles.title}>DAZAT Driver identity slice</Text>
+        <Text style={styles.body}>Driver account authentication is real platform state. It still does not make the driver eligible to work.</Text>
 
-        {status === 'VERIFY_CONTACT' ? (
-          <View style={styles.notice} accessibilityRole="summary">
-            <Text style={styles.noticeTitle}>Application account started</Text>
-            <Text style={styles.body}>Next: verify {displayHint}. Driver eligibility remains NOT STARTED until the later compliance phases.</Text>
-          </View>
-        ) : (
+        {status === 'REGISTER' || status === 'ERROR' || status === 'BUSY' ? (
           <>
             <Text style={styles.label}>Preferred name</Text>
-            <TextInput accessibilityLabel="Preferred name" value={preferredName} onChangeText={setPreferredName} style={styles.input} autoCapitalize="words" autoComplete="name" />
-
+            <TextInput value={preferredName} onChangeText={setPreferredName} style={styles.input} />
             <View style={styles.contactSwitch}>
               {(['EMAIL', 'MOBILE'] as const).map((type) => (
-                <Pressable
-                  key={type}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: contactType === type }}
-                  onPress={() => { setContactType(type); setContact(''); }}
-                  style={[styles.switchButton, contactType === type && styles.switchButtonSelected]}
-                >
+                <Pressable key={type} onPress={() => { setContactType(type); setContact(''); }} style={[styles.switchButton, contactType === type && styles.switchButtonSelected]}>
                   <Text style={styles.switchText}>{type === 'EMAIL' ? 'Email' : 'Mobile'}</Text>
                 </Pressable>
               ))}
             </View>
-
-            <Text style={styles.label}>{contactType === 'EMAIL' ? 'Email address' : 'Mobile number'}</Text>
-            <TextInput
-              accessibilityLabel={contactType === 'EMAIL' ? 'Email address' : 'Mobile number in international format'}
-              value={contact}
-              onChangeText={setContact}
-              style={styles.input}
-              autoCapitalize="none"
-              keyboardType={contactType === 'EMAIL' ? 'email-address' : 'phone-pad'}
-              autoComplete={contactType === 'EMAIL' ? 'email' : 'tel'}
-              placeholder={contactType === 'EMAIL' ? 'you@example.com' : '+44…'}
-            />
-
-            {status === 'ERROR' && <Text style={styles.error}>The application could not be started. Check the details and try again.</Text>}
-
-            <Pressable
-              accessibilityRole="button"
-              disabled={status === 'SUBMITTING' || preferredName.trim().length === 0 || contact.trim().length === 0}
-              onPress={startApplication}
-              style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed, status === 'SUBMITTING' && styles.disabled]}
-            >
-              {status === 'SUBMITTING' ? <ActivityIndicator /> : <Text style={styles.primaryButtonText}>Continue</Text>}
-            </Pressable>
+            <TextInput value={contact} onChangeText={setContact} style={styles.input} placeholder={contactType === 'EMAIL' ? 'you@example.com' : '+44…'} />
+            {status === 'ERROR' ? <Text style={styles.error}>The current step could not be completed.</Text> : null}
+            <PrimaryButton busy={busy} label="Create Driver account" onPress={startApplication} />
           </>
-        )}
+        ) : null}
+
+        {status === 'VERIFY' ? (
+          <View style={styles.notice}>
+            <Text style={styles.noticeTitle}>Verify {displayHint}</Text>
+            {!verificationId ? <PrimaryButton busy={false} label="Send verification code" onPress={sendCode} /> : (
+              <>
+                {developmentCode ? <Text style={styles.body}>Development-only code: {developmentCode}</Text> : null}
+                <TextInput value={verificationCode} onChangeText={setVerificationCode} style={styles.input} keyboardType="numeric" placeholder="6 digits" />
+                <PrimaryButton busy={false} label="Verify Driver account" onPress={verify} />
+              </>
+            )}
+          </View>
+        ) : null}
+
+        {status === 'AUTHENTICATED' ? (
+          <View style={styles.notice} accessibilityRole="summary">
+            <Text style={styles.noticeTitle}>Driver account authenticated</Text>
+            <Text style={styles.body}>Next Driver engineering phases add licensing, vehicle, insurance, training and service eligibility. Authentication alone never changes operating eligibility.</Text>
+          </View>
+        ) : null}
       </View>
     </SafeAreaView>
+  );
+}
+
+function PrimaryButton(props: { busy: boolean; label: string; onPress: () => void }) {
+  return (
+    <Pressable disabled={props.busy} onPress={props.onPress} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed, props.busy && styles.disabled]}>
+      {props.busy ? <ActivityIndicator /> : <Text style={styles.primaryButtonText}>{props.label}</Text>}
+    </Pressable>
   );
 }
 

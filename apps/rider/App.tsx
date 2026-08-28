@@ -1,117 +1,245 @@
 import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { RegistrationContactType } from '@dazat/contracts';
-import { startRiderRegistration } from './src/identity-api';
+import type { BookingQuoteResult, BookingSummary, RegistrationContactType } from '@dazat/contracts';
+import {
+  confirmRiderContactVerification,
+  startRiderContactVerification,
+  startRiderRegistration
+} from './src/identity-api';
+import { confirmRiderBooking, createRiderBooking, quoteRiderBooking } from './src/booking-api';
+
+type Flow = 'REGISTER' | 'VERIFY' | 'BOOK' | 'QUOTE' | 'READY';
+
+function Field(props: { label: string; value: string; onChangeText: (value: string) => void; keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad'; placeholder?: string }) {
+  return (
+    <View style={styles.field}>
+      <Text style={styles.label}>{props.label}</Text>
+      <TextInput
+        accessibilityLabel={props.label}
+        value={props.value}
+        onChangeText={props.onChangeText}
+        style={styles.input}
+        keyboardType={props.keyboardType ?? 'default'}
+        placeholder={props.placeholder}
+        autoCapitalize="none"
+      />
+    </View>
+  );
+}
 
 export default function RiderApp() {
+  const [flow, setFlow] = useState<Flow>('REGISTER');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   const [preferredName, setPreferredName] = useState('');
   const [contactType, setContactType] = useState<RegistrationContactType>('EMAIL');
   const [contact, setContact] = useState('');
-  const [status, setStatus] = useState<'IDLE' | 'SUBMITTING' | 'VERIFY_CONTACT' | 'ERROR'>('IDLE');
+  const [accountId, setAccountId] = useState('');
+  const [contactPointId, setContactPointId] = useState('');
   const [displayHint, setDisplayHint] = useState('');
+  const [verificationId, setVerificationId] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [developmentCode, setDevelopmentCode] = useState('');
+  const [sessionToken, setSessionToken] = useState('');
 
-  async function createAccount() {
-    setStatus('SUBMITTING');
-    try {
+  const [regionCode, setRegionCode] = useState('MANCHESTER');
+  const [pickupLabel, setPickupLabel] = useState('');
+  const [pickupLat, setPickupLat] = useState('');
+  const [pickupLon, setPickupLon] = useState('');
+  const [dropoffLabel, setDropoffLabel] = useState('');
+  const [dropoffLat, setDropoffLat] = useState('');
+  const [dropoffLon, setDropoffLon] = useState('');
+  const [booking, setBooking] = useState<BookingSummary | null>(null);
+  const [quote, setQuote] = useState<BookingQuoteResult['quote'] | null>(null);
+
+  async function run(action: () => Promise<void>) {
+    setBusy(true);
+    setError('');
+    try { await action(); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Something went wrong.'); }
+    finally { setBusy(false); }
+  }
+
+  function createAccount() {
+    void run(async () => {
       const result = await startRiderRegistration({
         profileKind: 'RIDER',
         preferredName,
         contact: { type: contactType, value: contact }
       });
+      setAccountId(result.accountId);
+      setContactPointId(result.contact.id);
       setDisplayHint(result.contact.displayHint);
-      setStatus('VERIFY_CONTACT');
-    } catch {
-      setStatus('ERROR');
-    }
+      setFlow('VERIFY');
+    });
+  }
+
+  function sendVerificationCode() {
+    void run(async () => {
+      const result = await startRiderContactVerification(accountId, contactPointId);
+      setVerificationId(result.verificationId);
+      setDevelopmentCode(result.developmentCode ?? '');
+      setFlow('VERIFY');
+    });
+  }
+
+  function verifyContact() {
+    void run(async () => {
+      const result = await confirmRiderContactVerification({ verificationId, code: verificationCode });
+      setSessionToken(result.session.bearerToken);
+      setFlow('BOOK');
+    });
+  }
+
+  function createBookingDraft() {
+    void run(async () => {
+      const result = await createRiderBooking(sessionToken, {
+        regionCode,
+        pickup: { latitude: Number(pickupLat), longitude: Number(pickupLon), displayLabel: pickupLabel },
+        dropoff: { latitude: Number(dropoffLat), longitude: Number(dropoffLon), displayLabel: dropoffLabel }
+      });
+      setBooking(result);
+      setFlow('QUOTE');
+    });
+  }
+
+  function requestQuote() {
+    if (!booking) return;
+    void run(async () => {
+      const result = await quoteRiderBooking(sessionToken, booking.bookingId);
+      setBooking(result.booking);
+      setQuote(result.quote);
+    });
+  }
+
+  function confirmQuote() {
+    if (!booking || !quote) return;
+    void run(async () => {
+      const result = await confirmRiderBooking(sessionToken, booking.bookingId, quote.quoteId);
+      setBooking(result.booking);
+      setFlow('READY');
+    });
   }
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
-      <View style={styles.container}>
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.2</Text>
-        <Text style={styles.title}>Create your DAZAT Rider account</Text>
-        <Text style={styles.body}>Your login account and Rider profile are separate records. Contact verification comes next.</Text>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.3</Text>
+        <Text style={styles.title}>DAZAT Rider vertical slice</Text>
+        <Text style={styles.body}>Verified contact → authenticated session → Booking → Quote → Confirm → READY_FOR_DISPATCH.</Text>
 
-        {status === 'VERIFY_CONTACT' ? (
-          <View style={styles.notice} accessibilityRole="summary">
-            <Text style={styles.noticeTitle}>Account started</Text>
-            <Text style={styles.body}>Next: verify {displayHint}. The verification provider is deliberately not faked in Phase 0.2.</Text>
-          </View>
-        ) : (
-          <>
-            <Text style={styles.label}>Preferred name</Text>
-            <TextInput
-              accessibilityLabel="Preferred name"
-              value={preferredName}
-              onChangeText={setPreferredName}
-              style={styles.input}
-              autoCapitalize="words"
-              autoComplete="name"
-            />
-
+        {flow === 'REGISTER' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>1. Create account</Text>
+            <Field label="Preferred name" value={preferredName} onChangeText={setPreferredName} />
             <View style={styles.contactSwitch}>
               {(['EMAIL', 'MOBILE'] as const).map((type) => (
-                <Pressable
-                  key={type}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: contactType === type }}
-                  onPress={() => { setContactType(type); setContact(''); }}
-                  style={[styles.switchButton, contactType === type && styles.switchButtonSelected]}
-                >
+                <Pressable key={type} onPress={() => { setContactType(type); setContact(''); }} style={[styles.switchButton, contactType === type && styles.switchButtonSelected]}>
                   <Text style={styles.switchText}>{type === 'EMAIL' ? 'Email' : 'Mobile'}</Text>
                 </Pressable>
               ))}
             </View>
-
-            <Text style={styles.label}>{contactType === 'EMAIL' ? 'Email address' : 'Mobile number'}</Text>
-            <TextInput
-              accessibilityLabel={contactType === 'EMAIL' ? 'Email address' : 'Mobile number in international format'}
-              value={contact}
-              onChangeText={setContact}
-              style={styles.input}
-              autoCapitalize="none"
-              keyboardType={contactType === 'EMAIL' ? 'email-address' : 'phone-pad'}
-              autoComplete={contactType === 'EMAIL' ? 'email' : 'tel'}
-              placeholder={contactType === 'EMAIL' ? 'you@example.com' : '+44…'}
-            />
-
-            {status === 'ERROR' && <Text style={styles.error}>Registration could not be started. Check the details and try again.</Text>}
-
-            <Pressable
-              accessibilityRole="button"
-              disabled={status === 'SUBMITTING' || preferredName.trim().length === 0 || contact.trim().length === 0}
-              onPress={createAccount}
-              style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed, status === 'SUBMITTING' && styles.disabled]}
-            >
-              {status === 'SUBMITTING' ? <ActivityIndicator /> : <Text style={styles.primaryButtonText}>Continue</Text>}
-            </Pressable>
-          </>
+            <Field label={contactType === 'EMAIL' ? 'Email address' : 'Mobile number (+country code)'} value={contact} onChangeText={setContact} keyboardType={contactType === 'EMAIL' ? 'email-address' : 'phone-pad'} />
+            <PrimaryButton label="Create Rider account" busy={busy} onPress={createAccount} />
+          </View>
         )}
-      </View>
+
+        {flow === 'VERIFY' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>2. Verify {displayHint}</Text>
+            {!verificationId ? (
+              <PrimaryButton label="Send verification code" busy={busy} onPress={sendVerificationCode} />
+            ) : (
+              <>
+                {developmentCode ? <Text style={styles.devNotice}>Development-only code: {developmentCode}</Text> : null}
+                <Field label="Six-digit verification code" value={verificationCode} onChangeText={setVerificationCode} keyboardType="numeric" />
+                <PrimaryButton label="Verify and create session" busy={busy} onPress={verifyContact} />
+              </>
+            )}
+          </View>
+        )}
+
+        {flow === 'BOOK' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>3. Create Booking</Text>
+            <Text style={styles.body}>Phase 0.3 uses manual coordinates to exercise the authoritative backend before map-provider integration.</Text>
+            <Field label="Region code" value={regionCode} onChangeText={setRegionCode} />
+            <Field label="Pickup label" value={pickupLabel} onChangeText={setPickupLabel} />
+            <Field label="Pickup latitude" value={pickupLat} onChangeText={setPickupLat} keyboardType="numeric" />
+            <Field label="Pickup longitude" value={pickupLon} onChangeText={setPickupLon} keyboardType="numeric" />
+            <Field label="Drop-off label" value={dropoffLabel} onChangeText={setDropoffLabel} />
+            <Field label="Drop-off latitude" value={dropoffLat} onChangeText={setDropoffLat} keyboardType="numeric" />
+            <Field label="Drop-off longitude" value={dropoffLon} onChangeText={setDropoffLon} keyboardType="numeric" />
+            <PrimaryButton label="Create DRAFT Booking" busy={busy} onPress={createBookingDraft} />
+          </View>
+        )}
+
+        {flow === 'QUOTE' && booking && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>4. Quote and confirm</Text>
+            <Text style={styles.body}>Booking {booking.bookingId}</Text>
+            <Text style={styles.status}>Authoritative state: {booking.status}</Text>
+            {!quote ? (
+              <PrimaryButton label="Create development quote" busy={busy} onPress={requestQuote} />
+            ) : (
+              <>
+                <View style={styles.notice}>
+                  <Text style={styles.noticeTitle}>{quote.currency} {quote.amountMinor} minor units</Text>
+                  <Text style={styles.body}>{quote.policyVersion}</Text>
+                  <Text style={styles.devNotice}>NON-COMMERCIAL DEVELOPMENT FIXTURE</Text>
+                </View>
+                <PrimaryButton label="Confirm quoted Booking" busy={busy} onPress={confirmQuote} />
+              </>
+            )}
+          </View>
+        )}
+
+        {flow === 'READY' && booking && (
+          <View style={styles.notice} accessibilityRole="summary">
+            <Text style={styles.noticeTitle}>First DAZAT Rider slice complete</Text>
+            <Text style={styles.status}>{booking.status}</Text>
+            <Text style={styles.body}>The Booking is now ready for the Dispatch Engine. No driver has been invented or assigned in Phase 0.3.</Text>
+          </View>
+        )}
+
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+      </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function PrimaryButton(props: { label: string; busy: boolean; onPress: () => void }) {
+  return (
+    <Pressable accessibilityRole="button" disabled={props.busy} onPress={props.onPress} style={({ pressed }) => [styles.primaryButton, pressed && styles.pressed, props.busy && styles.disabled]}>
+      {props.busy ? <ActivityIndicator /> : <Text style={styles.primaryButtonText}>{props.label}</Text>}
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: dazatTokens.color.canvas },
-  container: { flex: 1, padding: dazatTokens.spacing[6], gap: dazatTokens.spacing[3] },
-  eyebrow: { fontSize: 12, fontWeight: '600', color: dazatTokens.color.textMuted, marginTop: dazatTokens.spacing[6] },
+  container: { padding: dazatTokens.spacing[6], gap: dazatTokens.spacing[4] },
+  eyebrow: { fontSize: 12, fontWeight: '600', color: dazatTokens.color.textMuted, marginTop: dazatTokens.spacing[4] },
   title: { fontSize: 30, lineHeight: 36, fontWeight: '700', color: dazatTokens.color.textPrimary },
   body: { fontSize: 16, lineHeight: 24, color: dazatTokens.color.textMuted },
-  label: { marginTop: dazatTokens.spacing[2], fontSize: 14, fontWeight: '600', color: dazatTokens.color.textPrimary },
+  section: { gap: dazatTokens.spacing[3], paddingVertical: dazatTokens.spacing[3] },
+  sectionTitle: { fontSize: 22, lineHeight: 28, fontWeight: '700', color: dazatTokens.color.textPrimary },
+  field: { gap: dazatTokens.spacing[2] },
+  label: { fontSize: 14, fontWeight: '600', color: dazatTokens.color.textPrimary },
   input: { minHeight: 52, borderWidth: 1, borderColor: dazatTokens.color.border, borderRadius: dazatTokens.radius.input, paddingHorizontal: dazatTokens.spacing[4], fontSize: 16, color: dazatTokens.color.textPrimary },
   contactSwitch: { flexDirection: 'row', gap: dazatTokens.spacing[2] },
   switchButton: { minHeight: 44, justifyContent: 'center', paddingHorizontal: dazatTokens.spacing[4], borderWidth: 1, borderColor: dazatTokens.color.border, borderRadius: dazatTokens.radius.button },
   switchButtonSelected: { borderColor: dazatTokens.color.textPrimary, backgroundColor: dazatTokens.color.surface },
   switchText: { fontSize: 15, fontWeight: '600', color: dazatTokens.color.textPrimary },
-  primaryButton: { marginTop: dazatTokens.spacing[3], minHeight: 52, justifyContent: 'center', alignItems: 'center', backgroundColor: dazatTokens.color.textPrimary, borderRadius: dazatTokens.radius.button },
+  primaryButton: { marginTop: dazatTokens.spacing[2], minHeight: 52, justifyContent: 'center', alignItems: 'center', backgroundColor: dazatTokens.color.textPrimary, borderRadius: dazatTokens.radius.button },
   primaryButtonText: { color: dazatTokens.color.canvas, fontSize: 16, fontWeight: '700' },
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.55 },
   error: { color: dazatTokens.color.danger, fontSize: 14, lineHeight: 20 },
-  notice: { marginTop: dazatTokens.spacing[4], padding: dazatTokens.spacing[5], backgroundColor: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card, gap: dazatTokens.spacing[2] },
-  noticeTitle: { fontSize: 20, fontWeight: '700', color: dazatTokens.color.textPrimary }
+  notice: { padding: dazatTokens.spacing[5], backgroundColor: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card, gap: dazatTokens.spacing[2] },
+  noticeTitle: { fontSize: 20, fontWeight: '700', color: dazatTokens.color.textPrimary },
+  status: { fontSize: 16, fontWeight: '700', color: dazatTokens.color.textPrimary },
+  devNotice: { fontSize: 13, lineHeight: 18, color: dazatTokens.color.textMuted, fontWeight: '600' }
 });
