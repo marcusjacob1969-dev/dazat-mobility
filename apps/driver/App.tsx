@@ -71,7 +71,7 @@ export default function DriverApp() {
       <View style={styles.container}>
         <Text style={styles.eyebrow}>ENGINEERING PHASE 0.3</Text>
         <Text style={styles.title}>DAZAT Driver identity slice</Text>
-        <Text style={styles.body}>Driver account authentication is real platform state. It still does not make the driver eligible to work.</Text>
+        <Text style={styles.body}>Driver account authentication is real platform state. It does not make a driver eligible to work.</Text>
 
         {status === 'REGISTER' || status === 'ERROR' || status === 'BUSY' ? (
           <>
