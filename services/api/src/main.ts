@@ -2,10 +2,29 @@ import Fastify from 'fastify';
 import { loadConfig } from './config.js';
 import { createDatabasePool } from './db.js';
 import { registerIdentityRoutes } from './modules/identity/routes.js';
+import { DevelopmentConsoleVerificationDelivery } from './modules/identity/verification-delivery-port.js';
+import { registerBookingRoutes } from './modules/booking/routes.js';
+import {
+  DevelopmentFixturePricingAdapter,
+  DisabledPricingAdapter,
+  type PricingPort
+} from './modules/booking/development-pricing-adapter.js';
 
 const config = loadConfig();
 const app = Fastify({ logger: { level: config.logLevel } });
 const database = createDatabasePool(config.databaseUrl);
+
+const verificationDelivery = config.verificationDeliveryMode === 'development_console'
+  ? new DevelopmentConsoleVerificationDelivery(config.exposeDevelopmentVerificationCode)
+  : null;
+
+const pricing: PricingPort = config.pricingMode === 'development_fixture'
+  ? new DevelopmentFixturePricingAdapter(
+      config.developmentQuoteAmountMinor!,
+      config.developmentQuoteCurrency,
+      config.quoteTtlMinutes
+    )
+  : new DisabledPricingAdapter();
 
 app.get('/health/live', async () => ({ status: 'LIVE' }));
 
@@ -16,7 +35,9 @@ app.get('/health/ready', async (_request, reply) => {
       status: 'READY',
       dependencies: {
         database: 'READY',
-        redis: 'NOT_REQUIRED_FOR_PHASE_0_2_IDENTITY_PATH'
+        redis: 'NOT_REQUIRED_FOR_PHASE_0_3_VERTICAL_SLICE',
+        verificationDelivery: config.verificationDeliveryMode.toUpperCase(),
+        pricing: config.pricingMode.toUpperCase()
       }
     });
   } catch {
@@ -29,11 +50,12 @@ app.get('/health/ready', async (_request, reply) => {
 
 app.get('/v1/build-info', async () => ({
   product: 'DAZAT Mobility',
-  checkpoint: 'engineering-phase-0.2',
-  implementationStatus: 'IDENTITY_ACCOUNT_FOUNDATION_SOURCE_CREATED_NOT_PRODUCTION_VERIFIED'
+  checkpoint: 'engineering-phase-0.3',
+  implementationStatus: 'VERIFIED_CONTACT_SESSION_AND_FIRST_RIDER_BOOKING_SLICE_SOURCE_CREATED_NOT_PRODUCTION_VERIFIED'
 }));
 
-registerIdentityRoutes(app, database);
+registerIdentityRoutes(app, database, config, verificationDelivery);
+registerBookingRoutes(app, database, pricing);
 
 app.addHook('onClose', async () => {
   await database.end();
