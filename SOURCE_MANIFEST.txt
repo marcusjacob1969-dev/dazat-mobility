@@ -1,61 +1,78 @@
-.editorconfig
-.env.example
-.gitignore
-.nvmrc
-BUILD_STATUS.md
-COPYRIGHT.md
-README.md
-SOURCE_MANIFEST.txt
-apps/control-room/index.html
-apps/control-room/package.json
-apps/control-room/src/App.tsx
-apps/control-room/src/README.md
-apps/control-room/src/main.tsx
-apps/control-room/tsconfig.json
-apps/control-room/vite.config.ts
-apps/driver/App.tsx
-apps/driver/app.json
-apps/driver/package.json
-apps/driver/src/README.md
-apps/driver/tsconfig.json
-apps/rider/App.tsx
-apps/rider/app.json
-apps/rider/package.json
-apps/rider/src/README.md
-apps/rider/tsconfig.json
-compose.yaml
-database/README.md
-database/migrations/0001_foundation.sql
-database/seeds/README.md
-docs/architecture/ADR-0001-production-foundation.md
-docs/architecture/domain-ownership.md
-docs/engineering/phase-0-checklist.md
-docs/traceability/foundation-requirements.md
-openapi/dazat-api.yaml
-package.json
-packages/contracts/package.json
-packages/contracts/src/booking.ts
-packages/contracts/src/index.ts
-packages/contracts/tsconfig.json
-packages/design-system/package.json
-packages/design-system/src/index.ts
-packages/design-system/src/tokens.ts
-packages/design-system/tsconfig.json
-packages/domain/package.json
-packages/domain/src/booking-status.ts
-packages/domain/src/domain-event.ts
-packages/domain/src/ids.ts
-packages/domain/src/index.ts
-packages/domain/src/money.ts
-packages/domain/tsconfig.json
-scripts/verify-foundation.mjs
-services/api/package.json
-services/api/src/config.ts
-services/api/src/main.ts
-services/api/tsconfig.json
-services/workers/package.json
-services/workers/src/main.ts
-services/workers/tsconfig.json
-tests/domain/booking-status.test.mjs
-tests/domain/money.test.mjs
-tsconfig.base.json
+DAZAT Mobility Engineering Phase 0.2 source manifest
+Generated checkpoint contents (excluding .git and build output).
+
+.editorconfig	140
+.env.example	218
+.gitignore	86
+.nvmrc	3
+BUILD_STATUS.md	3084
+COPYRIGHT.md	348
+README.md	4455
+SOURCE_MANIFEST.txt	2683
+apps/control-room/index.html	305
+apps/control-room/package.json	464
+apps/control-room/src/App.tsx	689
+apps/control-room/src/README.md	214
+apps/control-room/src/main.tsx	221
+apps/control-room/tsconfig.json	209
+apps/control-room/vite.config.ts	161
+apps/driver/App.tsx	6230
+apps/driver/app.json	169
+apps/driver/package.json	339
+apps/driver/src/README.md	212
+apps/driver/src/identity-api.ts	808
+apps/driver/tsconfig.json	172
+apps/rider/App.tsx	6258
+apps/rider/app.json	167
+apps/rider/package.json	338
+apps/rider/src/README.md	229
+apps/rider/src/identity-api.ts	806
+apps/rider/tsconfig.json	172
+compose.yaml	766
+database/README.md	386
+database/migrations/0001_foundation.sql	8002
+database/migrations/0002_identity_account_foundation.sql	11119
+database/seeds/README.md	161
+docs/architecture/ADR-0001-production-foundation.md	2819
+docs/architecture/ADR-0002-identity-account-foundation.md	2906
+docs/architecture/domain-ownership.md	1216
+docs/engineering/phase-0-2-checklist.md	1527
+docs/engineering/phase-0-checklist.md	1318
+docs/traceability/foundation-requirements.md	1142
+docs/traceability/identity-account-requirements.md	2672
+openapi/dazat-api.yaml	4063
+package.json	714
+packages/contracts/package.json	207
+packages/contracts/src/booking.ts	1155
+packages/contracts/src/identity.ts	1241
+packages/contracts/src/index.ts	61
+packages/contracts/tsconfig.json	145
+packages/design-system/package.json	211
+packages/design-system/src/index.ts	29
+packages/design-system/src/tokens.ts	549
+packages/design-system/tsconfig.json	145
+packages/domain/package.json	204
+packages/domain/src/booking-status.ts	2632
+packages/domain/src/domain-event.ts	424
+packages/domain/src/identity.ts	5124
+packages/domain/src/ids.ts	750
+packages/domain/src/index.ts	157
+packages/domain/src/money.ts	539
+packages/domain/tsconfig.json	145
+scripts/verify-foundation.mjs	2407
+scripts/verify-phase-0-2.mjs	3709
+services/api/package.json	516
+services/api/src/config.ts	665
+services/api/src/db.ts	312
+services/api/src/main.ts	1189
+services/api/src/modules/identity/authentication-port.ts	1298
+services/api/src/modules/identity/registration-service.ts	6179
+services/api/src/modules/identity/routes.ts	2042
+services/api/tsconfig.json	168
+services/workers/package.json	364
+services/workers/src/main.ts	311
+services/workers/tsconfig.json	168
+tests/domain/booking-status.test.mjs	1110
+tests/domain/identity.test.mjs	2794
+tests/domain/money.test.mjs	350
+tsconfig.base.json	334

@@ -1,49 +1,55 @@
-# DAZAT Mobility Build Status
+# DAZAT Mobility — Build Status
 
-**Checkpoint:** Engineering Phase 0.1 — Foundation Started  
-**Implementation truth:** SOURCE CREATED / NOT PRODUCTION VERIFIED  
-**Blueprint baseline:** v0.4 PRE-WORK COMPLETE
+## Current checkpoint
 
-## Implemented in this checkpoint
+**Engineering Phase 0.2 — Identity & Account Foundation**  
+Status: **SOURCE IMPLEMENTED / CORE DOMAIN TESTED / DATABASE & PROVIDER INTEGRATION NOT YET VERIFIED**
 
-- [x] Clean DAZAT-owned monorepo structure
-- [x] Technology baseline captured as an ADR
-- [x] Domain ownership map
-- [x] PostgreSQL/PostGIS schema boundaries
-- [x] Identity Person/UserAccount foundation tables
-- [x] RiderProfile and DriverProfile foundation tables
-- [x] Canonical Booking status enum
-- [x] BookingParty role model
-- [x] immutable LocationSnapshot foundation
-- [x] BookingStateTransition append-only table
-- [x] Booking-domain transactional outbox table
-- [x] Domain-level Booking state vocabulary and guarded happy-path transition helper
-- [x] Shared design tokens
-- [x] API live/readiness/build-info route skeleton
-- [x] Worker/outbox publisher skeleton
-- [x] Rider / Driver / Control Room application shells
-- [x] OpenAPI foundation
-- [x] Offline verifier + domain tests
+DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
-## Not yet implemented
+## Implemented in source
 
-- [ ] Authentication/passkeys/session security
-- [ ] Account recovery / Shield step-up controls
-- [ ] Rider onboarding and Mobility Passport
-- [ ] Driver onboarding/compliance eligibility
-- [ ] Quote/Pricing engine
-- [ ] Booking persistence service/repository
-- [ ] Dispatch engine / live driver supply index
-- [ ] Journey / RideCheck execution
-- [ ] Payment / append-only double-entry ledger
-- [ ] Communications provider adapters
-- [ ] Control Room live operations
-- [ ] Safety / safeguarding engine
-- [ ] Fleet / Organisation / School / Rescue specialist modules
-- [ ] Production CI/CD, cloud accounts, secrets and observability
-- [ ] Provider procurement and production credentials
-- [ ] Load/security/accessibility evidence
+- Monorepo foundation for Rider, Driver, Control Room, API, workers and shared packages.
+- PostgreSQL/PostGIS domain schema boundaries and canonical Booking foundation.
+- Transactional outbox and append-only Booking transition history.
+- Person / UserAccount / RiderProfile / DriverProfile separation.
+- Preferred-name history and typed ContactPoint model.
+- Separate contact verification records and contact permissions.
+- Passkey-ready Authenticator record storing verifier/public metadata only.
+- DeviceTrustRecord and independently revocable Session model.
+- Explicit AccountRecoveryCase states and account lifecycle transition history.
+- LIMITED account capability policy preserving essential safety/journey/support access while blocking risky changes.
+- Idempotent identity registration transaction creating PENDING accounts only.
+- Rider Create Account screen wired to the registration API.
+- Driver Start Application screen wired to the same canonical Identity service while retaining separate driver compliance/eligibility truth.
+- Provider-neutral passkey ceremony adapter boundary.
 
-## Important
+## Verified in this checkpoint
 
-This file is intentionally strict: a scaffold is not marked as a finished feature. Every item above moves to implemented only when code, tests and evidence exist.
+- TypeScript build for domain/contracts/design-system packages.
+- Canonical identity/account state vocabulary.
+- Account lifecycle transition guard.
+- Limited Account Mode capability rules.
+- Email/mobile normalisation and masking rules.
+- E.164 registration phone validation.
+- Rider + Driver dual-profile semantics.
+- Recovery state-machine transitions.
+- Session authority requires ACTIVE + unexpired.
+- Static persistence/security checks for passkey/session boundaries and registration truthfulness.
+
+## Not yet verified / deliberately not claimed
+
+- PostgreSQL migrations have not been executed in this tool environment because no PostgreSQL/Docker runtime is available here.
+- API runtime compilation/integration awaits installed workspace dependencies and a database runtime.
+- Email/SMS verification is not wired.
+- WebAuthn/passkey ceremonies are not yet implemented; only the secure model/adapter boundary exists.
+- Authenticated bearer sessions are not yet issued.
+- DAZAT Shield step-up / suspicious-session runtime integration is not yet wired.
+- Driver registration is not driver approval or online eligibility.
+- Booking creation remains the next vertical-slice build.
+
+## Next checkpoint
+
+**Engineering Phase 0.3 — Verified Authentication & Session Boundary + First Account-to-Booking Slice**
+
+Target: contact verification adapter, passkey ceremony implementation/adapter, session issuance/revocation enforcement, then authenticated Rider Profile -> Create Booking -> Quote placeholder -> Confirm -> READY_FOR_DISPATCH using the canonical Booking engine.

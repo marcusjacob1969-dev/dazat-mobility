@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.1
-  description: Engineering Phase 0 API baseline. Server owns authoritative business state.
+  version: 0.0.2
+  description: Engineering Phase 0.2 API baseline. Server/domain owners remain authoritative for business and authentication state.
 servers:
   - url: http://localhost:3001
 paths:
@@ -17,17 +17,51 @@ paths:
       operationId: healthReady
       responses:
         '200':
-          description: Readiness state. Phase 0.1 deliberately reports NOT_READY until DB/provider checks exist.
+          description: Core Phase 0.2 identity path is ready, including database connectivity.
+        '503':
+          description: An authoritative dependency is unavailable.
   /v1/build-info:
     get:
       operationId: getBuildInfo
       responses:
         '200':
           description: Non-sensitive build checkpoint metadata.
+  /v1/identity/registrations:
+    post:
+      operationId: startAccountRegistration
+      summary: Start a DAZAT account registration without pretending the contact or authenticator is already verified.
+      description: >-
+        Atomically creates Person, pending UserAccount, typed ContactPoint and requested Rider/Driver profile(s).
+        It does not verify the contact, create an authenticated session, or make a Driver eligible to work.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 8
+            maxLength: 200
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartAccountRegistrationRequest'
+      responses:
+        '202':
+          description: Registration foundation created; contact verification is the required next action.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountRegistrationResult'
+        '400':
+          description: Invalid request or missing idempotency key.
+        '500':
+          description: Registration could not be committed.
   /v1/bookings:
     post:
       operationId: createBooking
-      summary: Planned first vertical-slice command; not implemented in Phase 0.1.
+      summary: Planned first vertical-slice command; not implemented in Phase 0.2.
       parameters:
         - name: Idempotency-Key
           in: header
@@ -36,4 +70,64 @@ paths:
             type: string
       responses:
         '501':
-          description: Not implemented in Phase 0.1.
+          description: Planned for the next vertical slice after authenticated identity is available.
+components:
+  schemas:
+    StartAccountRegistrationRequest:
+      type: object
+      additionalProperties: false
+      required: [profileKind, preferredName, contact]
+      properties:
+        profileKind:
+          type: string
+          enum: [RIDER, DRIVER, BOTH]
+        preferredName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        contact:
+          type: object
+          additionalProperties: false
+          required: [type, value]
+          properties:
+            type:
+              type: string
+              enum: [EMAIL, MOBILE]
+            value:
+              type: string
+              minLength: 3
+              maxLength: 320
+    AccountRegistrationResult:
+      type: object
+      required: [accountId, accountStatus, nextAction, contact]
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        riderProfileId:
+          type: string
+          format: uuid
+        driverProfileId:
+          type: string
+          format: uuid
+        accountStatus:
+          type: string
+          const: PENDING
+        nextAction:
+          type: string
+          const: CONTACT_VERIFICATION_REQUIRED
+        contact:
+          type: object
+          required: [id, type, displayHint, verificationStatus]
+          properties:
+            id:
+              type: string
+              format: uuid
+            type:
+              type: string
+              enum: [EMAIL, MOBILE]
+            displayHint:
+              type: string
+            verificationStatus:
+              type: string
+              const: UNVERIFIED

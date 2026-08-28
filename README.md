@@ -1,63 +1,119 @@
-# DAZAT Mobility — Production Engineering
+# DAZAT Mobility
 
-This repository is the clean production build started from the **DAZAT Mobility Master Blueprint v0.4** after the PRE-WORK COMPLETE milestone.
+Production engineering repository for DAZAT Mobility, built cleanly from the **DAZAT Mobility Master Blueprint v0.4 — PRE-WORK COMPLETE** baseline.
 
-## Current engineering phase
+> Build once. Build properly. Build to last.
 
-**Phase 0 — Production Foundation / checkpoint 0.1**
+## Current engineering checkpoint
 
-This checkpoint deliberately starts with the platform spine instead of polishing screens first:
+**Phase 0.2 — Identity & Account Foundation**
 
-- owned monorepo and domain boundaries;
-- PostgreSQL/PostGIS authoritative data foundation;
-- Redis only as derived/ephemeral infrastructure;
-- transactional-outbox foundation;
-- canonical identity/profile separation;
-- canonical Booking status vocabulary;
-- shared contracts and design tokens;
-- Rider, Driver and Control Room application shells;
-- Node.js + TypeScript API/worker service shells;
-- OpenAPI baseline;
-- local infrastructure definition;
-- offline structural verification and domain tests.
+This repository is now beyond a screen-only prototype. It contains the authoritative engineering foundation for:
 
-## Governing engineering rules
+- Rider mobile app (Expo / React Native / TypeScript)
+- Driver mobile app (Expo / React Native / TypeScript)
+- Control Room web app (React / TypeScript)
+- Platform API (Node.js / TypeScript / Fastify)
+- Background worker/event process
+- PostgreSQL + PostGIS authoritative transactional storage
+- Redis-compatible derived/ephemeral state
+- Shared domain/contracts/design-system packages
+- Booking state-machine foundation and transactional outbox
+- Person / UserAccount / RiderProfile / DriverProfile separation
+- Typed contact points and separate verification history
+- Passkey-ready authenticators, device trust, revocable sessions and explicit recovery state
+- A real idempotent account-registration API source path
 
-1. One business fact has one authoritative owning domain.
-2. Clients request commands; they do not set authoritative state.
-3. PostgreSQL/PostGIS owns transactional truth. Redis/search/analytics are rebuildable derived state.
-4. Cross-domain writes go through domain commands/events, not repository/table shortcuts.
-5. Authoritative change + outbox event commit atomically.
-6. No database transaction waits on an external provider.
-7. Provider results may be `UNKNOWN`; the platform must not manufacture certainty.
-8. The Rider, Driver, Control Room, telephone, voice and institutional channels share the same canonical backend engines.
-9. The build is private/owned DAZAT software. No competitor UI/code cloning.
-10. Blueprint requirement → implementation → test → evidence remains traceable.
+## Phase 0.2 registration behaviour
 
-## Local foundation check
+`POST /v1/identity/registrations` creates, in one database transaction:
 
-This checkpoint can be verified without downloading third-party packages:
+1. a minimal `Person` identity anchor;
+2. a **PENDING** `UserAccount`;
+3. a preferred-name record;
+4. a typed Email/Mobile `ContactPoint`;
+5. the requested Rider and/or Driver profile;
+6. append-only account lifecycle evidence;
+7. an Identity outbox event; and
+8. an idempotency response record.
+
+It deliberately returns:
+
+`CONTACT_VERIFICATION_REQUIRED`
+
+It **does not** claim the contact is verified, issue a login session, complete a passkey ceremony, or make a Driver eligible to work.
+
+## Architecture rules already enforced
+
+- One authoritative owner per business fact.
+- Server/domain owners decide state transitions; clients request commands.
+- PostgreSQL is transactional truth; Redis/search/cache are rebuildable projections.
+- Cross-domain writes go through commands/events rather than convenience table mutation.
+- Authoritative state + outbox event commit atomically.
+- Duplicate commands/events must be safe.
+- Passkey private keys are never stored by DAZAT.
+- Session bearer secrets must be stored only as strong hashes/references.
+- Device trust is risk context, not permanent identity proof.
+- Account recovery changes authentication authority, not historical journeys/finance.
+- A person may be both Rider and Driver without manufacturing duplicate human identity.
+- Driver registration is not Driver compliance approval.
+
+## Repository map
+
+```text
+dazat-mobility/
+├── apps/
+│   ├── rider/
+│   ├── driver/
+│   └── control-room/
+├── services/
+│   ├── api/
+│   └── workers/
+├── packages/
+│   ├── domain/
+│   ├── contracts/
+│   └── design-system/
+├── database/
+│   ├── migrations/
+│   └── seeds/
+├── docs/
+│   ├── architecture/
+│   ├── engineering/
+│   └── traceability/
+├── openapi/
+├── scripts/
+└── tests/
+```
+
+## Local verification
+
+The checkpoint has a no-network core verification path:
 
 ```bash
 npm run check
 ```
 
-The mobile/web/API application packages declare their intended dependencies but package installation is intentionally not required for the foundation verifier in this archive.
+It currently verifies the foundation, Phase 0.2 security/model checks and the domain test suite.
 
-## Local infrastructure
+A full runtime build additionally requires workspace dependencies and a PostgreSQL/PostGIS runtime. This execution environment had no external npm DNS access and no PostgreSQL/Docker runtime, so those integration claims remain explicitly open in `BUILD_STATUS.md` rather than being faked.
 
-When Docker is available:
+## Local runtime target
+
+Once dependencies are available:
 
 ```bash
-docker compose up -d postgres redis
+cp .env.example .env
+docker compose up -d
+npm install
+npm run check
 ```
 
-This starts local PostGIS and Redis services. The credentials in `compose.yaml` are local-development defaults only.
+Then apply the migrations in order and run the API/mobile clients. Production deployment will use managed infrastructure rather than this local compose file.
 
-## Next engineering slice
+## Next engineering checkpoint
 
-The next slice is **Identity + Account Foundation**, followed by the first canonical Booking flow:
+**Phase 0.3 — Verified Authentication & Session Boundary + First Account-to-Booking Slice**
 
-`Create identity/account → Rider profile → create Booking → quote → confirm → READY_FOR_DISPATCH`.
+The next work is to wire real contact verification/passkey ceremonies and authenticated session enforcement, then drive an authenticated Rider through the first canonical booking sequence toward `READY_FOR_DISPATCH`.
 
-No live payments, real dispatch or customer data should be introduced before the relevant security/provider gates are implemented.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0002-identity-account-foundation.md`, and `docs/traceability/identity-account-requirements.md` for exact implementation/non-implementation status.
