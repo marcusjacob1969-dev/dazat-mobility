@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverOfferSummary, RegistrationContactType, VerifyRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, DriverApplicationProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverOfferSummary, DriverOperatingEligibilityProjection, RegistrationContactType, VerifyRideCheckResult } from '@dazat/contracts';
 import {
   confirmDriverContactVerification,
   startDriverContactVerification,
@@ -28,6 +28,7 @@ import {
   verifyPickupRideCheck
 } from './src/journey-api';
 import { readDriverEarnings } from './src/finance-api';
+import { readDriverOperatingEligibility, startOrResumeDriverApplication } from './src/driver-operations-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'DRIVER_HOME';
 
@@ -66,6 +67,8 @@ export default function DriverApp() {
   const [rideCheckOutcome, setRideCheckOutcome] = useState<VerifyRideCheckResult | null>(null);
   const [safetyStatus, setSafetyStatus] = useState('');
   const [earnings, setEarnings] = useState<DriverEarningsProjection | null>(null);
+  const [driverApplication, setDriverApplication] = useState<DriverApplicationProjection | null>(null);
+  const [operatingEligibility, setOperatingEligibility] = useState<DriverOperatingEligibilityProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -102,7 +105,15 @@ export default function DriverApp() {
   }
 
   function checkEligibility() {
-    void run(async () => setEligibility(await getDriverEligibility(sessionToken, vehicleId || undefined)));
+    void run(async () => setEligibility(await getDriverEligibility(sessionToken, regionCode, vehicleId || undefined)));
+  }
+
+  function startApplication() {
+    void run(async () => setDriverApplication(await startOrResumeDriverApplication(sessionToken)));
+  }
+
+  function checkOperatingEligibility() {
+    void run(async () => setOperatingEligibility(await readDriverOperatingEligibility(sessionToken, regionCode, vehicleId || undefined)));
   }
 
   function goOnline() {
@@ -237,7 +248,7 @@ export default function DriverApp() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.7</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.8</Text>
         <Text style={styles.title}>DAZAT Driver journey</Text>
         <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. Pickup evidence and RideCheck protect the start. During an active Journey, telemetry confidence, Safety state, destination evidence and completion requirements remain separate backend-owned truths.</Text>
 
@@ -273,15 +284,33 @@ export default function DriverApp() {
         {flow === 'DRIVER_HOME' ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Driver readiness</Text>
+            <View style={styles.notice} accessibilityRole="summary">
+              <Text style={styles.noticeTitle}>Driver application: {driverApplication?.status ?? 'NOT STARTED'}</Text>
+              <Text style={styles.body}>{driverApplication
+                ? `Next action: ${driverApplication.nextAction}. Application approval never grants operating eligibility by itself.`
+                : 'Start a resumable application. Contact verification is recognised, but identity, documents, assessed training, vehicle and authorised review remain separate.'}</Text>
+              <PrimaryButton busy={busy} label="Start or resume Driver application" onPress={startApplication} />
+              <Text style={styles.devNotice}>OCR CANNOT APPROVE COMPLIANCE · DRIVER SELF-APPROVAL DISABLED</Text>
+            </View>
             <Text style={styles.status}>Availability: {availability}</Text>
             <Field label="Authorised vehicle ID" value={vehicleId} onChangeText={setVehicleId} />
             <Field label="Region" value={regionCode} onChangeText={setRegionCode} />
             <Field label="Current latitude" value={latitude} onChangeText={setLatitude} />
             <Field label="Current longitude" value={longitude} onChangeText={setLongitude} />
             <View style={styles.row}>
+              <SecondaryButton label="Check operating permission truth" onPress={checkOperatingEligibility} />
               <SecondaryButton label="Check eligibility" onPress={checkEligibility} />
               {availability === 'OFFLINE' ? <SecondaryButton label="Go online" onPress={goOnline} /> : availability !== 'ASSIGNED' ? <SecondaryButton label="Go offline" onPress={goOffline} /> : null}
             </View>
+            {operatingEligibility ? (
+              <View style={styles.notice} accessibilityRole="summary">
+                <Text style={styles.noticeTitle}>Operating eligibility: {operatingEligibility.status}</Text>
+                <Text style={styles.body}>{operatingEligibility.blockers.length
+                  ? operatingEligibility.blockers.join(', ')
+                  : `Permitted services: ${operatingEligibility.eligibleServiceCodes.join(', ')}`}</Text>
+                <Text style={styles.body}>Availability is evaluated separately. A permission never makes the Driver online.</Text>
+              </View>
+            ) : null}
             {eligibility ? (
               <View style={styles.notice} accessibilityRole="summary">
                 <Text style={styles.noticeTitle}>{eligibility.eligible ? 'Eligible for Dispatch' : 'Not eligible for Dispatch'}</Text>

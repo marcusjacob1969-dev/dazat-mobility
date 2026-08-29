@@ -18,6 +18,8 @@ function eligibleInput(overrides = {}) {
     vehicleAuthorised: true,
     vehicleStatus: 'ELIGIBLE',
     vehicleValidUntil: new Date('2026-09-29T10:00:00.000Z'),
+    servicePermissionMatch: true,
+    operatingRestrictionActive: false,
     availabilityStatus: 'AVAILABLE',
     locationObservedAt: new Date('2026-08-29T09:59:30.000Z'),
     locationConfidence: 0.95,
@@ -51,6 +53,15 @@ test('stale location is explicit and cannot enter the candidate pool', () => {
   assert.equal(result.eligible, false);
   assert.ok(result.blockers.includes('LOCATION_STALE'));
   assert.equal(isLocationFresh(new Date('2026-08-29T09:59:30.000Z'), now, 90), true);
+});
+
+test('scoped permission and restrictions remain Dispatch hard filters', () => {
+  const missingPermission = evaluateDriverDispatchEligibility(eligibleInput({ servicePermissionMatch: false }), now);
+  assert.equal(missingPermission.eligible, false);
+  assert.ok(missingPermission.blockers.includes('SERVICE_PERMISSION_MISMATCH'));
+  const restricted = evaluateDriverDispatchEligibility(eligibleInput({ operatingRestrictionActive: true }), now);
+  assert.equal(restricted.eligible, false);
+  assert.ok(restricted.blockers.includes('OPERATING_RESTRICTION_ACTIVE'));
 });
 
 test('availability and offer state machines reject unsafe shortcuts', () => {

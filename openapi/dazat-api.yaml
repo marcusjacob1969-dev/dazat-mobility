@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.7
-  description: Engineering Phase 0.7 API. Server/domain owners remain authoritative for identity, Booking, Dispatch, Journey, Safety, provider-disabled PaymentIntent truth and append-only balanced ledger boundaries.
+  version: 0.0.8
+  description: Engineering Phase 0.8 API. Server/domain owners remain authoritative for identity, Booking, Dispatch, Journey, Safety, Finance and evidence-based Driver onboarding/operating permission truth.
 servers:
   - url: http://localhost:3001
 paths:
@@ -132,9 +132,13 @@ paths:
         '200': { description: Current Booking/Dispatch/assignment projection. }
   /v1/driver/eligibility:
     get:
-      summary: Explain the authenticated Driver's current hard-filter eligibility.
+      summary: Explain the authenticated Driver's current hard-filter eligibility, including scoped operating permission.
       security: [{ bearerAuth: [] }]
       parameters:
+        - name: regionCode
+          in: query
+          required: true
+          schema: { type: string, minLength: 2, maxLength: 32 }
         - name: vehicleId
           in: query
           schema: { type: string, format: uuid }
@@ -443,6 +447,50 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/DriverEarningsProjection' }
+  /v1/driver/applications:
+    post:
+      summary: Start or resume the authenticated Driver's evidence-based application.
+      description: The command recognises already-authoritative contact verification but cannot approve identity, documents, training, a vehicle, the application or operating eligibility. OCR/extraction is never authoritative compliance verification.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Resumable application projection; self-approval and operating eligibility remain false.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverApplicationProjection' }
+  /v1/driver/application:
+    get:
+      summary: Read the authenticated Driver's latest authoritative application state.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Application progress without fabricated verification or approval.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverApplicationProjection' }
+        '404': { description: Driver application has not been started. }
+  /v1/driver/operating-eligibility:
+    get:
+      summary: Read derived Driver operating eligibility separately from availability.
+      description: Uses current application, compliance, Driver/vehicle pairing, vehicle evidence, service permissions and scoped restrictions. Availability is evaluated separately; this projection does not put the Driver online.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: regionCode
+          in: query
+          required: true
+          schema: { type: string, minLength: 2, maxLength: 32 }
+        - name: vehicleId
+          in: query
+          required: false
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: ELIGIBLE, PARTIALLY_ELIGIBLE or NOT_ELIGIBLE authoritative projection.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverOperatingEligibilityProjection' }
 components:
   securitySchemes:
     bearerAuth:
@@ -615,3 +663,31 @@ components:
               postedAt: { type: string, format: date-time }
         payoutDerivedFromEarnings: { type: boolean, const: false }
         riderFareUsedAsDriverEarning: { type: boolean, const: false }
+    DriverApplicationProjection:
+      type: object
+      required: [applicationId, driverProfileId, status, version, nextAction, approvalGranted, operatingEligibilityGranted, externalVerificationConfigured, ocrMayApproveCompliance, createdAt, updatedAt]
+      properties:
+        applicationId: { type: string, format: uuid }
+        driverProfileId: { type: string, format: uuid }
+        status: { type: string, enum: [STARTED, CONTACT_VERIFIED, IDENTITY_PENDING, DOCUMENTS_PENDING, TRAINING_PENDING, VEHICLE_PENDING, REVIEW_PENDING, APPROVED, DECLINED, WITHDRAWN, EXPIRED] }
+        version: { type: integer, minimum: 1 }
+        nextAction: { type: string, enum: [CONTACT_VERIFICATION_REQUIRED, IDENTITY_VERIFICATION_REQUIRED, DOCUMENTS_REQUIRED, TRAINING_REQUIRED, VEHICLE_REQUIRED, AUTHORISED_REVIEW_REQUIRED, NONE] }
+        approvalGranted: { type: boolean }
+        operatingEligibilityGranted: { type: boolean, const: false }
+        externalVerificationConfigured: { type: boolean, const: false }
+        ocrMayApproveCompliance: { type: boolean, const: false }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    DriverOperatingEligibilityProjection:
+      type: object
+      required: [driverProfileId, status, eligibleServiceCodes, activeRestrictionScopes, blockers, availabilityEvaluatedSeparately, source, evaluatedAt]
+      properties:
+        driverProfileId: { type: string, format: uuid }
+        selectedVehicleId: { type: string, format: uuid }
+        status: { type: string, enum: [ELIGIBLE, PARTIALLY_ELIGIBLE, NOT_ELIGIBLE] }
+        eligibleServiceCodes: { type: array, items: { type: string } }
+        activeRestrictionScopes: { type: array, items: { type: string, enum: [ALL_SERVICES, SCHOOL_ONLY, WAV_ONLY, NEW_JOURNEYS, PAYOUT_ONLY, SPECIFIC_VEHICLE] } }
+        blockers: { type: array, items: { type: string } }
+        availabilityEvaluatedSeparately: { type: boolean, const: true }
+        source: { type: string, const: AUTHORITATIVE_CURRENT_PROJECTION }
+        evaluatedAt: { type: string, format: date-time }

@@ -69,12 +69,27 @@ function hardRequirementsMatch(
   });
 }
 
+function requiredPermissionServiceCodes(
+  requirements: BookingDispatchContext['requirements']
+): readonly string[] {
+  const types = requirements.map((requirement) => requirement.type.trim().toUpperCase());
+  const services = new Set<string>();
+  if (types.some((type) => type.includes('SCHOOL'))) services.add('SCHOOL');
+  if (types.some((type) => type.includes('WAV') || type.includes('WHEELCHAIR'))) services.add('WAV');
+  if (types.some((type) => type.includes('HOSPITAL'))) services.add('HOSPITAL');
+  if (types.some((type) => type.includes('SPECIALIST') || type.includes('HANDOVER'))) services.add('SPECIALIST');
+  if (!services.size) services.add('STANDARD');
+  return [...services].sort();
+}
+
 async function readDriverEligibility(
   client: Pick<PoolClient, 'query'>,
   actor: AuthenticatedPrincipal,
   vehicleId: string | null,
+  regionCode: string | null,
   config: ApiConfig,
-  requirements: BookingDispatchContext['requirements'] = []
+  requirements: BookingDispatchContext['requirements'] = [],
+  requiredServiceCodes: readonly string[] = requiredPermissionServiceCodes(requirements)
 ): Promise<InternalEligibility> {
   if (!actor.driverProfileId) throw new DispatchForbiddenError('A Driver profile is required');
   const result = await client.query<{
@@ -92,6 +107,8 @@ async function readDriverEligibility(
     service_capabilities: Record<string, unknown> | null;
     vehicle_authorised: boolean;
     active_assignment: boolean;
+    service_permission_match: boolean;
+    operating_restriction_active: boolean;
   }>(
     `SELECT dp.onboarding_status,
             av.status AS availability_status,
@@ -116,7 +133,44 @@ async function readDriverEligibility(
             EXISTS (
               SELECT 1 FROM dispatch.driver_assignment da
                WHERE da.driver_profile_id = dp.id AND da.status = 'ACTIVE'
-            ) AS active_assignment
+            ) AS active_assignment,
+            CASE
+              WHEN $3::text IS NULL THEN false
+              WHEN cardinality($4::text[]) = 0 THEN EXISTS (
+                SELECT 1 FROM driver.current_permission_projection permission
+                 WHERE permission.driver_profile_id = dp.id AND permission.region_code = $3
+                   AND NOT EXISTS (
+                     SELECT 1 FROM driver.driver_restriction scoped_restriction
+                      WHERE scoped_restriction.driver_profile_id = dp.id AND scoped_restriction.status = 'ACTIVE'
+                        AND scoped_restriction.effective_from <= now()
+                        AND (scoped_restriction.effective_until IS NULL OR scoped_restriction.effective_until > now())
+                        AND (
+                          (scoped_restriction.scope = 'SCHOOL_ONLY' AND permission.service_code LIKE '%SCHOOL%')
+                          OR (scoped_restriction.scope = 'WAV_ONLY' AND permission.service_code LIKE '%WAV%')
+                        )
+                   )
+              )
+              ELSE NOT EXISTS (
+                SELECT 1 FROM unnest($4::text[]) required_service(service_code)
+                 WHERE NOT EXISTS (
+                   SELECT 1 FROM driver.current_permission_projection permission
+                    WHERE permission.driver_profile_id = dp.id AND permission.region_code = $3
+                      AND permission.service_code = required_service.service_code
+                 )
+              )
+            END AS service_permission_match,
+            EXISTS (
+              SELECT 1 FROM driver.driver_restriction restriction
+               WHERE restriction.driver_profile_id = dp.id AND restriction.status = 'ACTIVE'
+                 AND restriction.effective_from <= now()
+                 AND (restriction.effective_until IS NULL OR restriction.effective_until > now())
+                 AND (
+                   restriction.scope IN ('ALL_SERVICES','NEW_JOURNEYS')
+                   OR (restriction.scope = 'SPECIFIC_VEHICLE' AND restriction.vehicle_id = $2)
+                   OR (restriction.scope = 'SCHOOL_ONLY' AND 'SCHOOL' = ANY($4::text[]))
+                   OR (restriction.scope = 'WAV_ONLY' AND 'WAV' = ANY($4::text[]))
+                 )
+            ) AS operating_restriction_active
        FROM driver.driver_profile dp
        LEFT JOIN driver.availability_state av ON av.driver_profile_id = dp.id
        LEFT JOIN LATERAL (
@@ -132,7 +186,7 @@ async function readDriverEligibility(
           ORDER BY s.evaluated_at DESC LIMIT 1
        ) ves ON true
       WHERE dp.id = $1`,
-    [actor.driverProfileId, vehicleId]
+    [actor.driverProfileId, vehicleId, regionCode, requiredServiceCodes]
   );
   if (!result.rowCount) throw new DispatchNotFoundError('Driver profile not found');
   const row = result.rows[0]!;
@@ -145,6 +199,8 @@ async function readDriverEligibility(
     vehicleAuthorised: Boolean(vehicleId) && row.vehicle_authorised,
     vehicleStatus: row.vehicle_status,
     vehicleValidUntil: row.vehicle_valid_until,
+    servicePermissionMatch: row.service_permission_match,
+    operatingRestrictionActive: row.operating_restriction_active,
     availabilityStatus: row.availability_status ?? 'OFFLINE',
     locationObservedAt: row.location_observed_at,
     locationConfidence: row.location_confidence === null ? null : Number(row.location_confidence),
@@ -183,9 +239,10 @@ export async function getDriverEligibility(
   pool: DatabasePool,
   actor: AuthenticatedPrincipal,
   vehicleId: string | null,
+  regionCode: string,
   config: ApiConfig
 ): Promise<DriverEligibilitySummary> {
-  return publicEligibility(await readDriverEligibility(pool, actor, vehicleId, config));
+  return publicEligibility(await readDriverEligibility(pool, actor, vehicleId, regionCode, config, [], []));
 }
 
 export async function setDriverAvailability(
@@ -227,7 +284,7 @@ export async function setDriverAvailability(
       const observedAt = new Date(request.location!.observedAt);
       if (Number.isNaN(observedAt.getTime())) throw new DriverNotEligibleError(['LOCATION_MISSING']);
       if (request.location!.confidence < 0 || request.location!.confidence > 1) throw new DriverNotEligibleError(['LOCATION_CONFIDENCE_LOW']);
-      const preliminary = await readDriverEligibility(client, actor, vehicleId, config);
+      const preliminary = await readDriverEligibility(client, actor, vehicleId, request.regionCode!, config, [], []);
       const blockers = preliminary.decision.blockers.filter((blocker) => !['NOT_AVAILABLE', 'LOCATION_MISSING', 'LOCATION_STALE', 'LOCATION_CONFIDENCE_LOW'].includes(blocker));
       if (Date.now() - observedAt.getTime() > config.dispatchLocationMaxAgeSeconds * 1_000) blockers.push('LOCATION_STALE');
       if (observedAt.getTime() > Date.now() + 30_000) blockers.push('LOCATION_STALE');
@@ -281,8 +338,8 @@ export async function setDriverAvailability(
       [actor.driverProfileId, from, desired, nextVersion, commandId, `DRIVER_${desired}`]
     );
     const eligibility = desired === 'OFFLINE'
-      ? await readDriverEligibility(client, actor, null, config)
-      : await readDriverEligibility(client, actor, vehicleId, config);
+      ? await readDriverEligibility(client, actor, null, null, config, [], [])
+      : await readDriverEligibility(client, actor, vehicleId, request.regionCode!, config, [], []);
     const row = upsert.rows[0]!;
     const response: DriverAvailabilitySummary = {
       driverProfileId: actor.driverProfileId,
@@ -416,6 +473,7 @@ export async function startBookingDispatch(
       [bookingId, searchingVersion, context.regionCode]
     );
     const attemptId = attempt.rows[0]!.id;
+    const requiredServices = requiredPermissionServiceCodes(context.requirements);
     const rawCandidates = await client.query<{
       driver_profile_id: string; vehicle_id: string; availability_version: string | number;
       availability_status: DriverAvailabilityStatus; location_observed_at: Date | null; location_confidence: string | number | null;
@@ -424,6 +482,8 @@ export async function startBookingDispatch(
       vehicle_snapshot_id: string | null; vehicle_status: DriverEligibilityStatus | null; vehicle_valid_until: Date | null;
       service_capabilities: Record<string, unknown> | null; provisional_distance_metres: string | number | null;
       vehicle_authorised: boolean; active_assignment: boolean;
+      service_permission_match: boolean; operating_restriction_active: boolean;
+      current_permission_ids: string[]; active_restriction_ids: string[];
     }>(
       `SELECT av.driver_profile_id, av.vehicle_id, av.version AS availability_version,
               av.status AS availability_status, av.location_observed_at, av.location_confidence,
@@ -441,7 +501,40 @@ export async function startBookingDispatch(
               EXISTS (
                 SELECT 1 FROM dispatch.driver_assignment da
                  WHERE da.driver_profile_id = av.driver_profile_id AND da.status = 'ACTIVE'
-              ) AS active_assignment
+              ) AS active_assignment,
+              NOT EXISTS (
+                SELECT 1 FROM unnest($4::text[]) required_service(service_code)
+                 WHERE NOT EXISTS (
+                   SELECT 1 FROM driver.current_permission_projection permission
+                    WHERE permission.driver_profile_id = av.driver_profile_id
+                      AND permission.region_code = $3 AND permission.service_code = required_service.service_code
+                 )
+              ) AS service_permission_match,
+              EXISTS (
+                SELECT 1 FROM driver.driver_restriction restriction
+                 WHERE restriction.driver_profile_id = av.driver_profile_id AND restriction.status = 'ACTIVE'
+                   AND restriction.effective_from <= now()
+                   AND (restriction.effective_until IS NULL OR restriction.effective_until > now())
+                   AND (
+                     restriction.scope IN ('ALL_SERVICES','NEW_JOURNEYS')
+                     OR (restriction.scope = 'SPECIFIC_VEHICLE' AND restriction.vehicle_id = av.vehicle_id)
+                     OR (restriction.scope = 'SCHOOL_ONLY' AND 'SCHOOL' = ANY($4::text[]))
+                     OR (restriction.scope = 'WAV_ONLY' AND 'WAV' = ANY($4::text[]))
+                   )
+              ) AS operating_restriction_active,
+              ARRAY(
+                SELECT permission.id FROM driver.current_permission_projection permission
+                 WHERE permission.driver_profile_id = av.driver_profile_id
+                   AND permission.region_code = $3 AND permission.service_code = ANY($4::text[])
+                 ORDER BY permission.service_code, permission.id
+              ) AS current_permission_ids,
+              ARRAY(
+                SELECT restriction.id FROM driver.driver_restriction restriction
+                 WHERE restriction.driver_profile_id = av.driver_profile_id AND restriction.status = 'ACTIVE'
+                   AND restriction.effective_from <= now()
+                   AND (restriction.effective_until IS NULL OR restriction.effective_until > now())
+                 ORDER BY restriction.id
+              ) AS active_restriction_ids
          FROM driver.availability_state av
          JOIN driver.driver_profile dp ON dp.id = av.driver_profile_id
          JOIN identity.user_account ua ON ua.person_id = dp.person_id
@@ -456,7 +549,7 @@ export async function startBookingDispatch(
         WHERE av.region_code = $3 AND av.status IN ('AVAILABLE','FINISHING_SOON') AND av.location IS NOT NULL
         ORDER BY provisional_distance_metres ASC NULLS LAST, av.updated_at ASC
         LIMIT 200`,
-      [context.pickup.latitude, context.pickup.longitude, context.regionCode]
+      [context.pickup.latitude, context.pickup.longitude, context.regionCode, requiredServices]
     );
     const now = new Date();
     const eligible = rawCandidates.rows.filter((row) => evaluateDriverDispatchEligibility({
@@ -467,6 +560,8 @@ export async function startBookingDispatch(
       vehicleAuthorised: row.vehicle_authorised,
       vehicleStatus: row.vehicle_status,
       vehicleValidUntil: row.vehicle_valid_until,
+      servicePermissionMatch: row.service_permission_match,
+      operatingRestrictionActive: row.operating_restriction_active,
       availabilityStatus: row.availability_status,
       locationObservedAt: row.location_observed_at,
       locationConfidence: row.location_confidence === null ? null : Number(row.location_confidence),
@@ -503,11 +598,12 @@ export async function startBookingDispatch(
         `INSERT INTO dispatch.candidate_snapshot
            (dispatch_attempt_id, driver_profile_id, vehicle_id, driver_eligibility_snapshot_id,
             vehicle_eligibility_snapshot_id, availability_version, provisional_pickup_distance_metres,
-            rank_position, rank_factors)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb) RETURNING id`,
+            rank_position, rank_factors, required_service_codes, driver_permission_ids, active_restriction_ids)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12) RETURNING id`,
         [attemptId, row.driver_profile_id, row.vehicle_id, row.compliance_snapshot_id, row.vehicle_snapshot_id,
           Number(row.availability_version), row.provisional_distance_metres === null ? null : Number(row.provisional_distance_metres),
-          rank, JSON.stringify({ provisionalStraightLineDistanceOnly: true, hardFiltersPassed: true })]
+          rank, JSON.stringify({ provisionalStraightLineDistanceOnly: true, hardFiltersPassed: true }),
+          requiredServices, row.current_permission_ids, row.active_restriction_ids]
       );
       if (rank <= config.dispatchOfferWaveSize) {
         offeredCount += 1;
@@ -702,7 +798,7 @@ export async function acceptDriverOffer(
     }
     const booking = await readBookingContext(client, offer.booking_id);
     if (booking.status !== 'SEARCHING_FOR_DRIVER') throw new DispatchConflictError(`Booking is ${booking.status}`);
-    const eligibility = await readDriverEligibility(client, actor, offer.vehicle_id, config, booking.requirements);
+    const eligibility = await readDriverEligibility(client, actor, offer.vehicle_id, booking.regionCode, config, booking.requirements);
     if (!eligibility.decision.eligible) throw new DriverNotEligibleError(eligibility.decision.blockers);
     const assignment = await client.query<{ id: string; assigned_at: Date }>(
       `INSERT INTO dispatch.driver_assignment

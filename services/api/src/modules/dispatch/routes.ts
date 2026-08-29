@@ -72,10 +72,15 @@ export function registerDispatchRoutes(app: FastifyInstance, pool: DatabasePool,
     const principal = await requirePrincipal(request, reply, pool);
     if (!principal) return;
     if (!principal.driverProfileId) return reply.code(403).send({ code: 'DRIVER_PROFILE_REQUIRED' });
-    const query = z.object({ vehicleId: z.string().uuid().optional() }).safeParse(request.query);
+    const query = z.object({
+      regionCode: z.string().trim().min(2).max(32),
+      vehicleId: z.string().uuid().optional()
+    }).strict().safeParse(request.query);
     if (!query.success) return reply.code(400).send({ code: 'INVALID_VEHICLE_ID' });
     try {
-      return reply.code(200).send(await getDriverEligibility(pool, principal, query.data.vehicleId ?? null, config));
+      return reply.code(200).send(await getDriverEligibility(
+        pool, principal, query.data.vehicleId ?? null, query.data.regionCode.toUpperCase(), config
+      ));
     } catch (error) {
       const known = sendDispatchError(reply, error);
       if (known) return known;

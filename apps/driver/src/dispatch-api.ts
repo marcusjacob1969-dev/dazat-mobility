@@ -22,9 +22,9 @@ async function json<T>(response: Response): Promise<T> {
   return body;
 }
 
-export async function getDriverEligibility(sessionToken: string, vehicleId?: string): Promise<DriverEligibilitySummary> {
-  const query = vehicleId ? `?vehicleId=${encodeURIComponent(vehicleId)}` : '';
-  return json(await fetch(`${API_BASE_URL}/v1/driver/eligibility${query}`, {
+export async function getDriverEligibility(sessionToken: string, regionCode: string, vehicleId?: string): Promise<DriverEligibilitySummary> {
+  const query = new URLSearchParams({ regionCode, ...(vehicleId ? { vehicleId } : {}) });
+  return json(await fetch(`${API_BASE_URL}/v1/driver/eligibility?${query}`, {
     headers: { authorization: `Bearer ${sessionToken}` }
   }));
 }

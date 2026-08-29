@@ -4,3 +4,4 @@ export * from './dispatch.js';
 export * from './journey.js';
 export * from './live-journey.js';
 export * from './finance.js';
+export * from './driver-operations.js';

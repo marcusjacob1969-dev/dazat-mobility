@@ -94,6 +94,8 @@ export const DRIVER_ELIGIBILITY_BLOCKERS = [
   'VEHICLE_NOT_AUTHORISED',
   'VEHICLE_NOT_ELIGIBLE',
   'VEHICLE_ELIGIBILITY_EXPIRED',
+  'SERVICE_PERMISSION_MISMATCH',
+  'OPERATING_RESTRICTION_ACTIVE',
   'NOT_AVAILABLE',
   'LOCATION_MISSING',
   'LOCATION_STALE',
@@ -112,6 +114,8 @@ export interface DriverDispatchEligibilityInput {
   readonly vehicleAuthorised: boolean;
   readonly vehicleStatus: DriverEligibilityStatus | null;
   readonly vehicleValidUntil: Date | null;
+  readonly servicePermissionMatch: boolean;
+  readonly operatingRestrictionActive: boolean;
   readonly availabilityStatus: DriverAvailabilityStatus;
   readonly locationObservedAt: Date | null;
   readonly locationConfidence: number | null;
@@ -139,6 +143,8 @@ export function evaluateDriverDispatchEligibility(
   if (!input.vehicleAuthorised) blockers.push('VEHICLE_NOT_AUTHORISED');
   if (input.vehicleStatus !== 'ELIGIBLE') blockers.push('VEHICLE_NOT_ELIGIBLE');
   else if (!input.vehicleValidUntil || input.vehicleValidUntil.getTime() <= now.getTime()) blockers.push('VEHICLE_ELIGIBILITY_EXPIRED');
+  if (!input.servicePermissionMatch) blockers.push('SERVICE_PERMISSION_MISMATCH');
+  if (input.operatingRestrictionActive) blockers.push('OPERATING_RESTRICTION_ACTIVE');
   if (!['AVAILABLE', 'OFFERED', 'FINISHING_SOON'].includes(input.availabilityStatus)) blockers.push('NOT_AVAILABLE');
   if (!input.locationObservedAt) blockers.push('LOCATION_MISSING');
   else if (!isLocationFresh(input.locationObservedAt, now, input.maxLocationAgeSeconds)) blockers.push('LOCATION_STALE');

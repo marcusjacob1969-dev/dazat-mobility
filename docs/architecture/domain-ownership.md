@@ -4,8 +4,8 @@
 |---|---|
 | Identity | Person, UserAccount, authentication/session ownership |
 | Rider | RiderProfile |
-| Driver | DriverProfile, operating state |
-| Compliance | DriverComplianceProfile, VehicleComplianceProfile |
+| Driver | DriverProfile, DriverApplication, TrainingModule/Record, DriverPermission, DriverRestriction, operating/availability state |
+| Compliance | RequirementDefinition, DriverDocument/VerificationReview, DriverComplianceProfile, VehicleComplianceProfile |
 | Vehicle/Fleet | Vehicle, FleetAgreement |
 | Booking | Booking, BookingParty, BookingRequirement, BookingStateTransition |
 | Pricing | Quote, FareAgreement |

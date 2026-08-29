@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.7**.
+Current checkpoint: **Engineering Phase 0.8**.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 
@@ -11,6 +11,21 @@ The server-authoritative vertical slice now reaches governed Journey completion:
 Phase 0.7 extends the completed vertical slice into a provider-disabled Finance foundation:
 
 `GOVERNED COMPLETION → PREPARE PAYMENT INTENT (NO CHARGE) → CANONICAL STATUS / RECEIPT NOT READY`
+
+Phase 0.8 adds the evidence and authority boundary required before Driver operations:
+
+`APPLICATION START → VERIFIED CONTACT RECOGNISED → IDENTITY / DOCUMENT / TRAINING / VEHICLE EVIDENCE → AUTHORISED REVIEW → SCOPED PERMISSION → DERIVED OPERATING ELIGIBILITY`
+
+Important Driver onboarding and operating truth rules:
+
+- Authentication, application progress, compliance evidence, assessed competency, service permission, selected-vehicle eligibility and availability are separate facts.
+- The Driver self-service API can start/resume an application and recognise existing verified-contact truth; it cannot approve any later stage.
+- Only `REVIEW_PENDING` can transition to `APPROVED`, and the database requires an immutable authorised decision plus matching transition history.
+- OCR/extraction is provenance, never authoritative compliance verification.
+- Training attendance is not competency; high-risk permission requires current assessed competency evidence.
+- Permissions are scoped by region/service and validity. School/WAV restrictions narrow matching services; a selected-vehicle restriction blocks that vehicle; payout restrictions do not silently become operating bans.
+- Operating eligibility is derived with explicit blockers. Application approval and permission never place a Driver online; availability remains separate.
+- No identity-verification provider or jurisdiction-specific licensing rules are selected or fabricated in this checkpoint.
 
 Important Finance and ledger truth rules:
 
@@ -42,4 +57,4 @@ The earlier Journey integrity and Safety rules remain enforced:
 - Completion closes Journey, Booking, leg and assignment and returns the Driver to `AVAILABLE` atomically.
 - Completion does not initiate or imply payment.
 
-See `BUILD_STATUS.md`, `docs/architecture/ADR-0007-provider-neutral-finance-ledger-truth.md`, and `docs/engineering/phase-0-7-checklist.md` for evidence and limitations.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0008-driver-onboarding-operating-permission-truth.md`, and `docs/engineering/phase-0-8-checklist.md` for evidence and limitations.
