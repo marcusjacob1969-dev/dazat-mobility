@@ -5,3 +5,4 @@ export * from './domain-event.js';
 export * from './identity.js';
 export * from './authentication.js';
 export * from './pricing.js';
+export * from './dispatch.js';

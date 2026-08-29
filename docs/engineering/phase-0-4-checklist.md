@@ -1,0 +1,24 @@
+# Phase 0.4 checkpoint checklist
+
+- [x] Authentication kept separate from Driver operating eligibility.
+- [x] Append-only Driver and vehicle eligibility snapshots with policy/version/expiry evidence.
+- [x] Driver-to-vehicle authorisation boundary.
+- [x] Versioned availability state and append-only transition history.
+- [x] OFFLINE removes ordinary Driver-app location from the active availability record.
+- [x] Freshness, source and confidence carried with location.
+- [x] Hard filters applied before candidate ranking.
+- [x] Booking requirements matched against vehicle/service capabilities.
+- [x] Controlled offer wave with expiry and meaningful job context.
+- [x] Decline/expiry is not encoded as ordinary acceptance-rate punishment.
+- [x] Eligibility and Booking state revalidated at acceptance.
+- [x] DispatchAttempt lock plus unique active-assignment constraints prevent double assignment.
+- [x] Competing offers withdrawn after one atomic assignment.
+- [x] `NO_ELIGIBLE_DRIVER` is an explicit truthful Booking/Dispatch state.
+- [x] Rider, Driver and Control Room projection shells updated for Phase 0.4.
+- [ ] PostgreSQL/PostGIS migrations executed in a real local/CI database.
+- [ ] Two-driver acceptance race executed against PostgreSQL and proves exactly one assignment.
+- [ ] Fastify API compiled/integration-tested with installed dependencies.
+- [ ] Expo Rider/Driver apps compiled and exercised against the API.
+- [ ] Real Compliance/vehicle onboarding commands and evidence providers implemented.
+- [ ] Road-time ETA/routing provider installed and verified.
+- [ ] Scheduled-work conflict/reservation policy implemented and verified.

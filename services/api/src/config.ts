@@ -14,6 +14,10 @@ export interface ApiConfig {
   readonly developmentQuoteAmountMinor?: number;
   readonly developmentQuoteCurrency: string;
   readonly quoteTtlMinutes: number;
+  readonly dispatchOfferTtlSeconds: number;
+  readonly dispatchOfferWaveSize: number;
+  readonly dispatchLocationMaxAgeSeconds: number;
+  readonly dispatchMinimumLocationConfidence: number;
 }
 
 function parseInteger(env: NodeJS.ProcessEnv, name: string, fallback: number, min: number, max: number): number {
@@ -67,6 +71,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     pricingMode,
     ...(developmentQuoteAmountMinor !== undefined ? { developmentQuoteAmountMinor } : {}),
     developmentQuoteCurrency: (env.DEVELOPMENT_QUOTE_CURRENCY ?? 'GBP').toUpperCase(),
-    quoteTtlMinutes: parseInteger(env, 'QUOTE_TTL_MINUTES', 15, 1, 120)
+    quoteTtlMinutes: parseInteger(env, 'QUOTE_TTL_MINUTES', 15, 1, 120),
+    dispatchOfferTtlSeconds: parseInteger(env, 'DISPATCH_OFFER_TTL_SECONDS', 30, 10, 180),
+    dispatchOfferWaveSize: parseInteger(env, 'DISPATCH_OFFER_WAVE_SIZE', 3, 1, 20),
+    dispatchLocationMaxAgeSeconds: parseInteger(env, 'DISPATCH_LOCATION_MAX_AGE_SECONDS', 90, 15, 600),
+    dispatchMinimumLocationConfidence: (() => {
+      const value = Number(env.DISPATCH_MINIMUM_LOCATION_CONFIDENCE ?? '0.5');
+      if (!Number.isFinite(value) || value < 0 || value > 1) throw new Error('Invalid DISPATCH_MINIMUM_LOCATION_CONFIDENCE');
+      return value;
+    })()
   };
 }

@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { BookingQuoteResult, BookingSummary, RegistrationContactType } from '@dazat/contracts';
+import type { BookingDispatchProjection, BookingQuoteResult, BookingSummary, RegistrationContactType } from '@dazat/contracts';
 import {
   confirmRiderContactVerification,
   startRiderContactVerification,
   startRiderRegistration
 } from './src/identity-api';
 import { confirmRiderBooking, createRiderBooking, quoteRiderBooking } from './src/booking-api';
+import { getBookingDispatch, startBookingDispatch } from './src/dispatch-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'BOOK' | 'QUOTE' | 'READY';
 
@@ -53,6 +54,7 @@ export default function RiderApp() {
   const [dropoffLon, setDropoffLon] = useState('');
   const [booking, setBooking] = useState<BookingSummary | null>(null);
   const [quote, setQuote] = useState<BookingQuoteResult['quote'] | null>(null);
+  const [dispatch, setDispatch] = useState<BookingDispatchProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -122,11 +124,29 @@ export default function RiderApp() {
     });
   }
 
+  function beginDispatch() {
+    if (!booking) return;
+    void run(async () => {
+      const result = await startBookingDispatch(sessionToken, booking.bookingId);
+      setBooking({ ...booking, status: result.bookingStatus });
+      setDispatch(await getBookingDispatch(sessionToken, booking.bookingId));
+    });
+  }
+
+  function refreshDispatch() {
+    if (!booking) return;
+    void run(async () => {
+      const result = await getBookingDispatch(sessionToken, booking.bookingId);
+      setDispatch(result);
+      setBooking({ ...booking, status: result.bookingStatus });
+    });
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.3</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.4</Text>
         <Text style={styles.title}>DAZAT Rider vertical slice</Text>
         <Text style={styles.body}>Verified contact → authenticated session → Booking → Quote → Confirm → READY_FOR_DISPATCH.</Text>
 
@@ -198,9 +218,16 @@ export default function RiderApp() {
 
         {flow === 'READY' && booking && (
           <View style={styles.notice} accessibilityRole="summary">
-            <Text style={styles.noticeTitle}>First DAZAT Rider slice complete</Text>
+            <Text style={styles.noticeTitle}>Booking ready for Dispatch</Text>
             <Text style={styles.status}>{booking.status}</Text>
-            <Text style={styles.body}>The Booking is now ready for the Dispatch Engine. No driver has been invented or assigned in Phase 0.3.</Text>
+            <Text style={styles.body}>No driver has been invented or assigned at booking confirmation. Dispatch now applies compliance, vehicle, availability, location and hard-service filters before offering the work. It never invents a driver or ETA.</Text>
+            {!dispatch ? <PrimaryButton label="Start eligible-driver search" busy={busy} onPress={beginDispatch} /> : <PrimaryButton label="Refresh Dispatch status" busy={busy} onPress={refreshDispatch} />}
+            {dispatch ? (
+              <View style={styles.section}>
+                <Text style={styles.status}>Dispatch: {dispatch.dispatchStatus ?? 'NOT_STARTED'}</Text>
+                <Text style={styles.body}>{dispatch.driverAssigned ? 'An eligible Driver accepted and was assigned atomically.' : 'No Driver assignment exists yet.'}</Text>
+              </View>
+            ) : null}
           </View>
         )}
 
