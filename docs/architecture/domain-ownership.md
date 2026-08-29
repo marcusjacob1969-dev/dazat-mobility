@@ -6,7 +6,7 @@
 | Rider | RiderProfile |
 | Driver | DriverProfile, DriverApplication, TrainingModule/Record, DriverPermission, DriverRestriction, operating/availability state |
 | Compliance | RequirementDefinition, DriverDocument/VerificationReview, DriverComplianceProfile, VehicleComplianceProfile |
-| Vehicle/Fleet | Vehicle, FleetAgreement |
+| Vehicle/Fleet | FleetOrganisation, Vehicle, VehicleCapability, MarketplaceOffer, FleetAgreement, VehicleFinanceAgreement, DepositObligation, VehicleHandoverRecord, VehicleAssignment |
 | Booking | Booking, BookingParty, BookingRequirement, BookingStateTransition |
 | Pricing | Quote, FareAgreement |
 | Dispatch | DispatchAttempt, DriverOffer, DriverAssignment |

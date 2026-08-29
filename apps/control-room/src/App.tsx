@@ -3,7 +3,7 @@ import { dazatTokens } from '@dazat/design-system';
 export function App() {
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.8</p>
+      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.9</p>
       <h1>DAZAT Control Room</h1>
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.
@@ -35,6 +35,15 @@ export function App() {
         </p>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
           Control Room cannot directly set APPROVED or invent a broad ban. Restrictions are narrow — such as School, WAV, new journeys, payout or one vehicle — and precautionary restrictions are not findings of guilt.
+        </p>
+      </section>
+      <section aria-label="Fleet authority boundary" style={{ maxWidth: 720, marginTop: 16, padding: 24, border: `1px solid ${dazatTokens.color.border}`, borderRadius: dazatTokens.radius.card }}>
+        <h2 style={{ marginTop: 0 }}>Fleet terms are evidence, not marketing shorthand</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Marketplace publication requires verified supplier stock and warranty terms plus total cost, deposit, term, mileage, included/excluded services and end-of-term conditions. Control Room cannot invent a generic discount or infer WAV, school, executive or airport capability from body style.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Deposits remain separate from revenue; any proposed deduction needs condition evidence, agreement basis and a dispute route. External FleetOrganisation tenancy never bypasses DAZAT Driver, vehicle, insurance, training, compliance or Safety checks, and every replacement assignment is revalidated.
         </p>
       </section>
       <section aria-label="Completion boundary" style={{ maxWidth: 720, marginTop: 16, padding: 24, border: `1px solid ${dazatTokens.color.border}`, borderRadius: dazatTokens.radius.card }}>

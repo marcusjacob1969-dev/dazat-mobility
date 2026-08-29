@@ -20,6 +20,7 @@
 ./apps/driver/src/dispatch-api.ts
 ./apps/driver/src/driver-operations-api.ts
 ./apps/driver/src/finance-api.ts
+./apps/driver/src/fleet-operations-api.ts
 ./apps/driver/src/identity-api.ts
 ./apps/driver/src/journey-api.ts
 ./apps/driver/tsconfig.json
@@ -43,6 +44,7 @@
 ./database/migrations/0006_live_journey_monitoring_completion_foundation.sql
 ./database/migrations/0007_payment_finance_ledger_truth_foundation.sql
 ./database/migrations/0008_driver_onboarding_competency_permissions_foundation.sql
+./database/migrations/0009_fleet_marketplace_agreement_assignment_foundation.sql
 ./database/seeds/README.md
 ./docs/architecture/ADR-0001-production-foundation.md
 ./docs/architecture/ADR-0002-identity-account-foundation.md
@@ -52,6 +54,7 @@
 ./docs/architecture/ADR-0006-live-journey-safety-governed-completion.md
 ./docs/architecture/ADR-0007-provider-neutral-finance-ledger-truth.md
 ./docs/architecture/ADR-0008-driver-onboarding-operating-permission-truth.md
+./docs/architecture/ADR-0009-fleet-marketplace-agreement-assignment-truth.md
 ./docs/architecture/domain-ownership.md
 ./docs/engineering/phase-0-2-checklist.md
 ./docs/engineering/phase-0-3-checklist.md
@@ -60,6 +63,7 @@
 ./docs/engineering/phase-0-6-checklist.md
 ./docs/engineering/phase-0-7-checklist.md
 ./docs/engineering/phase-0-8-checklist.md
+./docs/engineering/phase-0-9-checklist.md
 ./docs/engineering/phase-0-checklist.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
@@ -69,6 +73,7 @@
 ./docs/traceability/phase-0-6-requirements.md
 ./docs/traceability/phase-0-7-requirements.md
 ./docs/traceability/phase-0-8-requirements.md
+./docs/traceability/phase-0-9-requirements.md
 ./openapi/dazat-api.yaml
 ./package.json
 ./packages/contracts/package.json
@@ -76,6 +81,7 @@
 ./packages/contracts/src/dispatch.ts
 ./packages/contracts/src/driver-operations.ts
 ./packages/contracts/src/finance.ts
+./packages/contracts/src/fleet-operations.ts
 ./packages/contracts/src/identity.ts
 ./packages/contracts/src/index.ts
 ./packages/contracts/src/journey.ts
@@ -92,6 +98,7 @@
 ./packages/domain/src/domain-event.ts
 ./packages/domain/src/driver-operations.ts
 ./packages/domain/src/finance.ts
+./packages/domain/src/fleet-operations.ts
 ./packages/domain/src/identity.ts
 ./packages/domain/src/ids.ts
 ./packages/domain/src/index.ts
@@ -108,6 +115,7 @@
 ./scripts/verify-phase-0-6.mjs
 ./scripts/verify-phase-0-7.mjs
 ./scripts/verify-phase-0-8.mjs
+./scripts/verify-phase-0-9.mjs
 ./services/api/package.json
 ./services/api/src/config.ts
 ./services/api/src/db.ts
@@ -121,6 +129,8 @@
 ./services/api/src/modules/driver-operations/routes.ts
 ./services/api/src/modules/finance/finance-service.ts
 ./services/api/src/modules/finance/routes.ts
+./services/api/src/modules/fleet-operations/fleet-operations-service.ts
+./services/api/src/modules/fleet-operations/routes.ts
 ./services/api/src/modules/identity/authentication-port.ts
 ./services/api/src/modules/identity/contact-verification-service.ts
 ./services/api/src/modules/identity/registration-service.ts
@@ -142,6 +152,7 @@
 ./tests/domain/dispatch.test.mjs
 ./tests/domain/driver-operations-source.test.mjs
 ./tests/domain/finance-source.test.mjs
+./tests/domain/fleet-operations-source.test.mjs
 ./tests/domain/identity.test.mjs
 ./tests/domain/journey-source.test.mjs
 ./tests/domain/live-journey-source.test.mjs

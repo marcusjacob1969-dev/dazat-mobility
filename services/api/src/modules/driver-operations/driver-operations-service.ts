@@ -212,9 +212,8 @@ export async function getDriverOperatingEligibilityProjection(
   );
   const vehicle = selectedVehicleId ? await pool.query<{ authorised: boolean; status: string | null; valid_until: Date | null }>(
     `SELECT EXISTS (
-              SELECT 1 FROM driver.driver_vehicle_authorisation a
-               WHERE a.driver_profile_id = $1 AND a.vehicle_id = $2 AND a.status = 'ACTIVE'
-                 AND a.valid_from <= now() AND (a.valid_until IS NULL OR a.valid_until > now())
+              SELECT 1 FROM driver.current_driver_vehicle_authorisation a
+               WHERE a.driver_profile_id = $1 AND a.vehicle_id = $2
             ) AS authorised,
             s.status, s.valid_until
        FROM (SELECT 1) seed

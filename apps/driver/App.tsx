@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, DriverApplicationProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverOfferSummary, DriverOperatingEligibilityProjection, RegistrationContactType, VerifyRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, DriverApplicationProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverOfferSummary, DriverOperatingEligibilityProjection, FleetAgreementProjection, FleetMarketplaceOfferProjection, RegistrationContactType, VehicleAssignmentValidationProjection, VerifyRideCheckResult } from '@dazat/contracts';
 import {
   confirmDriverContactVerification,
   startDriverContactVerification,
@@ -29,6 +29,7 @@ import {
 } from './src/journey-api';
 import { readDriverEarnings } from './src/finance-api';
 import { readDriverOperatingEligibility, startOrResumeDriverApplication } from './src/driver-operations-api';
+import { listDriverFleetAgreements, listFleetMarketplace, validateVehicleAssignment } from './src/fleet-operations-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'DRIVER_HOME';
 
@@ -37,6 +38,12 @@ function rideCheckOutcomeText(result: VerifyRideCheckResult): string {
   if (result.status === 'LOCKED') return 'RideCheck locked and protected-start hold opened. This is not a misconduct finding.';
   if (result.status === 'EXPIRED') return 'RideCheck expired. The Journey remains protected and cannot start.';
   return `RideCheck PIN did not match: ${result.attemptsRemaining} attempts remaining. This is not a misconduct finding.`;
+}
+
+function formatMinorUnits(amountMinor: number, currency: string): string {
+  const formatter = new Intl.NumberFormat('en-GB', { style: 'currency', currency });
+  const fractionDigits = formatter.resolvedOptions().maximumFractionDigits;
+  return formatter.format(amountMinor / (10 ** fractionDigits));
 }
 
 export default function DriverApp() {
@@ -69,6 +76,9 @@ export default function DriverApp() {
   const [earnings, setEarnings] = useState<DriverEarningsProjection | null>(null);
   const [driverApplication, setDriverApplication] = useState<DriverApplicationProjection | null>(null);
   const [operatingEligibility, setOperatingEligibility] = useState<DriverOperatingEligibilityProjection | null>(null);
+  const [fleetOffers, setFleetOffers] = useState<readonly FleetMarketplaceOfferProjection[]>([]);
+  const [fleetAgreements, setFleetAgreements] = useState<readonly FleetAgreementProjection[]>([]);
+  const [assignmentValidation, setAssignmentValidation] = useState<VehicleAssignmentValidationProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -114,6 +124,19 @@ export default function DriverApp() {
 
   function checkOperatingEligibility() {
     void run(async () => setOperatingEligibility(await readDriverOperatingEligibility(sessionToken, regionCode, vehicleId || undefined)));
+  }
+
+  function refreshFleetTruth() {
+    void run(async () => {
+      const [offersResult, agreementsResult] = await Promise.all([
+        listFleetMarketplace(sessionToken, regionCode),
+        listDriverFleetAgreements(sessionToken)
+      ]);
+      setFleetOffers(offersResult);
+      setFleetAgreements(agreementsResult);
+      if (vehicleId) setAssignmentValidation(await validateVehicleAssignment(sessionToken, regionCode, vehicleId));
+      else setAssignmentValidation(null);
+    });
   }
 
   function goOnline() {
@@ -248,7 +271,7 @@ export default function DriverApp() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.8</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.9</Text>
         <Text style={styles.title}>DAZAT Driver journey</Text>
         <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. Pickup evidence and RideCheck protect the start. During an active Journey, telemetry confidence, Safety state, destination evidence and completion requirements remain separate backend-owned truths.</Text>
 
@@ -311,6 +334,32 @@ export default function DriverApp() {
                 <Text style={styles.body}>Availability is evaluated separately. A permission never makes the Driver online.</Text>
               </View>
             ) : null}
+            <View style={styles.notice} accessibilityRole="summary">
+              <Text style={styles.noticeTitle}>Fleet Marketplace and assignment truth</Text>
+              <Text style={styles.body}>Supplier stock, warranty, total cost, deposit, term, mileage and end-of-term terms must be verified. DAZAT does not promise a generic discount.</Text>
+              <Text style={styles.body}>Deposits are not platform revenue. Vehicle capability is explicit, and replacement assignment re-runs Driver, vehicle, insurance, agreement and permission checks.</Text>
+              <SecondaryButton label="Refresh Fleet truth" onPress={refreshFleetTruth} />
+              <Text style={styles.body}>Current offers: {fleetOffers.length} · agreements: {fleetAgreements.length}</Text>
+              {fleetOffers.map((offer) => (
+                <View key={offer.offerId} style={styles.section}>
+                  <Text style={styles.noticeTitle}>{offer.accessRoute} · {offer.tier}</Text>
+                  <Text style={styles.body}>Total cost {formatMinorUnits(offer.totalContractCostMinor, offer.currency)} · deposit {formatMinorUnits(offer.depositMinor, offer.currency)}</Text>
+                  <Text style={styles.body}>Charge {formatMinorUnits(offer.periodicChargeMinor, offer.currency)} · {offer.billingInterval} · term {offer.termDays ?? 'not applicable'} days</Text>
+                  <Text style={styles.body}>Included: {offer.includedServices.length ? offer.includedServices.join(', ') : 'None stated'} · excluded: {offer.excludedServices.length ? offer.excludedServices.join(', ') : 'None stated'}</Text>
+                  <Text style={styles.body}>Mileage: {JSON.stringify(offer.mileageTerms)} · end conditions: {offer.endOfTermConditions.join(', ')}</Text>
+                  {offer.ownershipTransferTerms ? <Text style={styles.body}>Ownership transfer: {offer.ownershipTransferTerms.join(', ')}</Text> : null}
+                  <Text style={styles.body}>Supplier terms verified {offer.supplierTermsVerifiedAt}.</Text>
+                </View>
+              ))}
+              {fleetAgreements.map((agreement) => (
+                <Text key={agreement.agreementId} style={styles.body}>
+                  Agreement {agreement.agreementId}: {agreement.accessRoute} · {agreement.status} · version {agreement.version}
+                </Text>
+              ))}
+              {assignmentValidation ? <Text style={assignmentValidation.assignable ? styles.status : styles.error}>
+                Assignment {assignmentValidation.assignable ? 'VALIDATED' : `BLOCKED: ${assignmentValidation.blockers.join(', ')}`}
+              </Text> : null}
+            </View>
             {eligibility ? (
               <View style={styles.notice} accessibilityRole="summary">
                 <Text style={styles.noticeTitle}>{eligibility.eligible ? 'Eligible for Dispatch' : 'Not eligible for Dispatch'}</Text>

@@ -1,6 +1,6 @@
 {
   "name": "dazat-mobility",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "private": true,
   "description": "DAZAT Mobility production engineering monorepo",
   "engines": {
@@ -15,7 +15,7 @@
     "verify:foundation": "node scripts/verify-foundation.mjs",
     "build:core": "tsc -p packages/domain/tsconfig.json && tsc -p packages/contracts/tsconfig.json && tsc -p packages/design-system/tsconfig.json",
     "test:domain": "npm run build:core && node --test tests/domain/*.test.mjs",
-    "check": "npm run verify:foundation && npm run verify:phase-0-2 && npm run verify:phase-0-3 && npm run verify:phase-0-4 && npm run verify:phase-0-5 && npm run verify:phase-0-6 && npm run verify:phase-0-7 && npm run verify:phase-0-8 && npm run test:phase-0-5-domain && npm run test:phase-0-6-domain && npm run test:phase-0-7-domain && npm run test:phase-0-8-domain && npm run test:domain",
+    "check": "npm run verify:foundation && npm run verify:phase-0-2 && npm run verify:phase-0-3 && npm run verify:phase-0-4 && npm run verify:phase-0-5 && npm run verify:phase-0-6 && npm run verify:phase-0-7 && npm run verify:phase-0-8 && npm run verify:phase-0-9 && npm run test:phase-0-5-domain && npm run test:phase-0-6-domain && npm run test:phase-0-7-domain && npm run test:phase-0-8-domain && npm run test:phase-0-9-domain && npm run test:domain",
     "verify:phase-0-2": "node scripts/verify-phase-0-2.mjs",
     "verify:phase-0-3": "node scripts/verify-phase-0-3.mjs",
     "verify:phase-0-4": "node scripts/verify-phase-0-4.mjs",
@@ -26,6 +26,8 @@
     "verify:phase-0-7": "node scripts/verify-phase-0-7.mjs",
     "test:phase-0-7-domain": "node --experimental-strip-types --test tests/domain/finance-source.test.mjs",
     "verify:phase-0-8": "node scripts/verify-phase-0-8.mjs",
-    "test:phase-0-8-domain": "node --experimental-strip-types --test tests/domain/driver-operations-source.test.mjs"
+    "test:phase-0-8-domain": "node --experimental-strip-types --test tests/domain/driver-operations-source.test.mjs",
+    "verify:phase-0-9": "node scripts/verify-phase-0-9.mjs",
+    "test:phase-0-9-domain": "node --experimental-strip-types --test tests/domain/fleet-operations-source.test.mjs"
   }
 }

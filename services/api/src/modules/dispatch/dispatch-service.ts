@@ -123,12 +123,9 @@ async function readDriverEligibility(
             ves.valid_until AS vehicle_valid_until,
             ves.service_capabilities,
             EXISTS (
-              SELECT 1 FROM driver.driver_vehicle_authorisation dva
+              SELECT 1 FROM driver.current_driver_vehicle_authorisation dva
                WHERE dva.driver_profile_id = dp.id
                  AND dva.vehicle_id = $2
-                 AND dva.status = 'ACTIVE'
-                 AND dva.valid_from <= now()
-                 AND (dva.valid_until IS NULL OR dva.valid_until > now())
             ) AS vehicle_authorised,
             EXISTS (
               SELECT 1 FROM dispatch.driver_assignment da
@@ -493,10 +490,8 @@ export async function startBookingDispatch(
               ves.service_capabilities,
               round(ST_Distance(av.location, ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography)) AS provisional_distance_metres,
               EXISTS (
-                SELECT 1 FROM driver.driver_vehicle_authorisation dva
+                SELECT 1 FROM driver.current_driver_vehicle_authorisation dva
                  WHERE dva.driver_profile_id = av.driver_profile_id AND dva.vehicle_id = av.vehicle_id
-                   AND dva.status = 'ACTIVE' AND dva.valid_from <= now()
-                   AND (dva.valid_until IS NULL OR dva.valid_until > now())
               ) AS vehicle_authorised,
               EXISTS (
                 SELECT 1 FROM dispatch.driver_assignment da

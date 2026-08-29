@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.8**.
+Current checkpoint: **Engineering Phase 0.9**.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 
@@ -15,6 +15,24 @@ Phase 0.7 extends the completed vertical slice into a provider-disabled Finance 
 Phase 0.8 adds the evidence and authority boundary required before Driver operations:
 
 `APPLICATION START → VERIFIED CONTACT RECOGNISED → IDENTITY / DOCUMENT / TRAINING / VEHICLE EVIDENCE → AUTHORISED REVIEW → SCOPED PERMISSION → DERIVED OPERATING ELIGIBILITY`
+
+Phase 0.9 adds evidence-backed Fleet access and assignment truth:
+
+`VERIFIED SUPPLIER TERMS → VERSIONED MARKETPLACE OFFER → VERSIONED AGREEMENT → HANDOVER EVIDENCE → PAIR INSURANCE → FRESH VEHICLE ASSIGNMENT VALIDATION`
+
+Important Fleet truth rules:
+
+- Driver-owned, weekly rent, rent-to-own, fixed-term lease and lease-to-own are explicit access routes; Fleet tier remains separate.
+- Marketplace offers are immutable versions and expose total cost, periodic charge, deposit, term, mileage, included/excluded services and end conditions.
+- Published offers require verified supplier stock/warranty evidence. No generic discount percentage is promised.
+- Vehicle capability is explicit and evidence-backed; body style never infers WAV, school, executive, airport or capacity truth.
+- FleetAgreement and VehicleFinanceAgreement are versioned.
+- Deposits are separate from platform revenue. Proposed deductions require condition evidence, agreement basis and a dispute route.
+- Handover condition/equipment evidence is immutable and does not itself authorise a deduction.
+- Driver–vehicle insurance is validated for the actual pair and is now part of Dispatch authorisation.
+- Replacement assignment re-runs all Driver, vehicle, insurance, capability, agreement and operating checks.
+- External FleetOrganisation tenancy never bypasses DAZAT authority.
+- The Phase 0.9 API is read-only: no offer publication, reservation, agreement acceptance, deduction or vehicle assignment mutation is exposed.
 
 Important Driver onboarding and operating truth rules:
 
@@ -57,4 +75,4 @@ The earlier Journey integrity and Safety rules remain enforced:
 - Completion closes Journey, Booking, leg and assignment and returns the Driver to `AVAILABLE` atomically.
 - Completion does not initiate or imply payment.
 
-See `BUILD_STATUS.md`, `docs/architecture/ADR-0008-driver-onboarding-operating-permission-truth.md`, and `docs/engineering/phase-0-8-checklist.md` for evidence and limitations.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0009-fleet-marketplace-agreement-assignment-truth.md`, and `docs/engineering/phase-0-9-checklist.md` for evidence and limitations.
