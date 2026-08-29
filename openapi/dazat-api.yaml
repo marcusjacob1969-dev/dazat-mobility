@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.4
-  description: Engineering Phase 0.4 API. Server/domain owners remain authoritative for identity, Booking, Pricing, Driver availability and Dispatch state.
+  version: 0.0.5
+  description: Engineering Phase 0.5 API. Server/domain owners remain authoritative for identity, Booking, Dispatch, Journey, pickup evidence, RideCheck and protected-start state.
 servers:
   - url: http://localhost:3001
 paths:
@@ -195,6 +195,96 @@ paths:
       responses:
         '200': { description: Offer declined; acceptanceRatePenaltyApplied is false. }
         '409': { description: Offer already terminal or expired. }
+  /v1/bookings/{bookingId}/journey/acknowledge:
+    post:
+      summary: Assigned Driver acknowledges work and creates the authoritative EN_ROUTE Journey/first leg.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200': { description: Active assignment materialised as Journey and advanced to EN_ROUTE. }
+        '409': { description: Assignment or Booking state changed. }
+  /v1/bookings/{bookingId}/journey:
+    get:
+      summary: Read the authorised Rider/Driver Journey projection for reconciliation.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+      responses:
+        '200': { description: Current Journey projection with telemetry freshness and hold state. }
+        '404': { description: Assigned Driver has not yet acknowledged and created the Journey. }
+  /v1/journeys/{journeyId}/location-observations:
+    post:
+      summary: Ingest an append-only, purpose-scoped Driver location observation with source, time, accuracy and confidence.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/JourneyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DriverLocationObservationRequest' }
+      responses:
+        '202': { description: Observation durably recorded; stale/degraded evidence remains explicitly labelled. }
+  /v1/journeys/{journeyId}/arrived:
+    post:
+      summary: Mark arrival only after fresh, accurate, confident evidence falls inside the configured pickup radius.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/JourneyId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200': { description: Immutable arrival evidence accepted and Journey advanced to ARRIVED. }
+        '409': { description: Location evidence is missing, stale, degraded or outside the radius. }
+  /v1/journeys/{journeyId}/ridecheck/start:
+    post:
+      summary: Passenger starts protected RideCheck; the PIN is returned once and never persisted in plaintext.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/JourneyId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201': { description: Salted-verifier RideCheck session created and challenge returned once. }
+        '409': { description: Journey is not in ARRIVED or a protected hold exists. }
+  /v1/journeys/{journeyId}/ridecheck/verify:
+    post:
+      summary: Assigned Driver submits passenger PIN; mismatch is recorded without becoming a misconduct finding.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/JourneyId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rideCheckSessionId, code]
+              properties:
+                rideCheckSessionId: { type: string, format: uuid }
+                code: { type: string, pattern: '^\\d{6}$' }
+      responses:
+        '200': { description: Passenger/Driver/vehicle pairing verified. }
+        '409': { description: Mismatch, expiry or exhausted attempts; protected start remains blocked. }
+  /v1/journeys/{journeyId}/start:
+    post:
+      summary: Start only after verified RideCheck, active eligible assignment, fresh pickup evidence and no active hold.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/JourneyId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200': { description: Backend-validated JourneyStarted transition committed. }
+        '409': { description: One or more protected-start preconditions failed. }
+  /v1/journeys/{journeyId}/live:
+    get:
+      summary: Authorised current Journey projection; mutation clients must still revalidate owner state.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/JourneyId'
+      responses:
+        '200': { description: Current Journey/Booking/RideCheck/telemetry/hold projection. }
 components:
   securitySchemes:
     bearerAuth:
@@ -209,6 +299,11 @@ components:
       schema: { type: string, minLength: 8, maxLength: 200 }
     BookingId:
       name: bookingId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    JourneyId:
+      name: journeyId
       in: path
       required: true
       schema: { type: string, format: uuid }
@@ -268,3 +363,14 @@ components:
             observedAt: { type: string, format: date-time }
             source: { type: string, enum: [DEVICE_GPS, FLEET_TELEMATICS] }
             confidence: { type: number, minimum: 0, maximum: 1 }
+    DriverLocationObservationRequest:
+      type: object
+      required: [clientObservationId, latitude, longitude, observedAt, source, accuracyMetres, confidence]
+      properties:
+        clientObservationId: { type: string, format: uuid }
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
+        observedAt: { type: string, format: date-time }
+        source: { type: string, enum: [DEVICE_GPS, FLEET_TELEMATICS] }
+        accuracyMetres: { type: number, minimum: 0 }
+        confidence: { type: number, minimum: 0, maximum: 1 }

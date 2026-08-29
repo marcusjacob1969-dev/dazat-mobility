@@ -19,6 +19,7 @@
 ./apps/driver/src/README.md
 ./apps/driver/src/dispatch-api.ts
 ./apps/driver/src/identity-api.ts
+./apps/driver/src/journey-api.ts
 ./apps/driver/tsconfig.json
 ./apps/rider/App.tsx
 ./apps/rider/app.json
@@ -27,6 +28,7 @@
 ./apps/rider/src/booking-api.ts
 ./apps/rider/src/dispatch-api.ts
 ./apps/rider/src/identity-api.ts
+./apps/rider/src/journey-api.ts
 ./apps/rider/tsconfig.json
 ./compose.yaml
 ./database/README.md
@@ -34,20 +36,24 @@
 ./database/migrations/0002_identity_account_foundation.sql
 ./database/migrations/0003_verified_auth_session_booking_slice.sql
 ./database/migrations/0004_dispatch_driver_eligibility_foundation.sql
+./database/migrations/0005_assignment_pickup_ridecheck_foundation.sql
 ./database/seeds/README.md
 ./docs/architecture/ADR-0001-production-foundation.md
 ./docs/architecture/ADR-0002-identity-account-foundation.md
 ./docs/architecture/ADR-0003-verified-session-booking-slice.md
 ./docs/architecture/ADR-0004-dispatch-driver-eligibility-assignment.md
+./docs/architecture/ADR-0005-assignment-pickup-ridecheck-protected-start.md
 ./docs/architecture/domain-ownership.md
 ./docs/engineering/phase-0-2-checklist.md
 ./docs/engineering/phase-0-3-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
+./docs/engineering/phase-0-5-checklist.md
 ./docs/engineering/phase-0-checklist.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-3-requirements.md
 ./docs/traceability/phase-0-4-requirements.md
+./docs/traceability/phase-0-5-requirements.md
 ./openapi/dazat-api.yaml
 ./package.json
 ./packages/contracts/package.json
@@ -55,6 +61,7 @@
 ./packages/contracts/src/dispatch.ts
 ./packages/contracts/src/identity.ts
 ./packages/contracts/src/index.ts
+./packages/contracts/src/journey.ts
 ./packages/contracts/tsconfig.json
 ./packages/design-system/package.json
 ./packages/design-system/src/index.ts
@@ -68,6 +75,7 @@
 ./packages/domain/src/identity.ts
 ./packages/domain/src/ids.ts
 ./packages/domain/src/index.ts
+./packages/domain/src/journey.ts
 ./packages/domain/src/money.ts
 ./packages/domain/src/pricing.ts
 ./packages/domain/tsconfig.json
@@ -75,6 +83,7 @@
 ./scripts/verify-phase-0-2.mjs
 ./scripts/verify-phase-0-3.mjs
 ./scripts/verify-phase-0-4.mjs
+./scripts/verify-phase-0-5.mjs
 ./services/api/package.json
 ./services/api/src/config.ts
 ./services/api/src/db.ts
@@ -90,6 +99,8 @@
 ./services/api/src/modules/identity/routes.ts
 ./services/api/src/modules/identity/session-service.ts
 ./services/api/src/modules/identity/verification-delivery-port.ts
+./services/api/src/modules/journey/journey-service.ts
+./services/api/src/modules/journey/routes.ts
 ./services/api/src/security/secret-utils.ts
 ./services/api/tsconfig.json
 ./services/workers/package.json
@@ -99,6 +110,7 @@
 ./tests/domain/booking-status.test.mjs
 ./tests/domain/dispatch.test.mjs
 ./tests/domain/identity.test.mjs
+./tests/domain/journey-source.test.mjs
 ./tests/domain/money.test.mjs
 ./tests/domain/pricing.test.mjs
 ./tsconfig.base.json

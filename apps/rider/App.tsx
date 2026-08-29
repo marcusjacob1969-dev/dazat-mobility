@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { BookingDispatchProjection, BookingQuoteResult, BookingSummary, RegistrationContactType } from '@dazat/contracts';
+import type { BookingDispatchProjection, BookingQuoteResult, BookingSummary, JourneyLiveProjection, RegistrationContactType, StartRideCheckResult } from '@dazat/contracts';
 import {
   confirmRiderContactVerification,
   startRiderContactVerification,
@@ -10,6 +10,7 @@ import {
 } from './src/identity-api';
 import { confirmRiderBooking, createRiderBooking, quoteRiderBooking } from './src/booking-api';
 import { getBookingDispatch, startBookingDispatch } from './src/dispatch-api';
+import { getBookingJourney, startPassengerRideCheck } from './src/journey-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'BOOK' | 'QUOTE' | 'READY';
 
@@ -55,12 +56,28 @@ export default function RiderApp() {
   const [booking, setBooking] = useState<BookingSummary | null>(null);
   const [quote, setQuote] = useState<BookingQuoteResult['quote'] | null>(null);
   const [dispatch, setDispatch] = useState<BookingDispatchProjection | null>(null);
+  const [journey, setJourney] = useState<JourneyLiveProjection | null>(null);
+  const [rideCheck, setRideCheck] = useState<StartRideCheckResult | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
     setError('');
     try { await action(); } catch (cause) { setError(cause instanceof Error ? cause.message : 'Something went wrong.'); }
     finally { setBusy(false); }
+  }
+
+  function refreshJourney() {
+    if (!booking) return;
+    void run(async () => setJourney(await getBookingJourney(sessionToken, booking.bookingId)));
+  }
+
+  function createRideCheck() {
+    if (!journey) return;
+    void run(async () => {
+      const result = await startPassengerRideCheck(sessionToken, journey.journeyId);
+      setRideCheck(result);
+      setJourney(await getBookingJourney(sessionToken, journey.bookingId));
+    });
   }
 
   function createAccount() {
@@ -146,7 +163,7 @@ export default function RiderApp() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.4</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.5</Text>
         <Text style={styles.title}>DAZAT Rider vertical slice</Text>
         <Text style={styles.body}>Verified contact → authenticated session → Booking → Quote → Confirm → READY_FOR_DISPATCH.</Text>
 
@@ -226,6 +243,21 @@ export default function RiderApp() {
               <View style={styles.section}>
                 <Text style={styles.status}>Dispatch: {dispatch.dispatchStatus ?? 'NOT_STARTED'}</Text>
                 <Text style={styles.body}>{dispatch.driverAssigned ? 'An eligible Driver accepted and was assigned atomically.' : 'No Driver assignment exists yet.'}</Text>
+                {dispatch.driverAssigned ? <PrimaryButton label="Refresh pickup journey" busy={busy} onPress={refreshJourney} /> : null}
+                {journey ? (
+                  <View style={styles.notice}>
+                    <Text style={styles.noticeTitle}>Pickup state: {journey.journeyStatus}</Text>
+                    <Text style={styles.body}>Driver location: {journey.latestDriverLocation?.telemetryState ?? 'UNKNOWN'}. Stale or unknown location is never presented as live certainty.</Text>
+                    {journey.journeyStatus === 'ARRIVED' ? <PrimaryButton label="Create protected RideCheck" busy={busy} onPress={createRideCheck} /> : null}
+                    {rideCheck?.challengeCode ? (
+                      <View style={styles.section} accessibilityRole="summary">
+                        <Text style={styles.status}>RideCheck PIN: {rideCheck.challengeCode}</Text>
+                        <Text style={styles.body}>Show the PIN only to the assigned Driver at pickup. It is returned once and is not stored as plaintext.</Text>
+                      </View>
+                    ) : null}
+                    {journey.activeOperationalHold ? <Text style={styles.error}>Protected start hold active. Normal support cannot bypass this boundary.</Text> : null}
+                  </View>
+                ) : null}
               </View>
             ) : null}
           </View>

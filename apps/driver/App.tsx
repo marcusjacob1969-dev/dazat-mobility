@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { DriverEligibilitySummary, DriverOfferSummary, RegistrationContactType } from '@dazat/contracts';
+import type { DriverEligibilitySummary, DriverOfferSummary, JourneyLiveProjection, RegistrationContactType, VerifyRideCheckResult } from '@dazat/contracts';
 import {
   confirmDriverContactVerification,
   startDriverContactVerification,
@@ -15,8 +15,23 @@ import {
   listDriverOffers,
   setDriverAvailability
 } from './src/dispatch-api';
+import {
+  acknowledgeAssignment,
+  beginJourney,
+  getDriverJourney,
+  markArrived,
+  sendPickupLocation,
+  verifyPickupRideCheck
+} from './src/journey-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'DRIVER_HOME';
+
+function rideCheckOutcomeText(result: VerifyRideCheckResult): string {
+  if (result.verified) return 'Passenger verified.';
+  if (result.status === 'LOCKED') return 'RideCheck locked and protected-start hold opened. This is not a misconduct finding.';
+  if (result.status === 'EXPIRED') return 'RideCheck expired. The Journey remains protected and cannot start.';
+  return `RideCheck PIN did not match: ${result.attemptsRemaining} attempts remaining. This is not a misconduct finding.`;
+}
 
 export default function DriverApp() {
   const [flow, setFlow] = useState<Flow>('REGISTER');
@@ -40,6 +55,10 @@ export default function DriverApp() {
   const [availability, setAvailability] = useState('OFFLINE');
   const [offers, setOffers] = useState<readonly DriverOfferSummary[]>([]);
   const [assignment, setAssignment] = useState('');
+  const [assignedBookingId, setAssignedBookingId] = useState('');
+  const [journey, setJourney] = useState<JourneyLiveProjection | null>(null);
+  const [rideCheckCode, setRideCheckCode] = useState('');
+  const [rideCheckOutcome, setRideCheckOutcome] = useState<VerifyRideCheckResult | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -115,8 +134,54 @@ export default function DriverApp() {
     void run(async () => {
       const result = await acceptDriverOffer(sessionToken, offerId);
       setAssignment(result.assignmentId);
+      setAssignedBookingId(result.bookingId);
       setAvailability('ASSIGNED');
       setOffers([]);
+    });
+  }
+
+  function acknowledge() {
+    if (!assignedBookingId) return;
+    void run(async () => {
+      const result = await acknowledgeAssignment(sessionToken, assignedBookingId);
+      setJourney(await getDriverJourney(sessionToken, result.journeyId));
+    });
+  }
+
+  function sendLocation() {
+    if (!journey) return;
+    void run(async () => {
+      await sendPickupLocation(sessionToken, journey.journeyId, Number(latitude), Number(longitude));
+      setJourney(await getDriverJourney(sessionToken, journey.journeyId));
+    });
+  }
+
+  function refreshJourney() {
+    if (!journey) return;
+    void run(async () => setJourney(await getDriverJourney(sessionToken, journey.journeyId)));
+  }
+
+  function arrive() {
+    if (!journey) return;
+    void run(async () => {
+      await markArrived(sessionToken, journey.journeyId);
+      setJourney(await getDriverJourney(sessionToken, journey.journeyId));
+    });
+  }
+
+  function verifyRideCheck() {
+    if (!journey?.rideCheckSessionId) return;
+    void run(async () => {
+      setRideCheckOutcome(await verifyPickupRideCheck(sessionToken, journey.journeyId, journey.rideCheckSessionId!, rideCheckCode));
+      setJourney(await getDriverJourney(sessionToken, journey.journeyId));
+    });
+  }
+
+  function startProtectedJourney() {
+    if (!journey) return;
+    void run(async () => {
+      await beginJourney(sessionToken, journey.journeyId);
+      setJourney(await getDriverJourney(sessionToken, journey.journeyId));
     });
   }
 
@@ -131,9 +196,9 @@ export default function DriverApp() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.4</Text>
-        <Text style={styles.title}>DAZAT Driver availability</Text>
-        <Text style={styles.body}>Authentication, compliance, vehicle eligibility and online availability are separate truths. Authentication does not make a driver eligible; all hard checks must pass before Dispatch can offer or assign work.</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.5</Text>
+        <Text style={styles.title}>DAZAT Driver pickup journey</Text>
+        <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. Assignment, fresh pickup evidence and passenger verification are separate truths. The app requests transitions; it cannot skip arrival evidence, RideCheck or the protected backend start.</Text>
 
         {flow === 'REGISTER' ? (
           <View style={styles.section}>
@@ -174,12 +239,12 @@ export default function DriverApp() {
             <Field label="Current longitude" value={longitude} onChangeText={setLongitude} />
             <View style={styles.row}>
               <SecondaryButton label="Check eligibility" onPress={checkEligibility} />
-              {availability === 'OFFLINE' ? <SecondaryButton label="Go online" onPress={goOnline} /> : <SecondaryButton label="Go offline" onPress={goOffline} />}
+              {availability === 'OFFLINE' ? <SecondaryButton label="Go online" onPress={goOnline} /> : availability !== 'ASSIGNED' ? <SecondaryButton label="Go offline" onPress={goOffline} /> : null}
             </View>
             {eligibility ? (
               <View style={styles.notice} accessibilityRole="summary">
                 <Text style={styles.noticeTitle}>{eligibility.eligible ? 'Eligible for Dispatch' : 'Not eligible for Dispatch'}</Text>
-                <Text style={styles.body}>{eligibility.blockers.length ? eligibility.blockers.join(', ') : 'All Phase 0.4 hard filters passed.'}</Text>
+                <Text style={styles.body}>{eligibility.blockers.length ? eligibility.blockers.join(', ') : 'All Dispatch hard filters passed.'}</Text>
               </View>
             ) : null}
             <PrimaryButton busy={busy} label="Refresh job offers" onPress={refreshOffers} />
@@ -193,7 +258,29 @@ export default function DriverApp() {
                 </View>
               </View>
             ))}
-            {assignment ? <Text style={styles.status}>Atomic assignment confirmed: {assignment}</Text> : null}
+            {assignment ? (
+              <View style={styles.notice}>
+                <Text style={styles.noticeTitle}>Atomic assignment confirmed</Text>
+                <Text style={styles.body}>{assignment}</Text>
+                {!journey ? <PrimaryButton busy={busy} label="Acknowledge and navigate to pickup" onPress={acknowledge} /> : (
+                  <>
+                    <Text style={styles.status}>Journey: {journey.journeyStatus}</Text>
+                    <Text style={styles.body}>Telemetry: {journey.latestDriverLocation?.telemetryState ?? 'UNKNOWN'} · Hold: {journey.activeOperationalHold ? 'ACTIVE' : 'NONE'}</Text>
+                    <SecondaryButton label="Refresh authoritative pickup state" onPress={refreshJourney} />
+                    <SecondaryButton label="Send fresh pickup location" onPress={sendLocation} />
+                    {journey.journeyStatus === 'EN_ROUTE' ? <PrimaryButton busy={busy} label="Mark arrived with evidence" onPress={arrive} /> : null}
+                    {journey.journeyStatus === 'AWAITING_RIDECHECK' ? (
+                      <>
+                        <Field label="Passenger's six-digit RideCheck" value={rideCheckCode} onChangeText={setRideCheckCode} />
+                        <PrimaryButton busy={busy} label="Verify passenger pairing" onPress={verifyRideCheck} />
+                        {rideCheckOutcome ? <Text style={rideCheckOutcome.verified ? styles.status : styles.error}>{rideCheckOutcomeText(rideCheckOutcome)}</Text> : null}
+                      </>
+                    ) : null}
+                    {journey.journeyStatus === 'PASSENGER_VERIFIED' ? <PrimaryButton busy={busy} label="Start protected journey" onPress={startProtectedJourney} /> : null}
+                  </>
+                )}
+              </View>
+            ) : null}
           </View>
         ) : null}
 

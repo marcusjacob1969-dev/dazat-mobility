@@ -18,6 +18,14 @@ export interface ApiConfig {
   readonly dispatchOfferWaveSize: number;
   readonly dispatchLocationMaxAgeSeconds: number;
   readonly dispatchMinimumLocationConfidence: number;
+  readonly journeyLocationMaxAgeSeconds: number;
+  readonly journeyLocationMaximumFutureSkewSeconds: number;
+  readonly journeyLocationMaximumAccuracyMetres: number;
+  readonly journeyLocationMinimumConfidence: number;
+  readonly journeyArrivalRadiusMetres: number;
+  readonly rideCheckPepper: string;
+  readonly rideCheckTtlMinutes: number;
+  readonly rideCheckMaximumAttempts: number;
 }
 
 function parseInteger(env: NodeJS.ProcessEnv, name: string, fallback: number, min: number, max: number): number {
@@ -40,6 +48,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   const contactVerificationPepper = env.CONTACT_VERIFICATION_PEPPER;
   if (!contactVerificationPepper || contactVerificationPepper.length < 32) {
     throw new Error('CONTACT_VERIFICATION_PEPPER of at least 32 characters is required');
+  }
+  const rideCheckPepper = env.RIDECHECK_PEPPER;
+  if (!rideCheckPepper || rideCheckPepper.length < 32) {
+    throw new Error('RIDECHECK_PEPPER of at least 32 characters is required');
   }
 
   const verificationDeliveryMode = env.VERIFICATION_DELIVERY_MODE === 'disabled'
@@ -79,6 +91,18 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       const value = Number(env.DISPATCH_MINIMUM_LOCATION_CONFIDENCE ?? '0.5');
       if (!Number.isFinite(value) || value < 0 || value > 1) throw new Error('Invalid DISPATCH_MINIMUM_LOCATION_CONFIDENCE');
       return value;
-    })()
+    })(),
+    journeyLocationMaxAgeSeconds: parseInteger(env, 'JOURNEY_LOCATION_MAX_AGE_SECONDS', 60, 10, 600),
+    journeyLocationMaximumFutureSkewSeconds: parseInteger(env, 'JOURNEY_LOCATION_MAXIMUM_FUTURE_SKEW_SECONDS', 15, 0, 120),
+    journeyLocationMaximumAccuracyMetres: parseInteger(env, 'JOURNEY_LOCATION_MAXIMUM_ACCURACY_METRES', 75, 5, 1_000),
+    journeyLocationMinimumConfidence: (() => {
+      const value = Number(env.JOURNEY_LOCATION_MINIMUM_CONFIDENCE ?? '0.7');
+      if (!Number.isFinite(value) || value < 0 || value > 1) throw new Error('Invalid JOURNEY_LOCATION_MINIMUM_CONFIDENCE');
+      return value;
+    })(),
+    journeyArrivalRadiusMetres: parseInteger(env, 'JOURNEY_ARRIVAL_RADIUS_METRES', 200, 25, 2_000),
+    rideCheckPepper,
+    rideCheckTtlMinutes: parseInteger(env, 'RIDECHECK_TTL_MINUTES', 10, 1, 30),
+    rideCheckMaximumAttempts: parseInteger(env, 'RIDECHECK_MAXIMUM_ATTEMPTS', 5, 1, 10)
   };
 }
