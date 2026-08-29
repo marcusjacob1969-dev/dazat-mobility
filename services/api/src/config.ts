@@ -29,6 +29,7 @@ export interface ApiConfig {
   readonly activeJourneyMaximumPlausibleSpeedMetresPerSecond: number;
   readonly journeyArrivingRadiusMetres: number;
   readonly journeyCompletionRadiusMetres: number;
+  readonly paymentProviderMode: 'disabled';
 }
 
 function parseInteger(env: NodeJS.ProcessEnv, name: string, fallback: number, min: number, max: number): number {
@@ -61,6 +62,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     ? 'disabled'
     : 'development_console';
   const pricingMode = env.PRICING_MODE === 'development_fixture' ? 'development_fixture' : 'disabled';
+  if (env.PAYMENT_PROVIDER_MODE && env.PAYMENT_PROVIDER_MODE !== 'disabled') {
+    throw new Error('PAYMENT_PROVIDER_MODE must remain disabled until a provider and production controls are approved');
+  }
   let developmentQuoteAmountMinor: number | undefined;
   if (pricingMode === 'development_fixture') {
     const raw = env.DEVELOPMENT_QUOTE_AMOUNT_MINOR;
@@ -109,6 +113,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     rideCheckMaximumAttempts: parseInteger(env, 'RIDECHECK_MAXIMUM_ATTEMPTS', 5, 1, 10),
     activeJourneyMaximumPlausibleSpeedMetresPerSecond: parseInteger(env, 'ACTIVE_JOURNEY_MAXIMUM_PLAUSIBLE_SPEED_MPS', 75, 10, 150),
     journeyArrivingRadiusMetres: parseInteger(env, 'JOURNEY_ARRIVING_RADIUS_METRES', 1_000, 100, 5_000),
-    journeyCompletionRadiusMetres: parseInteger(env, 'JOURNEY_COMPLETION_RADIUS_METRES', 250, 25, 2_000)
+    journeyCompletionRadiusMetres: parseInteger(env, 'JOURNEY_COMPLETION_RADIUS_METRES', 250, 25, 2_000),
+    paymentProviderMode: 'disabled'
   };
 }

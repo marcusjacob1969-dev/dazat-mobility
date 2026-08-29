@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, RegistrationContactType, StartRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, PaymentStatusProjection, RegistrationContactType, StartRideCheckResult } from '@dazat/contracts';
 import {
   confirmRiderContactVerification,
   startRiderContactVerification,
@@ -11,6 +11,7 @@ import {
 import { confirmRiderBooking, createRiderBooking, quoteRiderBooking } from './src/booking-api';
 import { getBookingDispatch, startBookingDispatch } from './src/dispatch-api';
 import { getBookingJourney, requestJourneyStop, sendRiderSafetySignal, startPassengerRideCheck } from './src/journey-api';
+import { prepareProviderDisabledPaymentIntent, readPaymentStatus } from './src/finance-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'BOOK' | 'QUOTE' | 'READY';
 
@@ -62,6 +63,7 @@ export default function RiderApp() {
   const [changeLat, setChangeLat] = useState('');
   const [changeLon, setChangeLon] = useState('');
   const [journeyNotice, setJourneyNotice] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatusProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -185,11 +187,24 @@ export default function RiderApp() {
     });
   }
 
+  function preparePaymentIntent() {
+    if (!booking) return;
+    void run(async () => {
+      const intent = await prepareProviderDisabledPaymentIntent(sessionToken, booking.bookingId);
+      setPaymentStatus(await readPaymentStatus(sessionToken, intent.paymentIntentId));
+    });
+  }
+
+  function refreshPaymentStatus() {
+    if (!paymentStatus) return;
+    void run(async () => setPaymentStatus(await readPaymentStatus(sessionToken, paymentStatus.paymentIntentId)));
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.6</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.7</Text>
         <Text style={styles.title}>DAZAT Rider journey</Text>
         <Text style={styles.body}>Verified Booking through protected pickup, active Journey visibility, governed changes and persistent Safety controls.</Text>
 
@@ -303,7 +318,23 @@ export default function RiderApp() {
                         {journeyNotice ? <Text style={styles.status}>{journeyNotice}</Text> : null}
                       </View>
                     ) : null}
-                    {journey.journeyStatus === 'COMPLETED' ? <Text style={styles.status}>Journey completed. Payment remains a later governed checkpoint.</Text> : null}
+                    {journey.journeyStatus === 'COMPLETED' ? (
+                      <View style={styles.section}>
+                        <Text style={styles.status}>Journey completed. Completion itself did not initiate payment.</Text>
+                        {!paymentStatus
+                          ? <PrimaryButton label="Prepare payment intent — charging disabled" busy={busy} onPress={preparePaymentIntent} />
+                          : <SecondaryButton label="Refresh payment status" onPress={refreshPaymentStatus} />}
+                        {paymentStatus ? (
+                          <View style={styles.notice} accessibilityRole="summary">
+                            <Text style={styles.noticeTitle}>Payment intent: {paymentStatus.status}</Text>
+                            <Text style={styles.body}>{paymentStatus.currency} {paymentStatus.amountMinor} minor units</Text>
+                            <Text style={styles.body}>Charging eligibility: {paymentStatus.chargingEligibility}</Text>
+                            <Text style={styles.devNotice}>NO CHARGE ATTEMPTED · PRODUCTION CHARGING DISABLED</Text>
+                            <Text style={styles.body}>{paymentStatus.guidance}</Text>
+                          </View>
+                        ) : null}
+                      </View>
+                    ) : null}
                   </View>
                 ) : null}
               </View>

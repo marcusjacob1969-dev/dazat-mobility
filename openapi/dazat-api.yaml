@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.6
-  description: Engineering Phase 0.6 API. Server/domain owners remain authoritative for identity, Booking, Dispatch, Journey telemetry, governed changes, Safety and completion evidence.
+  version: 0.0.7
+  description: Engineering Phase 0.7 API. Server/domain owners remain authoritative for identity, Booking, Dispatch, Journey, Safety, provider-disabled PaymentIntent truth and append-only balanced ledger boundaries.
 servers:
   - url: http://localhost:3001
 paths:
@@ -395,6 +395,54 @@ paths:
             schema: { $ref: '#/components/schemas/RouteConcern' }
       responses:
         '201': { description: Restricted Safety event plus contextual route-deviation signal committed. }
+  /v1/bookings/{bookingId}/payment-intents:
+    post:
+      summary: Prepare a provider-neutral PaymentIntent from the immutable FareAgreement after governed completion.
+      description: Charging is disabled. This operation performs no provider call, captures no money, posts no ledger entries and does not change Booking state.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '201':
+          description: CREATED intent persisted with providerActionAttempted=false and productionChargingEnabled=false.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PreparePaymentIntentResult' }
+        '409': { description: Booking is not COMPLETED, FareAgreement is missing, or idempotency state conflicts. }
+  /v1/payments/{paymentId}/status:
+    get:
+      summary: Read DAZAT-owned PaymentIntent status without interpreting timeout as failure.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: Canonical status. STATUS_UNKNOWN includes reconciliation guidance and forbids blind retry.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentStatusProjection' }
+        '404': { description: PaymentIntent not found. }
+  /v1/receipts/{bookingId}:
+    get:
+      summary: Read a receipt projection only when a captured Payment exists.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+      responses:
+        '200': { description: Receipt derived from captured Payment truth. }
+        '409': { description: Receipt not ready; completion or a prepared intent is not proof of payment. }
+  /v1/driver/earnings:
+    get:
+      summary: Read separately posted DriverEarning records.
+      description: Rider fare is never projected as a Driver earning and earnings do not imply payout.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Authoritative DriverEarning projection; may be empty after Journey completion.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverEarningsProjection' }
 components:
   securitySchemes:
     bearerAuth:
@@ -416,6 +464,12 @@ components:
       name: journeyId
       in: path
       required: true
+      schema: { type: string, format: uuid }
+    PaymentId:
+      name: paymentId
+      in: path
+      required: true
+      description: PaymentIntent identifier in the provider-disabled Phase 0.7 foundation.
       schema: { type: string, format: uuid }
   schemas:
     StartAccountRegistrationRequest:
@@ -510,3 +564,54 @@ components:
           required: [routeConcernCategory]
           properties:
             routeConcernCategory: { type: string, enum: [CHECK_ROUTE, WRONG_DESTINATION, FEEL_UNSAFE, UNEXPECTED_STOP, OTHER] }
+    PreparePaymentIntentResult:
+      type: object
+      required: [paymentIntentId, bookingId, fareAgreementId, amountMinor, currency, status, chargingEligibility, providerActionAttempted, productionChargingEnabled, nextAction, blindRetryAllowed, createdAt]
+      properties:
+        paymentIntentId: { type: string, format: uuid }
+        bookingId: { type: string, format: uuid }
+        fareAgreementId: { type: string, format: uuid }
+        amountMinor: { type: integer, minimum: 0, maximum: 9007199254740991 }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        status: { type: string, const: CREATED }
+        chargingEligibility: { type: string, const: NOT_ELIGIBLE }
+        providerActionAttempted: { type: boolean, const: false }
+        productionChargingEnabled: { type: boolean, const: false }
+        nextAction: { type: string, const: PROVIDER_CONFIGURATION_REQUIRED }
+        blindRetryAllowed: { type: boolean, const: false }
+        createdAt: { type: string, format: date-time }
+    PaymentStatusProjection:
+      type: object
+      required: [paymentIntentId, bookingId, amountMinor, currency, status, chargingEligibility, productionChargingEnabled, providerActionAttempted, reconciliationRequired, blindRetryAllowed, guidance, updatedAt]
+      properties:
+        paymentIntentId: { type: string, format: uuid }
+        bookingId: { type: string, format: uuid }
+        amountMinor: { type: integer, minimum: 0, maximum: 9007199254740991 }
+        currency: { type: string, pattern: '^[A-Z]{3}$' }
+        status: { type: string, enum: [CREATED, PROCESSING, REQUIRES_ACTION, AUTHORISED, CAPTURED, PARTIALLY_REFUNDED, REFUNDED, FAILED, VOIDED, EXPIRED, STATUS_UNKNOWN, DISPUTED, CHARGEBACK] }
+        chargingEligibility: { type: string, enum: [NOT_ELIGIBLE, APPROVED_POLICY] }
+        productionChargingEnabled: { type: boolean, const: false }
+        providerActionAttempted: { type: boolean }
+        reconciliationRequired: { type: boolean }
+        blindRetryAllowed: { type: boolean, const: false }
+        guidance: { type: string }
+        updatedAt: { type: string, format: date-time }
+    DriverEarningsProjection:
+      type: object
+      required: [earnings, payoutDerivedFromEarnings, riderFareUsedAsDriverEarning]
+      properties:
+        earnings:
+          type: array
+          items:
+            type: object
+            required: [driverEarningId, bookingId, journeyId, amountMinor, currency, status, postedAt]
+            properties:
+              driverEarningId: { type: string, format: uuid }
+              bookingId: { type: string, format: uuid }
+              journeyId: { type: string, format: uuid }
+              amountMinor: { type: integer, minimum: 1, maximum: 9007199254740991 }
+              currency: { type: string, pattern: '^[A-Z]{3}$' }
+              status: { type: string, enum: [POSTED, ADJUSTED, REVERSED] }
+              postedAt: { type: string, format: date-time }
+        payoutDerivedFromEarnings: { type: boolean, const: false }
+        riderFareUsedAsDriverEarning: { type: boolean, const: false }

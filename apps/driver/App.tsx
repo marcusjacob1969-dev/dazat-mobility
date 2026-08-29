@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, DriverEligibilitySummary, DriverOfferSummary, RegistrationContactType, VerifyRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverOfferSummary, RegistrationContactType, VerifyRideCheckResult } from '@dazat/contracts';
 import {
   confirmDriverContactVerification,
   startDriverContactVerification,
@@ -27,6 +27,7 @@ import {
   sendPickupLocation,
   verifyPickupRideCheck
 } from './src/journey-api';
+import { readDriverEarnings } from './src/finance-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'DRIVER_HOME';
 
@@ -64,6 +65,7 @@ export default function DriverApp() {
   const [rideCheckCode, setRideCheckCode] = useState('');
   const [rideCheckOutcome, setRideCheckOutcome] = useState<VerifyRideCheckResult | null>(null);
   const [safetyStatus, setSafetyStatus] = useState('');
+  const [earnings, setEarnings] = useState<DriverEarningsProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -220,6 +222,10 @@ export default function DriverApp() {
     });
   }
 
+  function refreshEarnings() {
+    void run(async () => setEarnings(await readDriverEarnings(sessionToken)));
+  }
+
   function decline(offerId: string) {
     void run(async () => {
       await declineDriverOffer(sessionToken, offerId);
@@ -231,7 +237,7 @@ export default function DriverApp() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.6</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.7</Text>
         <Text style={styles.title}>DAZAT Driver journey</Text>
         <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. Pickup evidence and RideCheck protect the start. During an active Journey, telemetry confidence, Safety state, destination evidence and completion requirements remain separate backend-owned truths.</Text>
 
@@ -326,7 +332,15 @@ export default function DriverApp() {
                         {journey.journeyStatus === 'ARRIVING' ? <PrimaryButton busy={busy} label="Complete after requirements pass" onPress={finishJourney} /> : null}
                       </View>
                     ) : null}
-                    {journey.journeyStatus === 'COMPLETED' ? <Text style={styles.status}>Journey completed. Driver availability returned to AVAILABLE; payment was not initiated in this checkpoint.</Text> : null}
+                    {journey.journeyStatus === 'COMPLETED' ? (
+                      <View style={styles.section}>
+                        <Text style={styles.status}>Journey completed. Driver availability returned to AVAILABLE; no earning is inferred from the Rider fare.</Text>
+                        <SecondaryButton label="Refresh authoritative earnings" onPress={refreshEarnings} />
+                        {earnings ? <Text style={styles.body}>{earnings.earnings.length
+                          ? `${earnings.earnings.length} separately posted Driver earning record(s).`
+                          : 'No DriverEarning has been posted. A completed Journey is not itself an earning or payout.'}</Text> : null}
+                      </View>
+                    ) : null}
                   </>
                 )}
               </View>

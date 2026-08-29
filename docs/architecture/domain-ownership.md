@@ -13,7 +13,7 @@
 | Journey | Journey, JourneyLeg, RideCheckSession |
 | Safety | SafetyEvent, SafeguardingCase |
 | Operations | OperationalCase, ControlRoomTask |
-| Finance | Payment, LedgerTransaction, Payout, Invoice |
+| Finance | PaymentIntent, Payment, Refund, FinancialAccount, LedgerTransaction, DriverEarning, Payout, Invoice |
 | Communications | CommunicationRequest, ContactCase |
 | Organisation | Organisation, OrganisationAgreement |
 | School | SchoolPassengerProfile, SchoolTransportSeries |

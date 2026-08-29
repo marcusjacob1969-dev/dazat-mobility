@@ -12,6 +12,7 @@ import {
 import { registerDispatchRoutes } from './modules/dispatch/routes.js';
 import { registerJourneyRoutes } from './modules/journey/routes.js';
 import { registerSafetyRoutes } from './modules/safety/routes.js';
+import { registerFinanceRoutes } from './modules/finance/routes.js';
 
 const config = loadConfig();
 const app = Fastify({ logger: { level: config.logLevel } });
@@ -38,9 +39,10 @@ app.get('/health/ready', async (_request, reply) => {
       status: 'READY',
       dependencies: {
         database: 'READY',
-        redis: 'NOT_REQUIRED_FOR_PHASE_0_6_TRANSACTIONAL_LIVE_JOURNEY_FOUNDATION',
+        redis: 'NOT_REQUIRED_FOR_PHASE_0_7_PROVIDER_DISABLED_FINANCE_FOUNDATION',
         verificationDelivery: config.verificationDeliveryMode.toUpperCase(),
-        pricing: config.pricingMode.toUpperCase()
+        pricing: config.pricingMode.toUpperCase(),
+        paymentProvider: config.paymentProviderMode.toUpperCase()
       }
     });
   } catch {
@@ -53,8 +55,8 @@ app.get('/health/ready', async (_request, reply) => {
 
 app.get('/v1/build-info', async () => ({
   product: 'DAZAT Mobility',
-  checkpoint: 'engineering-phase-0.6',
-  implementationStatus: 'LIVE_JOURNEY_TELEMETRY_SAFETY_GOVERNED_CHANGE_AND_COMPLETION_FOUNDATION_SOURCE_CREATED_NOT_PRODUCTION_VERIFIED'
+  checkpoint: 'engineering-phase-0.7',
+  implementationStatus: 'PROVIDER_DISABLED_PAYMENT_FINANCE_BALANCED_LEDGER_FOUNDATION_SOURCE_CREATED_NOT_PRODUCTION_VERIFIED'
 }));
 
 registerIdentityRoutes(app, database, config, verificationDelivery);
@@ -62,6 +64,7 @@ registerBookingRoutes(app, database, pricing);
 registerDispatchRoutes(app, database, config);
 registerJourneyRoutes(app, database, config);
 registerSafetyRoutes(app, database);
+registerFinanceRoutes(app, database);
 
 app.addHook('onClose', async () => {
   await database.end();

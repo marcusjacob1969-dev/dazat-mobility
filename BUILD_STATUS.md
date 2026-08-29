@@ -2,15 +2,15 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.6 — Live Journey Monitoring + Safety + Governed Completion Foundation**
+**Engineering Phase 0.7 — Payment, Finance and Ledger Truth Foundation**
 
-Status: **SOURCE IMPLEMENTED / STATIC AND PURE-DOMAIN GUARDS VERIFIED / DATABASE, CONCURRENCY AND APP RUNTIME NOT YET VERIFIED**
+Status: **SOURCE IMPLEMENTED / STATIC AND PURE-DOMAIN GUARDS VERIFIED / CHARGING DISABLED / DATABASE, CONCURRENCY AND APP RUNTIME NOT YET VERIFIED**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
 
-- All Phase 0.1–0.5 monorepo, identity, Booking, Dispatch, assignment, pickup-evidence, RideCheck and protected-start foundations.
+- All Phase 0.1–0.6 monorepo, Identity, Booking, Dispatch, Journey, Safety and governed-completion foundations.
 - Guarded active Journey spine: `IN_PROGRESS → ARRIVING → COMPLETED`.
 - Append-only, purpose-scoped active telemetry with connectivity confidence and movement-plausibility classification.
 - Authoritative reconnect snapshot with Journey health, pending changes and completion requirements.
@@ -22,28 +22,36 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Fresh, accurate, confident, movement-plausible destination-approach evidence.
 - Service-context completion requirements with fail-closed authorised-handover gate.
 - Atomic Journey, Booking, leg and assignment completion plus Driver `ASSIGNED → AVAILABLE` release.
-- Explicit separation from Finance: `paymentInitiated: false`.
-- Rider, Driver and Control Room active Journey surfaces with low-distraction Safety controls and explicit uncertainty.
+- Provider-neutral PaymentIntent and distinct Payment state/history.
+- Fail-closed `PAYMENT_PROVIDER_MODE=disabled`; no provider adapter or charging call.
+- Rider intent preparation only after governed completion and only from immutable FareAgreement truth.
+- `STATUS_UNKNOWN` reconciliation model with blind retry forbidden.
+- Idempotent provider-event inbox boundary with signature state and payload hash.
+- Integer minor-unit/currency constraints and raw payment-secret field rejection.
+- Balanced, same-currency, append-only ledger posting with linked reversal corrections.
+- Separate Refund, DriverEarning, Payout and high-risk payout-destination-change models.
+- Receipt projection only from captured Payment truth.
+- Rider, Driver and Control Room Finance surfaces with explicit no-charge/no-inferred-earning labels.
 
 ### Verified in this checkpoint
 
-- Earlier structural verifiers remain available through Phase 0.5.
-- Phase 0.6 required-file, privacy, Safety and completion-boundary verification: **PASSED**.
-- Pure-domain tests cover plausible/impossible/out-of-order movement, destination evidence, standard completion, handover blockers, Silent Assistance, route concerns, state transitions and Driver release.
-- Blueprint traceability for `API-JRN-001`, `JRN-CON-001`, `JRN-DEV-001`, `JRN-CHG-001`, `JRN-HLT-001`, `JRN-CMP-001`, `SAF-SIL-001`, `SEC-AUTH-001`, `API-IDEM-001` and `AUD-001`: **recorded**.
+- Earlier structural verifiers and source tests remain available through Phase 0.6.
+- Phase 0.7 provider-disablement, payment, money, ledger, reconciliation and projection verifier: **PASSED**.
+- Pure-domain tests cover guarded payment transitions, unknown-status policy, balanced minor-unit ledger entries, reversal construction and recursive raw-secret rejection.
+- Blueprint traceability for `PAY-006`, `FIN-DAT-001`, `PAY-UNK-001`, `PAY-EAR-001`, `PAY-SUB-001`, `PAY-BRK-001` and `PAY-DSP-001`: **recorded**.
 
 ### Not yet verified / deliberately not claimed
 
-- PostgreSQL/PostGIS migrations 0001–0006 and transaction/concurrency cases have not been executed in this workspace.
+- PostgreSQL/PostGIS migrations 0001–0007 and transaction/concurrency cases have not been executed in this workspace.
 - Fastify, Expo and Vite workspaces have not been compiled with installed workspace dependencies here.
 - Authorised school/hospital/specialist handover recording is not exposed until staff and operating-authority rules are implemented.
-- Route repricing/application, Safety response coordination and external delivery adapters remain governed future work.
+- Production payment provider selection, adapter/webhook/reconciliation execution, refunds and payouts are not implemented.
+- Chart of accounts, principal/agent status, tax/VAT, revenue recognition and Driver economics await accountable approval.
+- PCI scope, fraud, dispute/chargeback, secrets, observability and payment incident controls require formal validation.
 - Telemetry thresholds/radii and retention defaults await Operations, Safety, privacy, accessibility and safeguarding validation.
 - No production Driver, vehicle, passenger, location, Safety, pricing, provider credentials or data are present.
 - Source creation is not production readiness, safeguarding approval, licensing approval, insurance cover, payment certification or security certification.
 
-## Next checkpoint
+## Founder/procurement gate
 
-**Engineering Phase 0.7 — Payment, Finance and Ledger Truth Foundation**
-
-The next checkpoint will be frozen against the Master Blueprint before implementation. It must keep payment authorisation, capture, settlement, refunds, fees and Driver payout as distinct owner-controlled states; completion alone cannot imply any of them.
+Selecting, contracting and enabling a production payment/payout provider remains a founder-level decision. The provider-neutral foundation can continue safely, but no charging, refund, settlement or payout path may be enabled before that decision and the required legal, accounting, security and operational controls.

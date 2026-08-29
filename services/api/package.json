@@ -1,6 +1,6 @@
 {
   "name": "@dazat/api",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,8 +12,8 @@
     "fastify": "^5.12.1",
     "pg": "^8.13.0",
     "zod": "^4.0.0",
-    "@dazat/domain": "0.0.6",
-    "@dazat/contracts": "0.0.6"
+    "@dazat/domain": "0.0.7",
+    "@dazat/contracts": "0.0.7"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
