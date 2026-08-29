@@ -26,6 +26,9 @@ export interface ApiConfig {
   readonly rideCheckPepper: string;
   readonly rideCheckTtlMinutes: number;
   readonly rideCheckMaximumAttempts: number;
+  readonly activeJourneyMaximumPlausibleSpeedMetresPerSecond: number;
+  readonly journeyArrivingRadiusMetres: number;
+  readonly journeyCompletionRadiusMetres: number;
 }
 
 function parseInteger(env: NodeJS.ProcessEnv, name: string, fallback: number, min: number, max: number): number {
@@ -103,6 +106,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     journeyArrivalRadiusMetres: parseInteger(env, 'JOURNEY_ARRIVAL_RADIUS_METRES', 200, 25, 2_000),
     rideCheckPepper,
     rideCheckTtlMinutes: parseInteger(env, 'RIDECHECK_TTL_MINUTES', 10, 1, 30),
-    rideCheckMaximumAttempts: parseInteger(env, 'RIDECHECK_MAXIMUM_ATTEMPTS', 5, 1, 10)
+    rideCheckMaximumAttempts: parseInteger(env, 'RIDECHECK_MAXIMUM_ATTEMPTS', 5, 1, 10),
+    activeJourneyMaximumPlausibleSpeedMetresPerSecond: parseInteger(env, 'ACTIVE_JOURNEY_MAXIMUM_PLAUSIBLE_SPEED_MPS', 75, 10, 150),
+    journeyArrivingRadiusMetres: parseInteger(env, 'JOURNEY_ARRIVING_RADIUS_METRES', 1_000, 100, 5_000),
+    journeyCompletionRadiusMetres: parseInteger(env, 'JOURNEY_COMPLETION_RADIUS_METRES', 250, 25, 2_000)
   };
 }

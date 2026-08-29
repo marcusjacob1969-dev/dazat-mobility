@@ -1,9 +1,13 @@
 import type {
+  ActiveJourneyLocationResult,
+  ActiveJourneyProjection,
   ArrivalResult,
+  CompleteJourneyResult,
   DriverAcknowledgementResult,
   DriverLocationObservationResult,
   JourneyCommandResult,
-  JourneyLiveProjection,
+  MarkArrivingResult,
+  SafetySignalResult,
   VerifyRideCheckResult
 } from '@dazat/contracts';
 
@@ -85,6 +89,42 @@ export async function beginJourney(sessionToken: string, journeyId: string): Pro
   }));
 }
 
-export async function getDriverJourney(sessionToken: string, journeyId: string): Promise<JourneyLiveProjection> {
+export async function sendActiveJourneyLocation(
+  sessionToken: string,
+  journeyId: string,
+  latitude: number,
+  longitude: number
+): Promise<ActiveJourneyLocationResult> {
+  return json(await fetch(`${API_BASE_URL}/v1/journeys/${journeyId}/telemetry/location`, {
+    method: 'POST',
+    headers: { ...auth(sessionToken), 'content-type': 'application/json' },
+    body: JSON.stringify({
+      clientObservationId: clientObservationId(), latitude, longitude,
+      observedAt: new Date().toISOString(), source: 'DEVICE_GPS', accuracyMetres: 20, confidence: 0.9
+    })
+  }));
+}
+
+export async function markDestinationArriving(sessionToken: string, journeyId: string): Promise<MarkArrivingResult> {
+  return json(await fetch(`${API_BASE_URL}/v1/journeys/${journeyId}/arriving`, {
+    method: 'POST', headers: { ...auth(sessionToken), 'idempotency-key': requestKey('journey-arriving') }
+  }));
+}
+
+export async function completeActiveJourney(sessionToken: string, journeyId: string): Promise<CompleteJourneyResult> {
+  return json(await fetch(`${API_BASE_URL}/v1/journeys/${journeyId}/complete`, {
+    method: 'POST', headers: { ...auth(sessionToken), 'idempotency-key': requestKey('journey-complete') }
+  }));
+}
+
+export async function sendDriverSos(sessionToken: string, journeyId: string): Promise<SafetySignalResult> {
+  return json(await fetch(`${API_BASE_URL}/v1/safety/signals/sos`, {
+    method: 'POST',
+    headers: { ...auth(sessionToken), 'content-type': 'application/json', 'idempotency-key': requestKey('driver-sos') },
+    body: JSON.stringify({ journeyId })
+  }));
+}
+
+export async function getDriverJourney(sessionToken: string, journeyId: string): Promise<ActiveJourneyProjection> {
   return json(await fetch(`${API_BASE_URL}/v1/journeys/${journeyId}/live`, { headers: auth(sessionToken) }));
 }

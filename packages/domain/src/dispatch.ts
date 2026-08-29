@@ -35,8 +35,6 @@ const availabilityTransitions: Readonly<Record<DriverAvailabilityStatus, readonl
   OFFLINE: ['AVAILABLE'],
   AVAILABLE: ['OFFLINE', 'OFFERED', 'ASSIGNED', 'BREAK', 'FINISHING_SOON'],
   OFFERED: ['AVAILABLE', 'OFFLINE', 'ASSIGNED', 'BREAK', 'FINISHING_SOON'],
-  // Leaving ASSIGNED is owned by the later Journey/cancellation/reassignment commands.
-  // A Driver cannot silently go offline and abandon an active assignment.
   ASSIGNED: [],
   BREAK: ['AVAILABLE', 'OFFLINE', 'FINISHING_SOON'],
   FINISHING_SOON: ['AVAILABLE', 'OFFLINE', 'OFFERED', 'ASSIGNED', 'BREAK']
@@ -65,6 +63,18 @@ export function assertDriverAvailabilityTransition(
   if (from !== to && !canTransitionDriverAvailability(from, to)) {
     throw new Error(`Invalid Driver availability transition: ${from} -> ${to}`);
   }
+}
+
+export function canReleaseDriverAfterJourneyCompletion(input: {
+  readonly from: DriverAvailabilityStatus;
+  readonly to: DriverAvailabilityStatus;
+  readonly journeyCompleted: boolean;
+  readonly assignmentCompleted: boolean;
+}): boolean {
+  return input.from === 'ASSIGNED'
+    && input.to === 'AVAILABLE'
+    && input.journeyCompleted
+    && input.assignmentCompleted;
 }
 
 export function canTransitionDriverOffer(from: DriverOfferStatus, to: DriverOfferStatus): boolean {

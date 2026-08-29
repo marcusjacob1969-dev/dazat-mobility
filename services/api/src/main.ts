@@ -11,6 +11,7 @@ import {
 } from './modules/booking/development-pricing-adapter.js';
 import { registerDispatchRoutes } from './modules/dispatch/routes.js';
 import { registerJourneyRoutes } from './modules/journey/routes.js';
+import { registerSafetyRoutes } from './modules/safety/routes.js';
 
 const config = loadConfig();
 const app = Fastify({ logger: { level: config.logLevel } });
@@ -37,7 +38,7 @@ app.get('/health/ready', async (_request, reply) => {
       status: 'READY',
       dependencies: {
         database: 'READY',
-        redis: 'NOT_REQUIRED_FOR_PHASE_0_5_TRANSACTIONAL_JOURNEY_FOUNDATION',
+        redis: 'NOT_REQUIRED_FOR_PHASE_0_6_TRANSACTIONAL_LIVE_JOURNEY_FOUNDATION',
         verificationDelivery: config.verificationDeliveryMode.toUpperCase(),
         pricing: config.pricingMode.toUpperCase()
       }
@@ -52,14 +53,15 @@ app.get('/health/ready', async (_request, reply) => {
 
 app.get('/v1/build-info', async () => ({
   product: 'DAZAT Mobility',
-  checkpoint: 'engineering-phase-0.5',
-  implementationStatus: 'ASSIGNMENT_TO_PICKUP_RIDECHECK_AND_PROTECTED_START_FOUNDATION_SOURCE_CREATED_NOT_PRODUCTION_VERIFIED'
+  checkpoint: 'engineering-phase-0.6',
+  implementationStatus: 'LIVE_JOURNEY_TELEMETRY_SAFETY_GOVERNED_CHANGE_AND_COMPLETION_FOUNDATION_SOURCE_CREATED_NOT_PRODUCTION_VERIFIED'
 }));
 
 registerIdentityRoutes(app, database, config, verificationDelivery);
 registerBookingRoutes(app, database, pricing);
 registerDispatchRoutes(app, database, config);
 registerJourneyRoutes(app, database, config);
+registerSafetyRoutes(app, database);
 
 app.addHook('onClose', async () => {
   await database.end();

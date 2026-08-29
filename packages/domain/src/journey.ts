@@ -4,7 +4,9 @@ export const JOURNEY_STATUSES = [
   'ARRIVED',
   'AWAITING_RIDECHECK',
   'PASSENGER_VERIFIED',
-  'IN_PROGRESS'
+  'IN_PROGRESS',
+  'ARRIVING',
+  'COMPLETED'
 ] as const;
 
 export type JourneyStatus = (typeof JOURNEY_STATUSES)[number];
@@ -15,7 +17,9 @@ const journeyTransitions: Readonly<Record<JourneyStatus, readonly JourneyStatus[
   ARRIVED: ['AWAITING_RIDECHECK'],
   AWAITING_RIDECHECK: ['PASSENGER_VERIFIED'],
   PASSENGER_VERIFIED: ['IN_PROGRESS'],
-  IN_PROGRESS: []
+  IN_PROGRESS: ['ARRIVING'],
+  ARRIVING: ['COMPLETED'],
+  COMPLETED: []
 };
 
 export function canTransitionJourney(from: JourneyStatus, to: JourneyStatus): boolean {

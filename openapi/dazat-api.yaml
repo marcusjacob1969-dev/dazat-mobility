@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.5
-  description: Engineering Phase 0.5 API. Server/domain owners remain authoritative for identity, Booking, Dispatch, Journey, pickup evidence, RideCheck and protected-start state.
+  version: 0.0.6
+  description: Engineering Phase 0.6 API. Server/domain owners remain authoritative for identity, Booking, Dispatch, Journey telemetry, governed changes, Safety and completion evidence.
 servers:
   - url: http://localhost:3001
 paths:
@@ -284,7 +284,117 @@ paths:
       parameters:
         - $ref: '#/components/parameters/JourneyId'
       responses:
-        '200': { description: Current Journey/Booking/RideCheck/telemetry/hold projection. }
+        '200': { description: Authoritative Journey snapshot with health, telemetry confidence, pending changes and completion requirements. }
+  /v1/journeys/{journeyId}/active:
+    get:
+      summary: Alias for the authoritative active Journey reconciliation snapshot.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/JourneyId'
+      responses:
+        '200': { description: Authoritative snapshot; reconnecting clients replace speculative local state. }
+  /v1/journeys/{journeyId}/telemetry/location:
+    post:
+      summary: Append active Journey telemetry with confidence and movement-plausibility classification.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/JourneyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DriverLocationObservationRequest' }
+      responses:
+        '202': { description: Observation persisted; impossible jumps and out-of-order samples remain explicit degraded evidence. }
+        '409': { description: Journey is not active or observation identity conflicts. }
+  /v1/journeys/{journeyId}/stop-requests:
+    post:
+      summary: Request an additional stop without mutating the active route prematurely.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/JourneyId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StopRequest' }
+      responses:
+        '202': { description: Request is PENDING_POLICY_REVIEW; pricing and Driver acknowledgement are not fabricated. }
+        '409': { description: Expected Journey version is stale or Journey is inactive. }
+  /v1/journeys/{journeyId}/route-change-requests:
+    post:
+      summary: Record a governed stop/destination request with an immutable requested location snapshot.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/JourneyId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RouteChangeRequest' }
+      responses:
+        '202': { description: Request recorded but routeChanged remains false pending policy workflow. }
+  /v1/journeys/{journeyId}/arriving:
+    post:
+      summary: Enter ARRIVING only with fresh, plausible destination-approach evidence.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/JourneyId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200': { description: Destination approach and completion-requirement snapshot committed. }
+        '409': { description: Destination evidence is missing, stale, degraded, implausible or outside policy radius. }
+  /v1/journeys/{journeyId}/complete:
+    post:
+      summary: Complete only after all authoritative destination, assignment, hold, continuity and handover guards pass.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/JourneyId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200': { description: Journey/Booking/assignment completed and Driver returned AVAILABLE; paymentInitiated is false. }
+        '409': { description: One or more governed completion requirements failed. }
+  /v1/safety/signals/sos:
+    post:
+      summary: Persist an SOS as a restricted INCIDENT signal before any external delivery attempt.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/JourneySafetySignal' }
+      responses:
+        '201': { description: Canonical Safety event and restricted outbox record committed. }
+  /v1/safety/signals/silent-assistance:
+    post:
+      summary: Persist Silent Assistance with a mandatory do-not-auto-call-reporter policy.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/JourneySafetySignal' }
+      responses:
+        '201': { description: Signal committed locally first; external provider availability is not a persistence dependency. }
+  /v1/safety/route-concerns:
+    post:
+      summary: Record a contextual route concern without creating an automatic misconduct finding.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RouteConcern' }
+      responses:
+        '201': { description: Restricted Safety event plus contextual route-deviation signal committed. }
 components:
   securitySchemes:
     bearerAuth:
@@ -374,3 +484,29 @@ components:
         source: { type: string, enum: [DEVICE_GPS, FLEET_TELEMATICS] }
         accuracyMetres: { type: number, minimum: 0 }
         confidence: { type: number, minimum: 0, maximum: 1 }
+    StopRequest:
+      type: object
+      required: [location, expectedJourneyVersion, reasonCode]
+      properties:
+        location: { $ref: '#/components/schemas/LocationInput' }
+        expectedJourneyVersion: { type: integer, minimum: 1 }
+        reasonCode: { type: string, enum: [PASSENGER_REQUEST, ACCESSIBILITY_NEED, OPERATIONAL_NEED, OTHER] }
+    RouteChangeRequest:
+      allOf:
+        - $ref: '#/components/schemas/StopRequest'
+        - type: object
+          required: [requestType]
+          properties:
+            requestType: { type: string, enum: [ADD_STOP, CHANGE_DESTINATION] }
+    JourneySafetySignal:
+      type: object
+      required: [journeyId]
+      properties:
+        journeyId: { type: string, format: uuid }
+    RouteConcern:
+      allOf:
+        - $ref: '#/components/schemas/JourneySafetySignal'
+        - type: object
+          required: [routeConcernCategory]
+          properties:
+            routeConcernCategory: { type: string, enum: [CHECK_ROUTE, WRONG_DESTINATION, FEEL_UNSAFE, UNEXPECTED_STOP, OTHER] }

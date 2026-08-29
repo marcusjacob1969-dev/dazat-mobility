@@ -36,7 +36,7 @@ export class JourneyEvidenceError extends Error {
   }
 }
 
-interface LockedJourney {
+export interface LockedJourney {
   readonly journeyId: string;
   readonly bookingId: string;
   readonly journeyStatus: JourneyStatus;
@@ -52,10 +52,13 @@ interface LockedJourney {
   readonly pickupSnapshotId: string;
   readonly pickupLatitude: number;
   readonly pickupLongitude: number;
+  readonly dropoffSnapshotId: string;
+  readonly dropoffLatitude: number;
+  readonly dropoffLongitude: number;
   readonly passengerPersonId: string;
 }
 
-interface LocationRow {
+export interface LocationRow {
   readonly id: string;
   readonly latitude: number;
   readonly longitude: number;
@@ -64,9 +67,11 @@ interface LocationRow {
   readonly accuracy_metres: string | number;
   readonly confidence: string | number;
   readonly telemetry_state: TelemetryConfidenceState;
+  readonly movement_plausible: boolean;
+  readonly movement_blocker: string | null;
 }
 
-function locationPolicy(config: ApiConfig) {
+export function journeyLocationPolicy(config: ApiConfig) {
   return {
     maxAgeSeconds: config.journeyLocationMaxAgeSeconds,
     maximumFutureSkewSeconds: config.journeyLocationMaximumFutureSkewSeconds,
@@ -75,7 +80,7 @@ function locationPolicy(config: ApiConfig) {
   };
 }
 
-async function readLockedJourney(client: PoolClient, journeyId: string): Promise<LockedJourney> {
+export async function readLockedJourney(client: PoolClient, journeyId: string): Promise<LockedJourney> {
   const result = await client.query<{
     journey_id: string;
     booking_id: string;
@@ -92,6 +97,9 @@ async function readLockedJourney(client: PoolClient, journeyId: string): Promise
     pickup_snapshot_id: string;
     pickup_latitude: string | number;
     pickup_longitude: string | number;
+    dropoff_snapshot_id: string;
+    dropoff_latitude: string | number;
+    dropoff_longitude: string | number;
     passenger_person_id: string;
   }>(
     `SELECT j.id AS journey_id, j.booking_id, j.status AS journey_status,
@@ -102,10 +110,14 @@ async function readLockedJourney(client: PoolClient, journeyId: string): Promise
             b.pickup_snapshot_id,
             ST_Y(pickup.point::geometry) AS pickup_latitude,
             ST_X(pickup.point::geometry) AS pickup_longitude,
+            b.dropoff_snapshot_id,
+            ST_Y(dropoff.point::geometry) AS dropoff_latitude,
+            ST_X(dropoff.point::geometry) AS dropoff_longitude,
             passenger.person_id AS passenger_person_id
        FROM journey.journey j
        JOIN booking.booking b ON b.id = j.booking_id
        JOIN booking.location_snapshot pickup ON pickup.id = b.pickup_snapshot_id
+       JOIN booking.location_snapshot dropoff ON dropoff.id = b.dropoff_snapshot_id
        JOIN dispatch.driver_assignment da ON da.id = j.active_assignment_id
        JOIN journey.journey_leg leg ON leg.journey_id = j.id AND leg.driver_assignment_id = da.id
        JOIN LATERAL (
@@ -135,18 +147,21 @@ async function readLockedJourney(client: PoolClient, journeyId: string): Promise
     pickupSnapshotId: row.pickup_snapshot_id,
     pickupLatitude: Number(row.pickup_latitude),
     pickupLongitude: Number(row.pickup_longitude),
+    dropoffSnapshotId: row.dropoff_snapshot_id,
+    dropoffLatitude: Number(row.dropoff_latitude),
+    dropoffLongitude: Number(row.dropoff_longitude),
     passengerPersonId: row.passenger_person_id
   };
 }
 
-function assertAssignedDriver(journey: LockedJourney, actor: AuthenticatedPrincipal): void {
+export function assertAssignedDriver(journey: LockedJourney, actor: AuthenticatedPrincipal): void {
   if (!actor.driverProfileId || actor.driverProfileId !== journey.driverProfileId) {
     throw new JourneyForbiddenError('Journey belongs to another Driver');
   }
   if (journey.assignmentStatus !== 'ACTIVE') throw new JourneyConflictError('Driver assignment is not active');
 }
 
-async function assertJourneyParty(
+export async function assertJourneyParty(
   client: Pick<PoolClient, 'query'>,
   bookingId: string,
   actor: AuthenticatedPrincipal
@@ -182,7 +197,7 @@ async function assertSelfBookerPassenger(
   if (!result.rowCount) throw new JourneyForbiddenError('Phase 0.5 PIN RideCheck requires the self-booking passenger');
 }
 
-async function appendBookingTransition(
+export async function appendBookingTransition(
   client: PoolClient,
   journey: LockedJourney,
   to: BookingStatus,
@@ -220,10 +235,12 @@ const legStatusForJourney: Readonly<Record<JourneyStatus, string>> = {
   ARRIVED: 'ARRIVED',
   AWAITING_RIDECHECK: 'ARRIVED',
   PASSENGER_VERIFIED: 'READY_TO_START',
-  IN_PROGRESS: 'IN_PROGRESS'
+  IN_PROGRESS: 'IN_PROGRESS',
+  ARRIVING: 'ARRIVING',
+  COMPLETED: 'COMPLETED'
 };
 
-async function appendJourneyTransition(
+export async function appendJourneyTransition(
   client: PoolClient,
   journey: LockedJourney,
   to: JourneyStatus,
@@ -238,14 +255,16 @@ async function appendJourneyTransition(
   await client.query(
     `UPDATE journey.journey
         SET status = $2::journey.journey_status, aggregate_version = $3, updated_at = now(),
-            started_at = CASE WHEN $2 = 'IN_PROGRESS' THEN now() ELSE started_at END
+            started_at = CASE WHEN $2 = 'IN_PROGRESS' THEN now() ELSE started_at END,
+            completed_at = CASE WHEN $2 = 'COMPLETED' THEN now() ELSE completed_at END
       WHERE id = $1`,
     [journey.journeyId, to, nextVersion]
   );
   await client.query(
     `UPDATE journey.journey_leg
         SET status = $2::journey.journey_leg_status,
-            started_at = CASE WHEN $2 = 'IN_PROGRESS' THEN now() ELSE started_at END
+            started_at = CASE WHEN $2 = 'IN_PROGRESS' THEN now() ELSE started_at END,
+            ended_at = CASE WHEN $2 = 'COMPLETED' THEN now() ELSE ended_at END
       WHERE id = $1`,
     [journey.journeyLegId, legStatusForJourney[to]]
   );
@@ -265,12 +284,13 @@ async function appendJourneyTransition(
   return nextVersion;
 }
 
-async function latestLocation(client: Pick<PoolClient, 'query'>, journeyId: string): Promise<LocationRow | null> {
+export async function latestLocation(client: Pick<PoolClient, 'query'>, journeyId: string): Promise<LocationRow | null> {
   const result = await client.query<LocationRow>(
     `SELECT id,
             ST_Y(point::geometry) AS latitude,
             ST_X(point::geometry) AS longitude,
-            observed_at, received_at, accuracy_metres, confidence, telemetry_state
+            observed_at, received_at, accuracy_metres, confidence, telemetry_state,
+            movement_plausible, movement_blocker
        FROM journey.driver_location_observation
       WHERE journey_id = $1
       ORDER BY observed_at DESC, received_at DESC
@@ -292,7 +312,7 @@ function evaluatePickupLocation(location: LocationRow, journey: LockedJourney, n
     latitude: journey.pickupLatitude,
     longitude: journey.pickupLongitude
   }, {
-    ...locationPolicy(config),
+    ...journeyLocationPolicy(config),
     arrivalRadiusMetres: config.journeyArrivalRadiusMetres
   });
 }
@@ -467,7 +487,7 @@ export async function recordDriverLocationObservation(
       receivedAt,
       accuracyMetres: request.accuracyMetres,
       confidence: request.confidence
-    }, locationPolicy(config));
+    }, journeyLocationPolicy(config));
     const inserted = await client.query<{ id: string; received_at: Date }>(
       `INSERT INTO journey.driver_location_observation
          (journey_id, journey_leg_id, driver_profile_id, client_observation_id, point, observed_at, received_at,
@@ -931,6 +951,8 @@ export async function getJourneyLiveProjection(
     location_latitude: string | number | null; location_longitude: string | number | null;
     location_observed_at: Date | null; location_received_at: Date | null;
     location_accuracy_metres: string | number | null; location_confidence: string | number | null;
+    location_persisted_telemetry_state: TelemetryConfidenceState | null;
+    location_movement_plausible: boolean | null;
   }>(
     `SELECT j.id AS journey_id, j.booking_id, j.status AS journey_status, b.status AS booking_status,
             j.aggregate_version, da.id AS assignment_id, da.driver_profile_id, da.vehicle_id,
@@ -939,7 +961,9 @@ export async function getJourneyLiveProjection(
             ST_Y(location.point::geometry) AS location_latitude,
             ST_X(location.point::geometry) AS location_longitude,
             location.observed_at AS location_observed_at, location.received_at AS location_received_at,
-            location.accuracy_metres AS location_accuracy_metres, location.confidence AS location_confidence
+            location.accuracy_metres AS location_accuracy_metres, location.confidence AS location_confidence,
+            location.telemetry_state AS location_persisted_telemetry_state,
+            location.movement_plausible AS location_movement_plausible
        FROM journey.journey j
        JOIN booking.booking b ON b.id = j.booking_id
        JOIN dispatch.driver_assignment da ON da.id = j.active_assignment_id
@@ -949,7 +973,8 @@ export async function getJourneyLiveProjection(
        ) rc ON true
        LEFT JOIN LATERAL (
          SELECT observation.point, observation.observed_at, observation.received_at,
-                observation.accuracy_metres, observation.confidence
+                observation.accuracy_metres, observation.confidence, observation.telemetry_state,
+                observation.movement_plausible
            FROM journey.driver_location_observation observation
           WHERE observation.journey_id = j.id
           ORDER BY observation.observed_at DESC, observation.received_at DESC LIMIT 1
@@ -963,11 +988,16 @@ export async function getJourneyLiveProjection(
   if (!assignedDriver) await assertJourneyParty(pool, row.booking_id, actor);
   let currentTelemetryState: TelemetryConfidenceState | undefined;
   if (row.location_observed_at && row.location_accuracy_metres !== null && row.location_confidence !== null) {
-    currentTelemetryState = evaluateLocationEvidence({
+    const readTimeTelemetry = evaluateLocationEvidence({
       latitude: Number(row.location_latitude), longitude: Number(row.location_longitude),
       observedAt: row.location_observed_at, receivedAt: new Date(),
       accuracyMetres: Number(row.location_accuracy_metres), confidence: Number(row.location_confidence)
-    }, locationPolicy(config)).state;
+    }, journeyLocationPolicy(config)).state;
+    currentTelemetryState = readTimeTelemetry === 'STALE' || row.location_persisted_telemetry_state === 'STALE'
+      ? 'STALE'
+      : row.location_movement_plausible === false || row.location_persisted_telemetry_state === 'DEGRADED'
+        ? 'DEGRADED'
+        : readTimeTelemetry;
   }
   return {
     journeyId: row.journey_id,

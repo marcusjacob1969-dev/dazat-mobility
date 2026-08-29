@@ -2,4 +2,4 @@
 
 The Rider UI is intentionally not being polished before Identity and the canonical Booking/Journey APIs exist.
 
-Current source slice: verified session → Booking/Quote/Confirm → Dispatch projection → pickup Journey reconciliation → self-booker PIN RideCheck. The challenge is returned once and never stored by the app as durable state.
+Current source slice continues through active Journey reconciliation, persistent SOS/Silent Assistance/route concern, governed stop requests and completion visibility. Route requests remain pending and Safety controls do not depend on external delivery success.

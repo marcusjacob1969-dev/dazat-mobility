@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { DriverEligibilitySummary, DriverOfferSummary, JourneyLiveProjection, RegistrationContactType, VerifyRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, DriverEligibilitySummary, DriverOfferSummary, RegistrationContactType, VerifyRideCheckResult } from '@dazat/contracts';
 import {
   confirmDriverContactVerification,
   startDriverContactVerification,
@@ -18,8 +18,12 @@ import {
 import {
   acknowledgeAssignment,
   beginJourney,
+  completeActiveJourney,
   getDriverJourney,
+  markDestinationArriving,
   markArrived,
+  sendActiveJourneyLocation,
+  sendDriverSos,
   sendPickupLocation,
   verifyPickupRideCheck
 } from './src/journey-api';
@@ -56,9 +60,10 @@ export default function DriverApp() {
   const [offers, setOffers] = useState<readonly DriverOfferSummary[]>([]);
   const [assignment, setAssignment] = useState('');
   const [assignedBookingId, setAssignedBookingId] = useState('');
-  const [journey, setJourney] = useState<JourneyLiveProjection | null>(null);
+  const [journey, setJourney] = useState<ActiveJourneyProjection | null>(null);
   const [rideCheckCode, setRideCheckCode] = useState('');
   const [rideCheckOutcome, setRideCheckOutcome] = useState<VerifyRideCheckResult | null>(null);
+  const [safetyStatus, setSafetyStatus] = useState('');
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -151,7 +156,11 @@ export default function DriverApp() {
   function sendLocation() {
     if (!journey) return;
     void run(async () => {
-      await sendPickupLocation(sessionToken, journey.journeyId, Number(latitude), Number(longitude));
+      if (['IN_PROGRESS', 'ARRIVING'].includes(journey.journeyStatus)) {
+        await sendActiveJourneyLocation(sessionToken, journey.journeyId, Number(latitude), Number(longitude));
+      } else {
+        await sendPickupLocation(sessionToken, journey.journeyId, Number(latitude), Number(longitude));
+      }
       setJourney(await getDriverJourney(sessionToken, journey.journeyId));
     });
   }
@@ -185,6 +194,32 @@ export default function DriverApp() {
     });
   }
 
+  function sendSos() {
+    if (!journey) return;
+    void run(async () => {
+      const result = await sendDriverSos(sessionToken, journey.journeyId);
+      setSafetyStatus(`SOS persisted · ${result.journeyHealth}`);
+      setJourney(await getDriverJourney(sessionToken, journey.journeyId));
+    });
+  }
+
+  function markDestinationApproach() {
+    if (!journey) return;
+    void run(async () => {
+      await markDestinationArriving(sessionToken, journey.journeyId);
+      setJourney(await getDriverJourney(sessionToken, journey.journeyId));
+    });
+  }
+
+  function finishJourney() {
+    if (!journey) return;
+    void run(async () => {
+      await completeActiveJourney(sessionToken, journey.journeyId);
+      setAvailability('AVAILABLE');
+      setJourney(await getDriverJourney(sessionToken, journey.journeyId));
+    });
+  }
+
   function decline(offerId: string) {
     void run(async () => {
       await declineDriverOffer(sessionToken, offerId);
@@ -196,9 +231,9 @@ export default function DriverApp() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.5</Text>
-        <Text style={styles.title}>DAZAT Driver pickup journey</Text>
-        <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. Assignment, fresh pickup evidence and passenger verification are separate truths. The app requests transitions; it cannot skip arrival evidence, RideCheck or the protected backend start.</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.6</Text>
+        <Text style={styles.title}>DAZAT Driver journey</Text>
+        <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. Pickup evidence and RideCheck protect the start. During an active Journey, telemetry confidence, Safety state, destination evidence and completion requirements remain separate backend-owned truths.</Text>
 
         {flow === 'REGISTER' ? (
           <View style={styles.section}>
@@ -266,8 +301,8 @@ export default function DriverApp() {
                   <>
                     <Text style={styles.status}>Journey: {journey.journeyStatus}</Text>
                     <Text style={styles.body}>Telemetry: {journey.latestDriverLocation?.telemetryState ?? 'UNKNOWN'} · Hold: {journey.activeOperationalHold ? 'ACTIVE' : 'NONE'}</Text>
-                    <SecondaryButton label="Refresh authoritative pickup state" onPress={refreshJourney} />
-                    <SecondaryButton label="Send fresh pickup location" onPress={sendLocation} />
+                    <SecondaryButton label="Refresh authoritative Journey state" onPress={refreshJourney} />
+                    <SecondaryButton label={['IN_PROGRESS', 'ARRIVING'].includes(journey.journeyStatus) ? 'Send active Journey location' : 'Send fresh pickup location'} onPress={sendLocation} />
                     {journey.journeyStatus === 'EN_ROUTE' ? <PrimaryButton busy={busy} label="Mark arrived with evidence" onPress={arrive} /> : null}
                     {journey.journeyStatus === 'AWAITING_RIDECHECK' ? (
                       <>
@@ -277,6 +312,21 @@ export default function DriverApp() {
                       </>
                     ) : null}
                     {journey.journeyStatus === 'PASSENGER_VERIFIED' ? <PrimaryButton busy={busy} label="Start protected journey" onPress={startProtectedJourney} /> : null}
+                    {['IN_PROGRESS', 'ARRIVING'].includes(journey.journeyStatus) ? (
+                      <View style={styles.activeJourney} accessibilityRole="summary">
+                        <Text style={styles.noticeTitle}>Active Journey · {journey.journeyHealth}</Text>
+                        <Text style={styles.body}>Telemetry: {journey.latestDriverLocation?.telemetryState ?? 'UNKNOWN'} · pending route changes: {journey.pendingRouteChangeCount}</Text>
+                        <Text style={styles.body}>Completion context: {journey.completionRequirements.serviceContext} · handover {journey.completionRequirements.handoverRequired ? 'required' : 'not required'}</Text>
+                        {journey.continuityCaseOpen ? <Text style={styles.error}>A continuity case is open. Completion remains blocked.</Text> : null}
+                        {journey.completionRequirements.handoverRequired && !journey.completionRequirements.authorisedHandoverRecorded ? <Text style={styles.error}>Completion stays blocked until an authorised handover is recorded. Passenger details alone are not authority.</Text> : null}
+                        {journey.completionRequirements.handoverFailureOpen ? <Text style={styles.error}>Failed handover is open. Do not complete the Journey.</Text> : null}
+                        <SafetyButton busy={busy} label="SOS — get help" onPress={sendSos} />
+                        {safetyStatus ? <Text style={styles.status}>{safetyStatus}</Text> : null}
+                        {journey.journeyStatus === 'IN_PROGRESS' ? <PrimaryButton busy={busy} label="Mark destination approach with evidence" onPress={markDestinationApproach} /> : null}
+                        {journey.journeyStatus === 'ARRIVING' ? <PrimaryButton busy={busy} label="Complete after requirements pass" onPress={finishJourney} /> : null}
+                      </View>
+                    ) : null}
+                    {journey.journeyStatus === 'COMPLETED' ? <Text style={styles.status}>Journey completed. Driver availability returned to AVAILABLE; payment was not initiated in this checkpoint.</Text> : null}
                   </>
                 )}
               </View>
@@ -302,6 +352,10 @@ function SecondaryButton(props: { label: string; onPress: () => void }) {
   return <Pressable onPress={props.onPress} style={styles.secondaryButton}><Text style={styles.secondaryText}>{props.label}</Text></Pressable>;
 }
 
+function SafetyButton(props: { busy: boolean; label: string; onPress: () => void }) {
+  return <Pressable disabled={props.busy} onPress={props.onPress} accessibilityRole="button" style={styles.safetyButton}><Text style={styles.safetyText}>{props.label}</Text></Pressable>;
+}
+
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: dazatTokens.color.canvas },
   container: { padding: dazatTokens.spacing[6], gap: dazatTokens.spacing[4] },
@@ -323,6 +377,9 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.55 },
   error: { color: dazatTokens.color.danger, fontSize: 14, lineHeight: 20 },
   notice: { padding: dazatTokens.spacing[5], backgroundColor: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card, gap: dazatTokens.spacing[2] },
+  activeJourney: { padding: dazatTokens.spacing[4], borderWidth: 2, borderColor: dazatTokens.color.textPrimary, borderRadius: dazatTokens.radius.card, gap: dazatTokens.spacing[3] },
+  safetyButton: { minHeight: 56, justifyContent: 'center', alignItems: 'center', paddingHorizontal: dazatTokens.spacing[4], backgroundColor: dazatTokens.color.danger, borderRadius: dazatTokens.radius.button },
+  safetyText: { color: dazatTokens.color.canvas, fontSize: 18, fontWeight: '700' },
   noticeTitle: { fontSize: 18, fontWeight: '700', color: dazatTokens.color.textPrimary },
   status: { fontSize: 16, fontWeight: '700', color: dazatTokens.color.textPrimary },
   devNotice: { fontSize: 13, lineHeight: 18, color: dazatTokens.color.textMuted, fontWeight: '600' }

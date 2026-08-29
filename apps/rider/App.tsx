@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { BookingDispatchProjection, BookingQuoteResult, BookingSummary, JourneyLiveProjection, RegistrationContactType, StartRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, RegistrationContactType, StartRideCheckResult } from '@dazat/contracts';
 import {
   confirmRiderContactVerification,
   startRiderContactVerification,
@@ -10,7 +10,7 @@ import {
 } from './src/identity-api';
 import { confirmRiderBooking, createRiderBooking, quoteRiderBooking } from './src/booking-api';
 import { getBookingDispatch, startBookingDispatch } from './src/dispatch-api';
-import { getBookingJourney, startPassengerRideCheck } from './src/journey-api';
+import { getBookingJourney, requestJourneyStop, sendRiderSafetySignal, startPassengerRideCheck } from './src/journey-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'BOOK' | 'QUOTE' | 'READY';
 
@@ -56,8 +56,12 @@ export default function RiderApp() {
   const [booking, setBooking] = useState<BookingSummary | null>(null);
   const [quote, setQuote] = useState<BookingQuoteResult['quote'] | null>(null);
   const [dispatch, setDispatch] = useState<BookingDispatchProjection | null>(null);
-  const [journey, setJourney] = useState<JourneyLiveProjection | null>(null);
+  const [journey, setJourney] = useState<ActiveJourneyProjection | null>(null);
   const [rideCheck, setRideCheck] = useState<StartRideCheckResult | null>(null);
+  const [changeLabel, setChangeLabel] = useState('');
+  const [changeLat, setChangeLat] = useState('');
+  const [changeLon, setChangeLon] = useState('');
+  const [journeyNotice, setJourneyNotice] = useState('');
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -159,13 +163,35 @@ export default function RiderApp() {
     });
   }
 
+  function requestStop() {
+    if (!journey) return;
+    void run(async () => {
+      const result = await requestJourneyStop(sessionToken, journey, {
+        latitude: Number(changeLat), longitude: Number(changeLon), displayLabel: changeLabel
+      });
+      setJourneyNotice(result.message);
+      setJourney(await getBookingJourney(sessionToken, journey.bookingId));
+    });
+  }
+
+  function signalSafety(signal: 'SOS' | 'SILENT_ASSISTANCE' | 'ROUTE_CONCERN', category?: 'CHECK_ROUTE' | 'FEEL_UNSAFE') {
+    if (!journey) return;
+    void run(async () => {
+      const result = await sendRiderSafetySignal(sessionToken, journey.journeyId, signal, category);
+      setJourneyNotice(signal === 'SILENT_ASSISTANCE'
+        ? `Silent Assistance persisted · ${result.journeyHealth} · no automatic call to you`
+        : `${signal.replace('_', ' ')} persisted · ${result.journeyHealth}`);
+      setJourney(await getBookingJourney(sessionToken, journey.bookingId));
+    });
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.5</Text>
-        <Text style={styles.title}>DAZAT Rider vertical slice</Text>
-        <Text style={styles.body}>Verified contact → authenticated session → Booking → Quote → Confirm → READY_FOR_DISPATCH.</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.6</Text>
+        <Text style={styles.title}>DAZAT Rider journey</Text>
+        <Text style={styles.body}>Verified Booking through protected pickup, active Journey visibility, governed changes and persistent Safety controls.</Text>
 
         {flow === 'REGISTER' && (
           <View style={styles.section}>
@@ -246,7 +272,7 @@ export default function RiderApp() {
                 {dispatch.driverAssigned ? <PrimaryButton label="Refresh pickup journey" busy={busy} onPress={refreshJourney} /> : null}
                 {journey ? (
                   <View style={styles.notice}>
-                    <Text style={styles.noticeTitle}>Pickup state: {journey.journeyStatus}</Text>
+                    <Text style={styles.noticeTitle}>Journey: {journey.journeyStatus}</Text>
                     <Text style={styles.body}>Driver location: {journey.latestDriverLocation?.telemetryState ?? 'UNKNOWN'}. Stale or unknown location is never presented as live certainty.</Text>
                     {journey.journeyStatus === 'ARRIVED' ? <PrimaryButton label="Create protected RideCheck" busy={busy} onPress={createRideCheck} /> : null}
                     {rideCheck?.challengeCode ? (
@@ -256,6 +282,28 @@ export default function RiderApp() {
                       </View>
                     ) : null}
                     {journey.activeOperationalHold ? <Text style={styles.error}>Protected start hold active. Normal support cannot bypass this boundary.</Text> : null}
+                    {['IN_PROGRESS', 'ARRIVING'].includes(journey.journeyStatus) ? (
+                      <View style={styles.activeJourney}>
+                        <Text style={styles.status}>Journey health: {journey.journeyHealth}</Text>
+                        <Text style={styles.body}>Reconnect source: {journey.reconnectInstruction}. Pending route changes: {journey.pendingRouteChangeCount}.</Text>
+                        {journey.continuityCaseOpen ? <Text style={styles.error}>A continuity case is open; completion remains blocked while support coordinates the Journey.</Text> : null}
+                        <View style={styles.actionRow}>
+                          <SafetyButton label="SOS" busy={busy} onPress={() => signalSafety('SOS')} />
+                          <SecondaryButton label="Silent Assistance" onPress={() => signalSafety('SILENT_ASSISTANCE')} />
+                          <SecondaryButton label="Check route" onPress={() => signalSafety('ROUTE_CONCERN', 'CHECK_ROUTE')} />
+                          <SecondaryButton label="I feel unsafe" onPress={() => signalSafety('ROUTE_CONCERN', 'FEEL_UNSAFE')} />
+                        </View>
+                        <Text style={styles.body}>A route concern is contextual evidence, never an automatic misconduct finding.</Text>
+                        <Field label="Requested stop label" value={changeLabel} onChangeText={setChangeLabel} />
+                        <Field label="Requested stop latitude" value={changeLat} onChangeText={setChangeLat} keyboardType="numeric" />
+                        <Field label="Requested stop longitude" value={changeLon} onChangeText={setChangeLon} keyboardType="numeric" />
+                        <SecondaryButton label="Request stop for policy review" onPress={requestStop} />
+                        <Text style={styles.body}>The route does not change until pricing, authority, communication and Driver acknowledgement rules succeed.</Text>
+                        {journey.completionRequirements.handoverRequired ? <Text style={styles.body}>This Journey requires an authorised handover before completion.</Text> : null}
+                        {journeyNotice ? <Text style={styles.status}>{journeyNotice}</Text> : null}
+                      </View>
+                    ) : null}
+                    {journey.journeyStatus === 'COMPLETED' ? <Text style={styles.status}>Journey completed. Payment remains a later governed checkpoint.</Text> : null}
                   </View>
                 ) : null}
               </View>
@@ -277,6 +325,14 @@ function PrimaryButton(props: { label: string; busy: boolean; onPress: () => voi
   );
 }
 
+function SecondaryButton(props: { label: string; onPress: () => void }) {
+  return <Pressable accessibilityRole="button" onPress={props.onPress} style={styles.secondaryButton}><Text style={styles.secondaryButtonText}>{props.label}</Text></Pressable>;
+}
+
+function SafetyButton(props: { label: string; busy: boolean; onPress: () => void }) {
+  return <Pressable accessibilityRole="button" disabled={props.busy} onPress={props.onPress} style={styles.safetyButton}><Text style={styles.safetyButtonText}>{props.label}</Text></Pressable>;
+}
+
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: dazatTokens.color.canvas },
   container: { padding: dazatTokens.spacing[6], gap: dazatTokens.spacing[4] },
@@ -294,10 +350,16 @@ const styles = StyleSheet.create({
   switchText: { fontSize: 15, fontWeight: '600', color: dazatTokens.color.textPrimary },
   primaryButton: { marginTop: dazatTokens.spacing[2], minHeight: 52, justifyContent: 'center', alignItems: 'center', backgroundColor: dazatTokens.color.textPrimary, borderRadius: dazatTokens.radius.button },
   primaryButtonText: { color: dazatTokens.color.canvas, fontSize: 16, fontWeight: '700' },
+  secondaryButton: { minHeight: 48, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: dazatTokens.color.border, borderRadius: dazatTokens.radius.button, paddingHorizontal: dazatTokens.spacing[4] },
+  secondaryButtonText: { color: dazatTokens.color.textPrimary, fontSize: 15, fontWeight: '700' },
+  safetyButton: { minHeight: 56, justifyContent: 'center', alignItems: 'center', backgroundColor: dazatTokens.color.danger, borderRadius: dazatTokens.radius.button, paddingHorizontal: dazatTokens.spacing[5] },
+  safetyButtonText: { color: dazatTokens.color.canvas, fontSize: 18, fontWeight: '700' },
+  actionRow: { gap: dazatTokens.spacing[2] },
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.55 },
   error: { color: dazatTokens.color.danger, fontSize: 14, lineHeight: 20 },
   notice: { padding: dazatTokens.spacing[5], backgroundColor: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card, gap: dazatTokens.spacing[2] },
+  activeJourney: { marginTop: dazatTokens.spacing[3], padding: dazatTokens.spacing[4], borderWidth: 2, borderColor: dazatTokens.color.textPrimary, borderRadius: dazatTokens.radius.card, gap: dazatTokens.spacing[3] },
   noticeTitle: { fontSize: 20, fontWeight: '700', color: dazatTokens.color.textPrimary },
   status: { fontSize: 16, fontWeight: '700', color: dazatTokens.color.textPrimary },
   devNotice: { fontSize: 13, lineHeight: 18, color: dazatTokens.color.textMuted, fontWeight: '600' }

@@ -5,7 +5,6 @@ import type { DatabasePool } from '../../db.js';
 import { authenticateBearerSession } from '../identity/session-service.js';
 import {
   acknowledgeDriverAssignment,
-  getJourneyLiveProjection,
   getJourneyLiveProjectionByBooking,
   JourneyConflictError,
   JourneyEvidenceError,
@@ -17,6 +16,13 @@ import {
   startRideCheck,
   verifyRideCheck
 } from './journey-service.js';
+import {
+  completeJourney,
+  getActiveJourneyProjection,
+  markJourneyArriving,
+  recordActiveJourneyLocation,
+  requestRouteChange
+} from './live-journey-service.js';
 
 const journeyParams = z.object({ journeyId: z.string().uuid() });
 const bookingParams = z.object({ bookingId: z.string().uuid() });
@@ -33,6 +39,20 @@ const verifySchema = z.object({
   rideCheckSessionId: z.string().uuid(),
   code: z.string().regex(/^\d{6}$/)
 }).strict();
+const routeChangeLocationSchema = z.object({
+  latitude: z.number().finite().min(-90).max(90),
+  longitude: z.number().finite().min(-180).max(180),
+  displayLabel: z.string().trim().min(1).max(500),
+  structuredAddress: z.record(z.string(), z.string()).optional(),
+  providerReference: z.string().trim().min(1).max(500).optional()
+}).strict();
+const routeChangeSchema = z.object({
+  requestType: z.enum(['ADD_STOP', 'CHANGE_DESTINATION']),
+  location: routeChangeLocationSchema,
+  expectedJourneyVersion: z.number().int().positive(),
+  reasonCode: z.enum(['PASSENGER_REQUEST', 'ACCESSIBILITY_NEED', 'OPERATIONAL_NEED', 'OTHER'])
+}).strict();
+const stopRequestSchema = routeChangeSchema.omit({ requestType: true });
 
 function bearer(request: FastifyRequest): string | null {
   const header = request.headers.authorization;
@@ -74,7 +94,8 @@ export function registerJourneyRoutes(app: FastifyInstance, pool: DatabasePool, 
     const params = bookingParams.safeParse(request.params);
     if (!params.success) return reply.code(400).send({ code: 'INVALID_BOOKING_ID' });
     try {
-      return reply.code(200).send(await getJourneyLiveProjectionByBooking(pool, params.data.bookingId, principal, config));
+      const projection = await getJourneyLiveProjectionByBooking(pool, params.data.bookingId, principal, config);
+      return reply.code(200).send(await getActiveJourneyProjection(pool, projection.journeyId, principal, config));
     } catch (error) {
       const known = sendJourneyError(reply, error);
       if (known) return known;
@@ -186,18 +207,122 @@ export function registerJourneyRoutes(app: FastifyInstance, pool: DatabasePool, 
     }
   });
 
+  app.post('/v1/journeys/:journeyId/telemetry/location', async (request, reply) => {
+    const principal = await requirePrincipal(request, reply, pool);
+    if (!principal) return;
+    const params = journeyParams.safeParse(request.params);
+    const body = locationSchema.safeParse(request.body);
+    if (!params.success || !body.success) return reply.code(400).send({ code: 'INVALID_ACTIVE_JOURNEY_LOCATION' });
+    try {
+      return reply.code(202).send(await recordActiveJourneyLocation(pool, params.data.journeyId, body.data, principal, config));
+    } catch (error) {
+      const known = sendJourneyError(reply, error);
+      if (known) return known;
+      request.log.error({ err: error }, 'active Journey telemetry failed');
+      return reply.code(500).send({ code: 'ACTIVE_JOURNEY_TELEMETRY_UNAVAILABLE' });
+    }
+  });
+
+  app.post('/v1/journeys/:journeyId/stop-requests', async (request, reply) => {
+    const principal = await requirePrincipal(request, reply, pool);
+    if (!principal) return;
+    const params = journeyParams.safeParse(request.params);
+    const body = stopRequestSchema.safeParse(request.body);
+    const key = idempotencyKey(request);
+    if (!params.success || !body.success) return reply.code(400).send({ code: 'INVALID_STOP_REQUEST' });
+    if (!key) return reply.code(400).send({ code: 'IDEMPOTENCY_KEY_REQUIRED' });
+    try {
+      return reply.code(202).send(await requestRouteChange(pool, params.data.journeyId, {
+        ...body.data,
+        requestType: 'ADD_STOP'
+      }, principal, key));
+    } catch (error) {
+      const known = sendJourneyError(reply, error);
+      if (known) return known;
+      request.log.error({ err: error }, 'Journey stop request failed');
+      return reply.code(500).send({ code: 'JOURNEY_STOP_REQUEST_UNAVAILABLE' });
+    }
+  });
+
+  app.post('/v1/journeys/:journeyId/route-change-requests', async (request, reply) => {
+    const principal = await requirePrincipal(request, reply, pool);
+    if (!principal) return;
+    const params = journeyParams.safeParse(request.params);
+    const body = routeChangeSchema.safeParse(request.body);
+    const key = idempotencyKey(request);
+    if (!params.success || !body.success) return reply.code(400).send({ code: 'INVALID_ROUTE_CHANGE_REQUEST' });
+    if (!key) return reply.code(400).send({ code: 'IDEMPOTENCY_KEY_REQUIRED' });
+    try {
+      return reply.code(202).send(await requestRouteChange(pool, params.data.journeyId, body.data, principal, key));
+    } catch (error) {
+      const known = sendJourneyError(reply, error);
+      if (known) return known;
+      request.log.error({ err: error }, 'Journey route change request failed');
+      return reply.code(500).send({ code: 'JOURNEY_ROUTE_CHANGE_UNAVAILABLE' });
+    }
+  });
+
+  app.post('/v1/journeys/:journeyId/arriving', async (request, reply) => {
+    const principal = await requirePrincipal(request, reply, pool);
+    if (!principal) return;
+    const params = journeyParams.safeParse(request.params);
+    const key = idempotencyKey(request);
+    if (!params.success) return reply.code(400).send({ code: 'INVALID_JOURNEY_ID' });
+    if (!key) return reply.code(400).send({ code: 'IDEMPOTENCY_KEY_REQUIRED' });
+    try {
+      return reply.code(200).send(await markJourneyArriving(pool, params.data.journeyId, principal, key, config));
+    } catch (error) {
+      const known = sendJourneyError(reply, error);
+      if (known) return known;
+      request.log.error({ err: error }, 'Journey destination arrival failed');
+      return reply.code(500).send({ code: 'JOURNEY_DESTINATION_ARRIVAL_UNAVAILABLE' });
+    }
+  });
+
+  app.post('/v1/journeys/:journeyId/complete', async (request, reply) => {
+    const principal = await requirePrincipal(request, reply, pool);
+    if (!principal) return;
+    const params = journeyParams.safeParse(request.params);
+    const key = idempotencyKey(request);
+    if (!params.success) return reply.code(400).send({ code: 'INVALID_JOURNEY_ID' });
+    if (!key) return reply.code(400).send({ code: 'IDEMPOTENCY_KEY_REQUIRED' });
+    try {
+      return reply.code(200).send(await completeJourney(pool, params.data.journeyId, principal, key, config));
+    } catch (error) {
+      const known = sendJourneyError(reply, error);
+      if (known) return known;
+      request.log.error({ err: error }, 'governed Journey completion failed');
+      return reply.code(500).send({ code: 'JOURNEY_COMPLETION_UNAVAILABLE' });
+    }
+  });
+
   app.get('/v1/journeys/:journeyId/live', async (request, reply) => {
     const principal = await requirePrincipal(request, reply, pool);
     if (!principal) return;
     const params = journeyParams.safeParse(request.params);
     if (!params.success) return reply.code(400).send({ code: 'INVALID_JOURNEY_ID' });
     try {
-      return reply.code(200).send(await getJourneyLiveProjection(pool, params.data.journeyId, principal, config));
+      return reply.code(200).send(await getActiveJourneyProjection(pool, params.data.journeyId, principal, config));
     } catch (error) {
       const known = sendJourneyError(reply, error);
       if (known) return known;
       request.log.error({ err: error }, 'Journey live projection failed');
       return reply.code(500).send({ code: 'JOURNEY_PROJECTION_UNAVAILABLE' });
+    }
+  });
+
+  app.get('/v1/journeys/:journeyId/active', async (request, reply) => {
+    const principal = await requirePrincipal(request, reply, pool);
+    if (!principal) return;
+    const params = journeyParams.safeParse(request.params);
+    if (!params.success) return reply.code(400).send({ code: 'INVALID_JOURNEY_ID' });
+    try {
+      return reply.code(200).send(await getActiveJourneyProjection(pool, params.data.journeyId, principal, config));
+    } catch (error) {
+      const known = sendJourneyError(reply, error);
+      if (known) return known;
+      request.log.error({ err: error }, 'active Journey projection failed');
+      return reply.code(500).send({ code: 'ACTIVE_JOURNEY_PROJECTION_UNAVAILABLE' });
     }
   });
 }
