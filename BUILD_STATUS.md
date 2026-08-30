@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.10 — Maintenance, Defect, Recall, Reliability, Replacement and Verified Perks Truth**
+**Engineering Phase 0.11 — Driver Performance, Fair Treatment, Conduct Protection, Appeal and Incentive Truth**
 
 Status: **SOURCE IMPLEMENTED / STATIC AND PURE-DOMAIN GUARDS VERIFIED / PROVIDER, STAFF AND CHARGING MUTATIONS DISABLED / DATABASE, CONCURRENCY AND APP RUNTIME NOT YET VERIFIED**
 
@@ -63,27 +63,42 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Verified versioned Driver perks and complete whole-life cost evidence that prohibits brochure-price-only evaluation.
 - One authoritative maintenance gate integrated into Marketplace, assignment validation, Driver eligibility, Dispatch and Journey protected start.
 - Authenticated maintenance/perks reads and idempotent Driver pre-shift command plus Driver/Control Room truth surfaces.
+- Separate rating, Safety, compliance, reliability, feedback, cancellation, training and security dimensions with no opaque Driver Score.
+- Immutable rating feedback that cannot itself create a finding, restriction or Dispatch-priority change.
+- Guarded complaint lifecycle with separate allegation, evidence, Driver response, assessment, finding and action records.
+- Exact Driver-offer outcome attribution integrated into decline, timeout, acceptance, ineligibility and assigned-elsewhere paths without ordinary-decline punishment.
+- Evidence-backed reliability review that distinguishes Driver, vehicle, system, provider, traffic and external causes.
+- Narrow, reviewable precautionary Driver restrictions that are database-constrained against becoming guilt findings.
+- Governed high-impact Driver appeal aggregate with immutable evidence, independent resolution and preserved original history.
+- Safety-owned RiderConductCase and assigned-Driver protected reporting for violence, harassment, discrimination, fraud and dangerous behaviour.
+- Atomic unsafe-Journey termination across canonical Safety truth, interrupted leg, cancelled assignment, passenger continuity, Booking incident state and Driver break, with rating protection and no Driver fault finding.
+- Versioned, evidence-backed and Finance-approved incentive truth separated from base earnings, acceptance coercion, fatigue pressure and hidden Dispatch priority.
+- Offboarding records that preserve earnings, disputes, vehicle-return obligations and historical Safety/Finance truth.
+- Authenticated fair-treatment, conduct, unsafe-termination, appeal and incentive APIs plus Driver/Control Room truth surfaces.
 
 ### Verified in this checkpoint
 
-- All structural verifiers pass from the foundation through Phase 0.10.
-- All 46 executable Phase 0.5–0.10 source-domain tests pass.
+- All structural verifiers pass from the foundation through Phase 0.11.
+- All 56 executable Phase 0.5–0.11 source-domain tests pass.
 - Phase 0.9 supplier, terms, capability, insurance, deposit and assignment-boundary verifier: **PASSED**.
 - Pure-domain tests cover Fleet state, Marketplace publication, ownership-transfer terms, explicit capability, deposit deduction and assignment hard checks.
 - Blueprint §54.2 Fleet Marketplace/agreement/assignment traceability: **recorded**.
 - Phase 0.10 maintenance/defect/reliability boundary verifier: **PASSED**.
 - Pure-domain tests cover pre-shift uncertainty, maintenance urgency/restrictions, defect history, warranty-first repair, reviewed return to service, verified perks and whole-life evidence.
 - Blueprint §54.3 and §66.21 maintenance/reliability traceability: **recorded**.
+- Phase 0.11 Driver fair-treatment boundary verifier: **PASSED**.
+- Pure-domain tests cover ratings, complaint stages, exact offer outcomes, reliability attribution, restrictions, appeals, unsafe termination, incentives and offboarding preservation.
+- Blueprint §54.4, §66.22 and fair-treatment P1 traceability: **recorded**.
 
 ### Not yet verified / deliberately not claimed
 
-- PostgreSQL/PostGIS migrations 0001–0010 and transaction/concurrency cases have not been executed in this workspace.
+- PostgreSQL/PostGIS migrations 0001–0011 and transaction/concurrency cases have not been executed in this workspace.
 - Fastify, Expo and Vite workspaces have not been compiled with installed workspace dependencies here.
 - Authorised school/hospital/specialist handover recording is not exposed until staff and operating-authority rules are implemented.
 - Production payment provider selection, adapter/webhook/reconciliation execution, refunds and payouts are not implemented.
 - Production identity/document verification provider selection, callbacks and reconciliation are not implemented.
 - Jurisdiction-, region- and service-specific licensing, insurance, document, training and renewal policy is not approved or seeded.
-- Authorised review roles, separation of duties, evidence upload/scanning, appeals, expiry/recomputation and offboarding workflows are not implemented.
+- Authorised review roles, separation of duties, evidence upload/scanning, adjudication mutations, appeal-resolution queues and offboarding execution are not implemented. Driver appeal submission and persistence are implemented.
 - No Fleet supplier, stock/warranty feed, rental/lease/finance product or agreement terms are selected, contracted, seeded or contacted.
 - Marketplace publication/reservation, agreement acceptance/activation, handover acknowledgement, deposit funding/deduction and vehicle assignment workflows are not implemented.
 - No maintenance/recovery/parts/warranty/inspection/telematics/perk provider, policy or operational threshold is selected, contracted, seeded or contacted.
@@ -104,3 +119,5 @@ Selecting or contracting an identity/document verification provider, and approvi
 Selecting Fleet suppliers and approving any rental, lease, finance, deposit or ownership-transfer terms is also a founder/procurement/legal/Finance gate. Phase 0.9 stores no real offer and exposes no mutation that can reserve, contract, charge, deduct or assign a vehicle.
 
 Selecting maintenance, recovery, parts, warranty, inspection, telematics or Driver-perk providers and approving service/recall/return-to-service policy is a founder/procurement/legal/Operations/Safety gate. Phase 0.10 stores no real provider offer and exposes no staff mutation that can book repair, approve spend, return a vehicle to service, assign a replacement or market an unverified benefit.
+
+Approving real Driver performance policy, complaint evidence access, restriction/offboarding authority, appeal reviewer roles and incentive terms remains a founder/legal/People/Operations/Safety/Finance gate. Phase 0.11 exposes Driver reporting and appeal submission but no staff adjudication editor, real incentive publication or destructive Driver-history deletion path.

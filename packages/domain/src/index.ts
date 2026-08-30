@@ -12,3 +12,4 @@ export * from './finance.js';
 export * from './driver-operations.js';
 export * from './fleet-operations.js';
 export * from './maintenance-reliability.js';
+export * from './driver-fair-treatment.js';

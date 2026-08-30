@@ -134,11 +134,12 @@ for (const path of ['/driver/vehicles/{vehicleId}/maintenance:', '/driver/vehicl
 for (const statement of ['something does not feel right without diagnosis', 'Breakdown alone never proves Driver neglect', 'Unverified fuel, charging, tyres']) {
   if (!api.includes(statement)) errors.push(`OpenAPI maintenance truth statement missing: ${statement}`);
 }
-if (!api.includes('version: 0.0.10')) errors.push('OpenAPI is not versioned at 0.0.10');
+if (!/version: 0\.0\.(?:1[0-9]|[2-9][0-9])\b/.test(api)) errors.push('OpenAPI is older than Phase 0.10');
 
 for (const rel of ['package.json', 'packages/domain/package.json', 'packages/contracts/package.json', 'services/api/package.json', 'apps/driver/package.json', 'apps/rider/package.json', 'apps/control-room/package.json']) {
   const parsed = JSON.parse(readFileSync(join(root, rel), 'utf8'));
-  if (parsed.version !== '0.0.10') errors.push(`${rel} is not versioned at 0.0.10`);
+  const patch = Number(String(parsed.version).split('.')[2]);
+  if (!Number.isInteger(patch) || patch < 10) errors.push(`${rel} is older than Phase 0.10`);
 }
 
 if (errors.length) {

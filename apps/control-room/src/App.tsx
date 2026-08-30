@@ -3,7 +3,7 @@ import { dazatTokens } from '@dazat/design-system';
 export function App() {
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.10</p>
+      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.11</p>
       <h1>DAZAT Control Room</h1>
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.
@@ -53,6 +53,18 @@ export function App() {
         </p>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
           Estimates, warranty evaluation, repair authorisation, invoices, completion evidence and reviewed return-to-service remain separate records. Breakdown evidence does not prove neglect, replacement remains separate from passenger continuity, and only provider-verified perk terms may be shown.
+        </p>
+      </section>
+      <section aria-label="Driver fair treatment boundary" style={{ maxWidth: 720, marginTop: 16, padding: 24, border: `1px solid ${dazatTokens.color.border}`, borderRadius: dazatTokens.radius.card }}>
+        <h2 style={{ marginTop: 0 }}>Fair treatment has no opaque Driver Score</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Ratings, Safety, compliance, reliability, customer feedback, cancellations, training and security remain separate evidence dimensions. A rating is feedback, not a finding; ordinary offer declines and timeouts are not misconduct and never create a hidden Dispatch-priority penalty.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Complaint allegation, evidence, Driver response, assessment, finding and action remain distinct records. Temporary restrictions use the narrowest safe scope, are reviewable and are not guilt. High-impact findings, restrictions, offboarding and incentive qualification retain an independent appeal route with the original decision history preserved.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          RiderConductCase is Safety-owned and protects Drivers reporting violence, harassment, discrimination, fraud or dangerous behaviour. Safe Journey termination opens passenger continuity, protects the Driver rating and creates no automatic Driver fault finding.
         </p>
       </section>
       <section aria-label="Completion boundary" style={{ maxWidth: 720, marginTop: 16, padding: 24, border: `1px solid ${dazatTokens.color.border}`, borderRadius: dazatTokens.radius.card }}>

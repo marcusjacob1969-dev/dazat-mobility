@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, DriverApplicationProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverOfferSummary, DriverOperatingEligibilityProjection, FleetAgreementProjection, FleetMarketplaceOfferProjection, PreShiftCheckProjection, RegistrationContactType, VehicleAssignmentValidationProjection, VehicleMaintenanceProjection, VerifiedDriverPerkProjection, VerifyRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, DriverAppealSubjectType, DriverApplicationProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverFairTreatmentProjection, DriverIncentiveProjection, DriverOfferSummary, DriverOperatingEligibilityProjection, FleetAgreementProjection, FleetMarketplaceOfferProjection, PreShiftCheckProjection, RegistrationContactType, RiderConductCaseProjection, SubmitDriverAppealProjection, VehicleAssignmentValidationProjection, VehicleMaintenanceProjection, VerifiedDriverPerkProjection, VerifyRideCheckResult } from '@dazat/contracts';
 import {
   confirmDriverContactVerification,
   startDriverContactVerification,
@@ -31,6 +31,7 @@ import { readDriverEarnings } from './src/finance-api';
 import { readDriverOperatingEligibility, startOrResumeDriverApplication } from './src/driver-operations-api';
 import { listDriverFleetAgreements, listFleetMarketplace, validateVehicleAssignment } from './src/fleet-operations-api';
 import { listVerifiedDriverPerks, readVehicleMaintenance, submitPreShiftCheck } from './src/maintenance-reliability-api';
+import { listDriverIncentives, readDriverFairTreatment, submitAppeal, submitRiderConductCase, terminateUnsafeJourney } from './src/driver-fair-treatment-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'DRIVER_HOME';
 
@@ -85,6 +86,14 @@ export default function DriverApp() {
   const [odometer, setOdometer] = useState('');
   const [vehicleConcern, setVehicleConcern] = useState('');
   const [verifiedPerks, setVerifiedPerks] = useState<readonly VerifiedDriverPerkProjection[]>([]);
+  const [fairTreatment, setFairTreatment] = useState<DriverFairTreatmentProjection | null>(null);
+  const [driverIncentives, setDriverIncentives] = useState<readonly DriverIncentiveProjection[]>([]);
+  const [riderConductDetails, setRiderConductDetails] = useState('');
+  const [riderConductCase, setRiderConductCase] = useState<RiderConductCaseProjection | null>(null);
+  const [appealSubjectType, setAppealSubjectType] = useState<DriverAppealSubjectType>('DRIVER_RESTRICTION');
+  const [appealSubjectId, setAppealSubjectId] = useState('');
+  const [appealStatement, setAppealStatement] = useState('');
+  const [appealResult, setAppealResult] = useState<SubmitDriverAppealProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -174,6 +183,47 @@ export default function DriverApp() {
       });
       setPreShiftResult(result);
       setMaintenance(await readVehicleMaintenance(sessionToken, vehicleId, operatingEligibility?.eligibleServiceCodes ?? ['STANDARD']));
+    });
+  }
+
+  function refreshFairTreatment() {
+    void run(async () => {
+      const [treatment, incentives] = await Promise.all([
+        readDriverFairTreatment(sessionToken),
+        listDriverIncentives(sessionToken, regionCode)
+      ]);
+      setFairTreatment(treatment);
+      setDriverIncentives(incentives);
+    });
+  }
+
+  function reportRiderConduct(terminate: boolean) {
+    if (!journey) return;
+    void run(async () => {
+      const reportReference = riderConductDetails.trim();
+      if (!reportReference) throw new Error('Describe the unsafe or unacceptable conduct in your own words.');
+      const request = { categories: ['DANGEROUS_BEHAVIOUR'] as const, reportReference, immediateDanger: terminate };
+      const result = terminate
+        ? await terminateUnsafeJourney(sessionToken, journey.journeyId, request)
+        : await submitRiderConductCase(sessionToken, { journeyId: journey.journeyId, ...request });
+      setRiderConductCase(result);
+      if (terminate) {
+        setAvailability('BREAK');
+        setSafetyStatus('Unsafe Journey terminated · Safety case and passenger continuity persisted · rating protected');
+      }
+    });
+  }
+
+  function submitDriverDecisionAppeal() {
+    void run(async () => {
+      if (!appealSubjectId.trim() || !appealStatement.trim()) throw new Error('Enter the decision ID and your appeal statement.');
+      setAppealResult(await submitAppeal(sessionToken, {
+        subjectType: appealSubjectType,
+        subjectId: appealSubjectId.trim(),
+        reasonCategory: 'PROCEDURAL_FAIRNESS',
+        statementReference: appealStatement.trim()
+      }));
+      setFairTreatment(await readDriverFairTreatment(sessionToken));
     });
   }
 
@@ -309,7 +359,7 @@ export default function DriverApp() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.10</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.11</Text>
         <Text style={styles.title}>DAZAT Driver journey</Text>
         <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. Pickup evidence and RideCheck protect the start. During an active Journey, telemetry confidence, Safety state, destination evidence and completion requirements remain separate backend-owned truths.</Text>
 
@@ -426,6 +476,40 @@ export default function DriverApp() {
                 {perk.category} · {perk.programmeName}: {perk.benefitTerms.join(', ')}
               </Text>)}
             </View>
+            <View style={styles.notice} accessibilityRole="summary">
+              <Text style={styles.noticeTitle}>Fair treatment — separate evidence, no hidden score</Text>
+              <Text style={styles.body}>Ratings are feedback, not findings. Allegation, evidence, your response, assessment, finding and action remain separate. Ordinary offer declines never reduce hidden Dispatch priority.</Text>
+              <SecondaryButton label="Refresh fair-treatment and incentive truth" onPress={refreshFairTreatment} />
+              {fairTreatment ? (
+                <>
+                  <Text style={styles.status}>Opaque Driver Score: NOT USED</Text>
+                  <Text style={styles.body}>Ratings: {fairTreatment.dimensions.ratingFeedbackCount} · open complaints: {fairTreatment.dimensions.openComplaintCount} · findings: {fairTreatment.dimensions.substantiatedFindingCount}</Text>
+                  <Text style={styles.body}>Active restrictions: {fairTreatment.dimensions.activeRestrictionCount} · open appeals: {fairTreatment.dimensions.openAppealCount} · Driver protection cases: {fairTreatment.dimensions.openRiderConductCaseCount}</Text>
+                  {fairTreatment.complaints.map((complaint) => <Text key={complaint.complaintId} style={styles.body}>
+                    Complaint {complaint.complaintId}: {complaint.status} · allegation is not a finding
+                  </Text>)}
+                  {fairTreatment.restrictions.map((restriction) => <Text key={restriction.restrictionId} style={styles.body}>
+                    Restriction {restriction.scope}: {restriction.restrictionBasis} · narrowest safe scope · not guilt
+                  </Text>)}
+                </>
+              ) : null}
+              <Text style={styles.body}>Finance-approved incentives: {driverIncentives.length}. Incentives stay separate from base earnings, unsafe fatigue pressure and secret priority boosts.</Text>
+              {driverIncentives.map((incentive) => <Text key={incentive.programmeVersionId} style={styles.body}>
+                {incentive.title} · v{incentive.version} · {incentive.qualification?.outcome ?? 'not yet evaluated'} · dispute route available
+              </Text>)}
+              <Text style={styles.noticeTitle}>Appeal a high-impact decision</Text>
+              <View style={styles.row}>
+                {(['COMPLAINT_FINDING', 'DRIVER_RESTRICTION', 'OFFBOARDING_DECISION', 'INCENTIVE_QUALIFICATION'] as const).map((subjectType) => (
+                  <Pressable key={subjectType} onPress={() => setAppealSubjectType(subjectType)} style={[styles.secondaryButton, appealSubjectType === subjectType && styles.selected]}>
+                    <Text style={styles.secondaryText}>{subjectType.replaceAll('_', ' ')}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              <Field label="Decision or restriction ID" value={appealSubjectId} onChangeText={setAppealSubjectId} />
+              <Field label="Appeal statement" value={appealStatement} onChangeText={setAppealStatement} />
+              <SecondaryButton label="Submit for independent review" onPress={submitDriverDecisionAppeal} />
+              {appealResult ? <Text style={styles.status}>Appeal {appealResult.appealId} submitted. Original decision history is preserved.</Text> : null}
+            </View>
             {eligibility ? (
               <View style={styles.notice} accessibilityRole="summary">
                 <Text style={styles.noticeTitle}>{eligibility.eligible ? 'Eligible for Dispatch' : 'Not eligible for Dispatch'}</Text>
@@ -471,6 +555,10 @@ export default function DriverApp() {
                         {journey.completionRequirements.handoverRequired && !journey.completionRequirements.authorisedHandoverRecorded ? <Text style={styles.error}>Completion stays blocked until an authorised handover is recorded. Passenger details alone are not authority.</Text> : null}
                         {journey.completionRequirements.handoverFailureOpen ? <Text style={styles.error}>Failed handover is open. Do not complete the Journey.</Text> : null}
                         <SafetyButton busy={busy} label="SOS — get help" onPress={sendSos} />
+                        <Field label="Unsafe rider conduct — describe in your own words" value={riderConductDetails} onChangeText={setRiderConductDetails} />
+                        <SecondaryButton label="Report rider conduct without ending Journey" onPress={() => reportRiderConduct(false)} />
+                        <SafetyButton busy={busy} label="End unsafe Journey safely" onPress={() => reportRiderConduct(true)} />
+                        {riderConductCase ? <Text style={styles.status}>Safety case {riderConductCase.riderConductCaseId} persisted · rating protection required · no Driver misconduct finding</Text> : null}
                         {safetyStatus ? <Text style={styles.status}>{safetyStatus}</Text> : null}
                         {journey.journeyStatus === 'IN_PROGRESS' ? <PrimaryButton busy={busy} label="Mark destination approach with evidence" onPress={markDestinationApproach} /> : null}
                         {journey.journeyStatus === 'ARRIVING' ? <PrimaryButton busy={busy} label="Complete after requirements pass" onPress={finishJourney} /> : null}

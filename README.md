@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.10**.
+Current checkpoint: **Engineering Phase 0.11**.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 
@@ -23,6 +23,24 @@ Phase 0.9 adds evidence-backed Fleet access and assignment truth:
 Phase 0.10 adds maintenance, defect and vehicle-reliability truth:
 
 `CURRENT MAINTENANCE PLAN → PRE-SHIFT OBSERVATION → DEFECT / RESTRICTION → WARRANTY-FIRST REPAIR → INSPECTION → REVIEWED RETURN TO SERVICE`
+
+Phase 0.11 adds Driver performance and fair-treatment truth:
+
+`SEPARATE EVIDENCE DIMENSIONS → DRIVER RESPONSE → ASSESSMENT → FINDING → PROPORTIONATE ACTION → INDEPENDENT APPEAL`
+
+Important Driver fair-treatment truth rules:
+
+- DAZAT does not use an opaque Driver Score. Ratings, Safety, compliance, reliability, customer feedback, cancellations, training and security stay separate.
+- A Rider rating is feedback, not an authorised finding, restriction or Dispatch-priority input.
+- Complaint allegation, evidence, Driver response, assessment, finding and action are distinct records.
+- Ordinary offer declines and timeouts do not create misconduct, acceptance-rate punishment or a hidden priority penalty.
+- Reliability review starts from an accepted commitment and considers vehicle, system, provider, traffic and external causes.
+- Temporary restrictions use the narrowest safe scope, are reviewable and are not guilt.
+- High-impact findings, restrictions, offboarding and incentive qualification retain an independent appeal route that preserves original history.
+- Safety-owned RiderConductCase protects Drivers from violence, harassment, discrimination, fraud and dangerous behaviour.
+- The assigned Driver can terminate an unsafe Journey; Safety truth and passenger continuity persist, the rating is protected and no automatic Driver fault finding is created.
+- Incentives require versioned visible terms, Finance approval and evidence; they cannot pressure unsafe fatigue, coerce acceptance or create secret Dispatch priority.
+- Offboarding preserves earnings, disputes, vehicle-return obligations and historical Safety/Finance truth.
 
 Important maintenance and reliability truth rules:
 
@@ -91,4 +109,4 @@ The earlier Journey integrity and Safety rules remain enforced:
 - Completion closes Journey, Booking, leg and assignment and returns the Driver to `AVAILABLE` atomically.
 - Completion does not initiate or imply payment.
 
-See `BUILD_STATUS.md`, `docs/architecture/ADR-0010-maintenance-defect-reliability-truth.md`, and `docs/engineering/phase-0-10-checklist.md` for evidence and limitations.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0011-driver-fair-treatment-truth.md`, and `docs/engineering/phase-0-11-checklist.md` for evidence and limitations.

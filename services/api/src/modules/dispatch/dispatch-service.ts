@@ -680,8 +680,19 @@ export async function startBookingDispatch(
 export async function listDriverOffers(pool: DatabasePool, actor: AuthenticatedPrincipal): Promise<readonly DriverOfferSummary[]> {
   if (!actor.driverProfileId) throw new DispatchForbiddenError('A Driver profile is required');
   await pool.query(
-    `UPDATE dispatch.driver_offer SET status = 'EXPIRED', responded_at = now(), response_reason = 'TTL_EXPIRED'
-      WHERE driver_profile_id = $1 AND status = 'OFFERED' AND expires_at <= now()`,
+    `WITH expired AS (
+       UPDATE dispatch.driver_offer
+          SET status = 'EXPIRED', responded_at = now(), response_reason = 'TTL_EXPIRED'
+        WHERE driver_profile_id = $1 AND status = 'OFFERED' AND expires_at <= now()
+        RETURNING id, driver_profile_id
+     )
+     INSERT INTO dispatch.driver_offer_outcome_attribution
+       (driver_offer_id, driver_profile_id, outcome, cause_class, reason_code,
+        ordinary_decline, automatically_creates_misconduct,
+        acceptance_rate_penalty_applied, dispatch_priority_penalty_applied)
+     SELECT id, driver_profile_id, 'TIMED_OUT', 'DRIVER_CHOICE', 'TTL_EXPIRED',
+            false, false, false, false FROM expired
+     ON CONFLICT (driver_offer_id) DO NOTHING`,
     [actor.driverProfileId]
   );
   const result = await pool.query<{
@@ -756,6 +767,14 @@ export async function declineDriverOffer(
       acceptanceRatePenaltyApplied: false
     };
     await client.query(
+      `INSERT INTO dispatch.driver_offer_outcome_attribution
+         (driver_offer_id, driver_profile_id, outcome, cause_class, reason_code,
+          ordinary_decline, automatically_creates_misconduct,
+          acceptance_rate_penalty_applied, dispatch_priority_penalty_applied)
+       VALUES ($1, $2, 'DECLINED', 'DRIVER_CHOICE', $3, true, false, false, false)`,
+      [offerId, actor.driverProfileId, reasonCode]
+    );
+    await client.query(
       `INSERT INTO dispatch.command_deduplication
          (command_id, idempotency_key, command_type, subject_id, response_status, response_body)
        VALUES ($1,$2,'DeclineDriverOffer',$3,200,$4::jsonb)`,
@@ -788,8 +807,10 @@ export async function acceptDriverOffer(
   const client = await pool.connect();
   const commandId = randomUUID();
   const correlationId = randomUUID();
+  let transactionOpen = false;
   try {
     await client.query('BEGIN');
+    transactionOpen = true;
     const offerLookup = await client.query<{ dispatch_attempt_id: string; driver_profile_id: string }>(
       `SELECT dispatch_attempt_id, driver_profile_id FROM dispatch.driver_offer WHERE id = $1`,
       [offerId]
@@ -805,6 +826,7 @@ export async function acceptDriverOffer(
     );
     if (dedupe.rowCount) {
       await client.query('COMMIT');
+      transactionOpen = false;
       return dedupe.rows[0]!.response_body;
     }
     const attempt = await client.query<{ status: string }>(
@@ -823,12 +845,42 @@ export async function acceptDriverOffer(
     if (offer.status !== 'OFFERED') throw new DispatchConflictError(`Offer is ${offer.status}`);
     if (offer.expires_at.getTime() <= Date.now()) {
       await client.query(`UPDATE dispatch.driver_offer SET status = 'EXPIRED', responded_at = now(), response_reason = 'TTL_EXPIRED' WHERE id = $1`, [offerId]);
+      await client.query(
+        `INSERT INTO dispatch.driver_offer_outcome_attribution
+           (driver_offer_id, driver_profile_id, outcome, cause_class, reason_code,
+            ordinary_decline, automatically_creates_misconduct,
+            acceptance_rate_penalty_applied, dispatch_priority_penalty_applied)
+         VALUES ($1, $2, 'TIMED_OUT', 'DRIVER_CHOICE', 'TTL_EXPIRED', false, false, false, false)
+         ON CONFLICT (driver_offer_id) DO NOTHING`,
+        [offerId, actor.driverProfileId]
+      );
+      await client.query('COMMIT');
+      transactionOpen = false;
       throw new DispatchConflictError('Offer expired before acceptance');
     }
     const booking = await readBookingContext(client, offer.booking_id);
     if (booking.status !== 'SEARCHING_FOR_DRIVER') throw new DispatchConflictError(`Booking is ${booking.status}`);
     const eligibility = await readDriverEligibility(client, actor, offer.vehicle_id, booking.regionCode, config, booking.requirements);
-    if (!eligibility.decision.eligible) throw new DriverNotEligibleError(eligibility.decision.blockers);
+    if (!eligibility.decision.eligible) {
+      await client.query(
+        `UPDATE dispatch.driver_offer
+            SET status = 'WITHDRAWN', responded_at = now(), response_reason = 'DRIVER_BECAME_INELIGIBLE'
+          WHERE id = $1`,
+        [offerId]
+      );
+      await client.query(
+        `INSERT INTO dispatch.driver_offer_outcome_attribution
+           (driver_offer_id, driver_profile_id, outcome, cause_class, reason_code,
+            evidence_references, ordinary_decline, automatically_creates_misconduct,
+            acceptance_rate_penalty_applied, dispatch_priority_penalty_applied)
+         VALUES ($1, $2, 'DRIVER_BECAME_INELIGIBLE', 'SYSTEM', 'HARD_FILTER_REVALIDATION_FAILED',
+                 $3::jsonb, false, false, false, false)`,
+        [offerId, actor.driverProfileId, JSON.stringify(eligibility.decision.blockers)]
+      );
+      await client.query('COMMIT');
+      transactionOpen = false;
+      throw new DriverNotEligibleError(eligibility.decision.blockers);
+    }
     const assignment = await client.query<{ id: string; assigned_at: Date }>(
       `INSERT INTO dispatch.driver_assignment
          (dispatch_attempt_id, accepted_offer_id, booking_id, driver_profile_id, vehicle_id, status)
@@ -839,6 +891,27 @@ export async function acceptDriverOffer(
     await client.query(
       `UPDATE dispatch.driver_offer SET status = 'WITHDRAWN', responded_at = now(), response_reason = 'BOOKING_ASSIGNED'
         WHERE dispatch_attempt_id = $1 AND id <> $2 AND status = 'OFFERED'`,
+      [offer.dispatch_attempt_id, offer.id]
+    );
+    await client.query(
+      `INSERT INTO dispatch.driver_offer_outcome_attribution
+         (driver_offer_id, driver_profile_id, outcome, cause_class, reason_code,
+          ordinary_decline, automatically_creates_misconduct,
+          acceptance_rate_penalty_applied, dispatch_priority_penalty_applied)
+       VALUES ($1, $2, 'ACCEPTED', 'DRIVER_CHOICE', 'DRIVER_ACCEPTED', false, false, false, false)`,
+      [offer.id, actor.driverProfileId]
+    );
+    await client.query(
+      `INSERT INTO dispatch.driver_offer_outcome_attribution
+         (driver_offer_id, driver_profile_id, outcome, cause_class, reason_code,
+          ordinary_decline, automatically_creates_misconduct,
+          acceptance_rate_penalty_applied, dispatch_priority_penalty_applied)
+       SELECT withdrawn.id, withdrawn.driver_profile_id, 'ASSIGNED_ELSEWHERE', 'DISPATCH',
+              'BOOKING_ASSIGNED', false, false, false, false
+         FROM dispatch.driver_offer withdrawn
+        WHERE withdrawn.dispatch_attempt_id = $1 AND withdrawn.id <> $2
+          AND withdrawn.status = 'WITHDRAWN' AND withdrawn.response_reason = 'BOOKING_ASSIGNED'
+       ON CONFLICT (driver_offer_id) DO NOTHING`,
       [offer.dispatch_attempt_id, offer.id]
     );
     await client.query(`UPDATE dispatch.dispatch_attempt SET status = 'ASSIGNED', completed_at = now() WHERE id = $1`, [offer.dispatch_attempt_id]);
@@ -883,9 +956,10 @@ export async function acceptDriverOffer(
       [commandId, idempotencyKey, actor.driverProfileId, JSON.stringify(response)]
     );
     await client.query('COMMIT');
+    transactionOpen = false;
     return response;
   } catch (error) {
-    await client.query('ROLLBACK');
+    if (transactionOpen) await client.query('ROLLBACK');
     throw error;
   } finally {
     client.release();

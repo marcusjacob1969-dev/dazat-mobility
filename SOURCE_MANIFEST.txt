@@ -18,6 +18,7 @@
 ./apps/driver/package.json
 ./apps/driver/src/README.md
 ./apps/driver/src/dispatch-api.ts
+./apps/driver/src/driver-fair-treatment-api.ts
 ./apps/driver/src/driver-operations-api.ts
 ./apps/driver/src/finance-api.ts
 ./apps/driver/src/fleet-operations-api.ts
@@ -47,6 +48,7 @@
 ./database/migrations/0008_driver_onboarding_competency_permissions_foundation.sql
 ./database/migrations/0009_fleet_marketplace_agreement_assignment_foundation.sql
 ./database/migrations/0010_maintenance_defect_reliability_foundation.sql
+./database/migrations/0011_driver_fair_treatment_foundation.sql
 ./database/seeds/README.md
 ./docs/architecture/ADR-0001-production-foundation.md
 ./docs/architecture/ADR-0002-identity-account-foundation.md
@@ -58,8 +60,10 @@
 ./docs/architecture/ADR-0008-driver-onboarding-operating-permission-truth.md
 ./docs/architecture/ADR-0009-fleet-marketplace-agreement-assignment-truth.md
 ./docs/architecture/ADR-0010-maintenance-defect-reliability-truth.md
+./docs/architecture/ADR-0011-driver-fair-treatment-truth.md
 ./docs/architecture/domain-ownership.md
 ./docs/engineering/phase-0-10-checklist.md
+./docs/engineering/phase-0-11-checklist.md
 ./docs/engineering/phase-0-2-checklist.md
 ./docs/engineering/phase-0-3-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
@@ -72,6 +76,7 @@
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
+./docs/traceability/phase-0-11-requirements.md
 ./docs/traceability/phase-0-3-requirements.md
 ./docs/traceability/phase-0-4-requirements.md
 ./docs/traceability/phase-0-5-requirements.md
@@ -84,6 +89,7 @@
 ./packages/contracts/package.json
 ./packages/contracts/src/booking.ts
 ./packages/contracts/src/dispatch.ts
+./packages/contracts/src/driver-fair-treatment.ts
 ./packages/contracts/src/driver-operations.ts
 ./packages/contracts/src/finance.ts
 ./packages/contracts/src/fleet-operations.ts
@@ -102,6 +108,7 @@
 ./packages/domain/src/booking-status.ts
 ./packages/domain/src/dispatch.ts
 ./packages/domain/src/domain-event.ts
+./packages/domain/src/driver-fair-treatment.ts
 ./packages/domain/src/driver-operations.ts
 ./packages/domain/src/finance.ts
 ./packages/domain/src/fleet-operations.ts
@@ -116,6 +123,7 @@
 ./packages/domain/tsconfig.json
 ./scripts/verify-foundation.mjs
 ./scripts/verify-phase-0-10.mjs
+./scripts/verify-phase-0-11.mjs
 ./scripts/verify-phase-0-2.mjs
 ./scripts/verify-phase-0-3.mjs
 ./scripts/verify-phase-0-4.mjs
@@ -133,6 +141,8 @@
 ./services/api/src/modules/booking/routes.ts
 ./services/api/src/modules/dispatch/dispatch-service.ts
 ./services/api/src/modules/dispatch/routes.ts
+./services/api/src/modules/driver-fair-treatment/driver-fair-treatment-service.ts
+./services/api/src/modules/driver-fair-treatment/routes.ts
 ./services/api/src/modules/driver-operations/driver-operations-service.ts
 ./services/api/src/modules/driver-operations/routes.ts
 ./services/api/src/modules/finance/finance-service.ts
@@ -160,6 +170,7 @@
 ./tests/domain/authentication.test.mjs
 ./tests/domain/booking-status.test.mjs
 ./tests/domain/dispatch.test.mjs
+./tests/domain/driver-fair-treatment-source.test.mjs
 ./tests/domain/driver-operations-source.test.mjs
 ./tests/domain/finance-source.test.mjs
 ./tests/domain/fleet-operations-source.test.mjs

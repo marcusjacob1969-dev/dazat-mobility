@@ -11,3 +11,5 @@ Phase 0.8 documents the Driver authority boundary. Application progress, documen
 Phase 0.9 documents Fleet supplier/terms/capability/insurance/agreement/handover/deposit/assignment boundaries. No staff mutation route can publish an offer, invent a discount, accept an agreement, apply a deposit deduction or assign a vehicle.
 
 Phase 0.10 documents maintenance-plan, defect, restriction, recall, warranty-first repair, inspection, return-to-service, reliability, replacement and verified-perk boundaries. No staff mutation route can diagnose a defect, override a restriction, approve repair, return a vehicle to service, assign a replacement or publish an unverified benefit.
+
+Phase 0.11 documents fair-treatment separation: ratings are feedback, allegations are not findings, ordinary declines are non-punitive, temporary restrictions are not guilt, and high-impact outcomes retain independent appeal. RiderConductCase remains Safety-owned. No staff mutation route is exposed until reviewer authority, separation of duties, evidence access and audit controls are implemented.
