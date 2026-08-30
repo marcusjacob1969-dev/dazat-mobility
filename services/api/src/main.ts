@@ -22,6 +22,7 @@ import { registerCommunicationRoutes } from './modules/communications/routes.js'
 import { registerTelephonyVoiceRoutes } from './modules/telephony-voice/routes.js';
 import { registerCommunicationsOperationsRoutes } from './modules/communications-operations/routes.js';
 import { registerCommunicationsClosureRoutes } from './modules/communications-closure/routes.js';
+import { registerOrganisationOperationsRoutes } from './modules/organisation-operations/routes.js';
 
 const config = loadConfig();
 const app = Fastify({ logger: { level: config.logLevel } });
@@ -48,7 +49,7 @@ app.get('/health/ready', async (_request, reply) => {
       status: 'READY',
       dependencies: {
         database: 'READY',
-        redis: 'NOT_REQUIRED_FOR_PHASE_0_16_COMMUNICATIONS_ENGINE_FINAL_CLOSURE_FOUNDATION',
+        redis: 'NOT_REQUIRED_FOR_PHASE_0_17_ORGANISATION_OPERATIONS_FOUNDATION',
         verificationDelivery: config.verificationDeliveryMode.toUpperCase(),
         pricing: config.pricingMode.toUpperCase(),
         paymentProvider: config.paymentProviderMode.toUpperCase(),
@@ -57,7 +58,9 @@ app.get('/health/ready', async (_request, reply) => {
         voiceAssistant: config.voiceAssistantMode.toUpperCase(),
         contactCentreMutation: config.contactCentreMutationMode.toUpperCase(),
         communicationsScenarioExecution: config.communicationsScenarioMode.toUpperCase(),
-        communicationsClosureExecution: config.communicationsClosureMode.toUpperCase()
+        communicationsClosureExecution: config.communicationsClosureMode.toUpperCase(),
+        organisationMutation: config.organisationMutationMode.toUpperCase(),
+        organisationIntegration: config.organisationIntegrationMode.toUpperCase()
       }
     });
   } catch {
@@ -70,8 +73,8 @@ app.get('/health/ready', async (_request, reply) => {
 
 app.get('/v1/build-info', async () => ({
   product: 'DAZAT Mobility',
-  checkpoint: 'engineering-phase-0.16',
-  implementationStatus: 'COMMUNICATIONS_ENGINE_CANONICAL_REQUEST_EVENT_PERMISSION_ROUTING_ACCEPTANCE_LAUNCH_GATE_CLOSURE_SOURCE_CREATED_PROVIDER_AND_COMMAND_EXECUTION_DISABLED_NOT_PRODUCTION_VERIFIED'
+  checkpoint: 'engineering-phase-0.17',
+  implementationStatus: 'ORGANISATION_IDENTITY_TENANCY_ROLES_BOOKING_AUTHORITY_APPROVALS_INTEGRATIONS_EXPORTS_OFFBOARDING_SOURCE_CREATED_READ_ONLY_PROJECTIONS_ONLY_MUTATIONS_AND_INTEGRATIONS_DISABLED_NOT_PRODUCTION_VERIFIED'
 }));
 
 registerIdentityRoutes(app, database, config, verificationDelivery);
@@ -89,6 +92,7 @@ registerCommunicationRoutes(app, database);
 registerTelephonyVoiceRoutes(app, database);
 registerCommunicationsOperationsRoutes(app, database);
 registerCommunicationsClosureRoutes(app, database);
+registerOrganisationOperationsRoutes(app, database);
 
 app.addHook('onClose', async () => {
   await database.end();

@@ -13,3 +13,4 @@ export * from './communications.js';
 export * from './telephony-voice.js';
 export * from './communications-operations.js';
 export * from './communications-closure.js';
+export * from './organisation-operations.js';

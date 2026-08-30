@@ -37,6 +37,8 @@ export interface ApiConfig {
   readonly contactCentreMutationMode: 'disabled';
   readonly communicationsScenarioMode: 'disabled';
   readonly communicationsClosureMode: 'disabled';
+  readonly organisationMutationMode: 'disabled';
+  readonly organisationIntegrationMode: 'disabled';
 }
 
 function parseInteger(env: NodeJS.ProcessEnv, name: string, fallback: number, min: number, max: number): number {
@@ -89,6 +91,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   }
   if (env.COMMUNICATIONS_CLOSURE_MODE && env.COMMUNICATIONS_CLOSURE_MODE !== 'disabled') {
     throw new Error('COMMUNICATIONS_CLOSURE_MODE must remain disabled until every launch gate and accountable approval passes');
+  }
+  if (env.ORGANISATION_MUTATION_MODE && env.ORGANISATION_MUTATION_MODE !== 'disabled') {
+    throw new Error('ORGANISATION_MUTATION_MODE must remain disabled until staff authority and operational controls are approved');
+  }
+  if (env.ORGANISATION_INTEGRATION_MODE && env.ORGANISATION_INTEGRATION_MODE !== 'disabled') {
+    throw new Error('ORGANISATION_INTEGRATION_MODE must remain disabled until tenant-scoped credentials, signing and operational controls are approved');
   }
   let developmentQuoteAmountMinor: number | undefined;
   if (pricingMode === 'development_fixture') {
@@ -146,6 +154,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     voiceAssistantMode: 'disabled',
     contactCentreMutationMode: 'disabled',
     communicationsScenarioMode: 'disabled',
-    communicationsClosureMode: 'disabled'
+    communicationsClosureMode: 'disabled',
+    organisationMutationMode: 'disabled',
+    organisationIntegrationMode: 'disabled'
   };
 }

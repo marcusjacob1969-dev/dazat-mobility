@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.16**.
+Current checkpoint: **Engineering Phase 0.17**.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 
@@ -89,6 +89,26 @@ Important final-closure truth rules:
 - All eighteen end-to-end acceptance cases are fixture-only and provider-disabled; scenario success cannot come from contacting real people.
 - All thirteen launch gates are separate from production policy, procurement/provider, staffing, security, accessibility and privacy/retention approvals.
 - Endpoint availability grants no domain authority. Unmanaged provider calls, closure mutations and pilot launch remain disabled.
+
+Phase 0.17 adds Organisation identity, tenancy, roles and booking-authority truth:
+
+`ORGANISATION IDENTITY → ACTIVE MEMBERSHIP → GRANULAR PERMISSION → TENANT/SITE/COST SCOPE → BOOKING AUTHORITY → CANONICAL BOOKING`
+
+Important Organisation Operations Part 1 truth rules:
+
+- Business, school, authority, healthcare, care, community and partner accounts use one typed Organisation model without implying identical legal powers.
+- Organisation identity, legal profile, site and cost centre remain separate versioned facts. Tenant isolation is enforced by the backend from authenticated active membership.
+- There is no universal organisation administrator. Finance, booking, safeguarding, reporting and settings permissions remain distinct and scoped.
+- SSO authenticates an identity but does not grant DAZAT permission. High-risk administration requires step-up and governed review evidence.
+- Membership and roster entry do not create Booking authority, passenger ownership, consent, lawful basis or safeguarding authority.
+- Booker, passenger and payer remain distinct canonical Booking parties. Organisation flows reuse the Booking and Journey engines.
+- Organisation policy can narrow ordinary service/funding choices but cannot remove accessibility requirements, universal Safety or school safeguarding.
+- A cost centre is allocation/reporting context and never Finance ledger, invoice, payment or refund truth.
+- Approval is bound to explicit Booking and quote versions; material change requires reapproval while Safety-driven active-Journey action continues safely.
+- Restrictions are scoped and cannot strand an active passenger or create a passenger/Driver finding.
+- API clients and webhooks remain tenant/environment/permission scoped, signed, idempotent and replay-safe; webhook failure cannot mutate Booking.
+- Exports are role/purpose/time scoped and minimised. Offboarding revokes authority without deleting lawful passenger identity or history.
+- Organisation staff mutations, portal database editing, exports and external integrations remain disabled.
 
 Important Communications Core truth rules:
 
@@ -196,4 +216,4 @@ The earlier Journey integrity and Safety rules remain enforced:
 - Completion closes Journey, Booking, leg and assignment and returns the Driver to `AVAILABLE` atomically.
 - Completion does not initiate or imply payment.
 
-See `BUILD_STATUS.md`, `docs/architecture/ADR-0016-communications-engine-final-closure.md`, and `docs/engineering/phase-0-16-checklist.md` for evidence and limitations.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0017-organisation-identity-tenancy-authority.md`, and `docs/engineering/phase-0-17-checklist.md` for evidence and limitations.

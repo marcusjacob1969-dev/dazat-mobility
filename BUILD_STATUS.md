@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.16 — Communications Engine Final Closure Contract**
+**Engineering Phase 0.17 — Organisation Identity, Tenancy and Authority Foundation**
 
 Status: **SOURCE IMPLEMENTED / STATIC AND PURE-DOMAIN GUARDS VERIFIED / PROVIDER, STAFF AND CHARGING MUTATIONS DISABLED / DATABASE, CONCURRENCY AND APP RUNTIME NOT YET VERIFIED**
 
@@ -139,11 +139,25 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Complete thirteen-gate launch catalogue with evidence separated from policy, provider/procurement, staffing and privacy/retention approvals.
 - Public final-closure capabilities plus authenticated recipient request coverage and launch-evidence reads; no mutation or provider execution route.
 - Rider, Driver and Control Room final-closure truth surfaces with explicit no-pilot/no-provider authority.
+- One typed Organisation identity and staged lifecycle across business, school, authority, healthcare, care, community and partner accounts.
+- Versioned legal profiles, sites, cost centres, purpose contacts, service/communication policies, agreements, approval policies and Booking authority rules.
+- Backend-enforced active-membership tenant isolation with site, cost-centre, service and passenger-group scope.
+- Granular role and permission truth with no universal organisation administrator and independent safeguarding scope.
+- Purpose-bound invitations, guarded membership status, high-risk step-up/four-eyes evidence and SSO-as-authentication-only boundaries.
+- Booker, passenger and payer separation with organisation passenger ownership, roster-derived authority and membership-alone Booking authority prohibited.
+- Accessibility, universal Safety and school safeguarding preserved above organisation cost/service policy.
+- Cost-centre allocation separated from Finance ledger, invoice, payment and refund truth.
+- Version-bound approvals and Safety-driven active-Journey continuation without ordinary corporate approval delay.
+- Scoped restrictions that cannot strand an active Journey or create passenger/Driver findings.
+- Tenant/environment/permission-scoped API clients, credential rotation, signed webhook and replay/idempotency truth with external execution disabled.
+- Purpose/time/role-scoped export records that prohibit unrelated passenger, raw Safety/location, card and clinical data.
+- Non-destructive offboarding preserving passenger identity and lawful Booking/Journey/Safety/Finance history.
+- Public organisation capability projection, authenticated actor-owned organisation/context reads, Organisation Portal and Control Room boundary surfaces.
 
 ### Verified in this checkpoint
 
-- All structural verifiers pass from the foundation through Phase 0.16.
-- All 141 executable Phase 0.5–0.16 source-domain tests pass.
+- All structural verifiers pass from the foundation through Phase 0.17.
+- All 169 executable Phase 0.5–0.17 source-domain tests pass.
 - Phase 0.9 supplier, terms, capability, insurance, deposit and assignment-boundary verifier: **PASSED**.
 - Pure-domain tests cover Fleet state, Marketplace publication, ownership-transfer terms, explicit capability, deposit deduction and assignment hard checks.
 - Blueprint §54.2 Fleet Marketplace/agreement/assignment traceability: **recorded**.
@@ -168,10 +182,13 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Phase 0.16 canonical request/envelope, role permission, ordered routing, degraded-mode, acceptance and launch-gate verifier: **PASSED**.
 - Pure-domain tests cover source-event/idempotency requirements, payload minimisation, stale/deduplication handling, recipient-role leakage, SENT ambiguity, fallback, Shield degradation, critical scenarios and all thirteen launch gates.
 - Blueprint §59.1–§59.16 Communications Engine Final Closure traceability: **recorded**.
+- Phase 0.17 Organisation identity, tenancy, roles, Booking authority, approval, restriction, integration, export and offboarding verifier: **PASSED**.
+- Pure-domain tests cover lifecycle provenance, tenant/site/cost isolation, granular permissions, high-risk step-up, Booking authority, Safety/accessibility override, versioned approvals, scoped arrears restrictions, export minimisation, API replay protection and non-destructive offboarding.
+- Blueprint §61.1–§61.54 Organisation Operations Part 1 traceability: **recorded**.
 
 ### Not yet verified / deliberately not claimed
 
-- PostgreSQL/PostGIS migrations 0001–0016 and transaction/concurrency cases have not been executed in this workspace.
+- PostgreSQL/PostGIS migrations 0001–0017 and transaction/concurrency cases have not been executed in this workspace.
 - Fastify, Expo and Vite workspaces have not been compiled with installed workspace dependencies here.
 - Authorised school/hospital/specialist handover recording is not exposed until staff and operating-authority rules are implemented.
 - Production payment provider selection, adapter/webhook/reconciliation execution, refunds and payouts are not implemented.
@@ -194,6 +211,8 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - No production Notification/Delivery Policy catalogue, regional/legal variant, SLO target, Contact Centre permission/staffing model, provider failover plan or isolated scenario runner is approved or configured.
 - Contact Centre mutation, operator follow-up sends, provider retry/failover execution, channel-outage detection and scenario execution remain disabled.
 - Communications final-closure command endpoints, provider-bypass enforcement at deployed network/credential boundaries, acceptance execution and launch-gate assessment remain disabled/unverified.
+- Organisation verification, invitation, role, roster, policy, approval, agreement, restriction, export, API/webhook and offboarding command execution remains disabled/unverified.
+- No real organisation legal profile, contracting/safeguarding authority, agreement, passenger roster, credit policy, SSO, API credential, webhook or export policy is approved or seeded.
 - No production Driver, vehicle, passenger, location, Safety, pricing, provider credentials or data are present.
 - Source creation is not production readiness, safeguarding approval, licensing approval, insurance cover, payment certification or security certification.
 
@@ -218,3 +237,5 @@ Selecting or enabling telephony, Voice Assistant, contact-centre, recording, tra
 Approving production Notification/Delivery Policies, templates, regional/legal/retention variants, Communications SLOs, Contact Centre roles/queues/staffing, primary/secondary providers, failover authority, bulk-export controls and operational drills remains a founder/legal/privacy/security/Operations/Safety/accessibility/procurement gate. Phase 0.15 exposes only disabled capabilities and recipient-scoped reads; it sends nothing and grants no staff mutation authority.
 
 Passing the Phase 0.16 source catalogue does not approve launch. Enabling any Communications command or provider requires all thirteen launch gates plus explicit production policy, provider/procurement, operations staffing, security, accessibility, safeguarding and privacy/retention approval. This checkpoint exposes only disabled capabilities and authenticated read projections; it cannot enable a pilot.
+
+Enabling Organisation mutations, SSO, company-registry or credit checks, e-signature, accounting integration, API credentials, webhook delivery, bulk upload or exports requires explicit legal, Finance, privacy, security, safeguarding, accessibility and Operations approval. Phase 0.17 exposes only public capability truth and authenticated actor-owned reads.

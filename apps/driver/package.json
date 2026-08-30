@@ -1,6 +1,6 @@
 {
   "name": "@dazat/driver",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "dependencies": {
@@ -8,7 +8,7 @@
     "expo": "^57.0.0",
     "react": "19.2.3",
     "react-native": "0.86.x",
-    "@dazat/contracts": "0.0.16"
+    "@dazat/contracts": "0.0.17"
   },
   "devDependencies": {
     "typescript": "^5.8.0"

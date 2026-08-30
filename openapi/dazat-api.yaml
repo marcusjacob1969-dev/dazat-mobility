@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.16
-  description: Engineering Phase 0.16 API. Communication intent is separate from delivery and UNKNOWN is not delivery. Telephone remains provider-disabled; Caller ID is not authentication, confirmed structured fields outrank transcripts, and no external telephony or Voice Assistant execution is enabled. Communications transports authoritative domain truth and never invents it. Canonical requests require immutable versioned events, idempotency, role permission, approved payload variables, state revalidation and versioned policy. Priority grants no additional data access, provider acceptance is not delivery, stale and duplicate work is suppressed, and Shield degradation pauses risky changes without stranding essential journey or safety truth. The complete acceptance and launch-gate catalogues are modelled, but external providers, closure commands, staff mutations and real-user scenarios remain disabled.
+  version: 0.0.17
+  description: Engineering Phase 0.17 API. Communication intent is separate from delivery and UNKNOWN is not delivery. Telephone remains provider-disabled; Caller ID is not authentication, confirmed structured fields outrank transcripts, and no external telephony or Voice Assistant execution is enabled. Communications transports authoritative domain truth and never invents it. Canonical requests require immutable versioned events, idempotency, role permission, approved payload variables, state revalidation and versioned policy. Priority grants no additional data access, provider acceptance is not delivery, stale and duplicate work is suppressed, and Shield degradation pauses risky changes without stranding essential journey or safety truth. The complete acceptance and launch-gate catalogues are modelled, but external providers, closure commands, staff mutations and real-user scenarios remain disabled. Organisation accounts are a governed booking, funding, administration and reporting layer, not a second Booking engine and not an owner of passenger identity. The backend enforces active membership plus organisation, site, cost-centre, role, purpose and permission scope. Booker, passenger and payer remain distinct; accessibility, Safety and safeguarding cannot be downgraded by organisation policy; cost centres are not Finance ledger truth. Only public capability and authenticated actor-owned organisation reads are exposed. Organisation staff mutations, portal database editing, export execution, API credential use and external webhook/integration execution remain disabled.
 servers:
   - url: http://localhost:3001
 paths:
@@ -965,6 +965,51 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/CommunicationsLaunchReadinessProjection' }
         '401': { description: Missing, expired or revoked session. }
+  /v1/organisations/capabilities:
+    get:
+      summary: Read the Organisation Operations Part 1 capability boundary.
+      description: Catalogues identity, lifecycle, roles, permissions, conceptual APIs, events, requirements and acceptance cases while reporting that staff mutations and integrations are disabled.
+      responses:
+        '200':
+          description: Explicit organisation source capabilities and disabled-execution truth.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrganisationOperationsCapabilitiesProjection' }
+  /v1/organisations:
+    get:
+      summary: List only organisations owned by the authenticated actor's active memberships.
+      description: Tenant access is derived server-side from current valid membership. A supplied organisation identifier, SSO assertion or Booking identifier does not grant authority.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Actor-owned active organisation memberships.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [organisations]
+                properties:
+                  organisations:
+                    type: array
+                    items: { $ref: '#/components/schemas/ActorOrganisationSummaryProjection' }
+        '401': { description: Missing, expired or revoked session. }
+  /v1/organisations/{organisationId}/context:
+    get:
+      summary: Read one authenticated actor-owned tenant context.
+      description: The database query requires the requested organisation and authenticated person to match one current ACTIVE membership, then returns only that membership's role, permission, site and cost-centre scope plus aggregate counts.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganisationId'
+      responses:
+        '200':
+          description: Tenant-scoped read-only organisation context.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ActorOrganisationContextProjection' }
+        '400': { description: Organisation identifier is not a valid UUID. }
+        '401': { description: Missing, expired or revoked session. }
+        '404': { description: No active actor-owned membership exists for this organisation. }
 components:
   securitySchemes:
     bearerAuth:
@@ -992,6 +1037,11 @@ components:
       in: path
       required: true
       description: PaymentIntent identifier in the provider-disabled Phase 0.7 foundation.
+      schema: { type: string, format: uuid }
+    OrganisationId:
+      name: organisationId
+      in: path
+      required: true
       schema: { type: string, format: uuid }
   schemas:
     StartAccountRegistrationRequest:
@@ -1870,3 +1920,87 @@ components:
         privacyRetentionApproved: { type: boolean, const: false }
         pilotReady: { type: boolean, const: false }
         providerExecutionMayBeEnabledAtThisCheckpoint: { type: boolean, const: false }
+    OrganisationType:
+      type: string
+      enum: [BUSINESS, SCHOOL_EDUCATION, LOCAL_AUTHORITY_PUBLIC_BODY, HOSPITAL_HEALTHCARE, CARE_ORGANISATION, CHARITY_COMMUNITY, PARTNER_OPERATOR]
+    OrganisationLifecycleState:
+      type: string
+      enum: [PROSPECT, APPLICATION_DUE_DILIGENCE, COMMERCIAL_SERVICE_REVIEW, CONTRACT_PENDING, CONFIGURATION, ACTIVE, RESTRICTED, SUSPENDED, OFFBOARDING, CLOSED]
+    OrganisationMembershipState:
+      type: string
+      enum: [INVITED, ACTIVE, TEMPORARILY_RESTRICTED, SUSPENDED, EXPIRED, REVOKED, LEFT_ORGANISATION]
+    OrganisationRoleFamily:
+      type: string
+      enum: [ORGANISATION_OWNER_PRIMARY_ADMIN, TRANSPORT_COORDINATOR, BOOKER, FINANCE, SCHOOL_TRANSPORT_COORDINATOR, SAFEGUARDING_LEAD, SERVICE_MANAGER, READ_ONLY_AUDITOR, API_SERVICE_ACCOUNT]
+    OrganisationPermission:
+      type: string
+      enum: [BOOKING.CREATE, BOOKING.CANCEL, BOOKING.CHANGE, PASSENGER.ROSTER_VIEW, PASSENGER.ROSTER_EDIT, SCHOOL.HANDOVER_VIEW, SCHOOL.HANDOVER_MANAGE, FINANCE.INVOICE_VIEW, FINANCE.COST_CENTRE_MANAGE, REPORTING.EXPORT, USER.INVITE, USER.ROLE_MANAGE, ORG.SETTINGS_MANAGE]
+    OrganisationOperationsCapabilitiesProjection:
+      type: object
+      additionalProperties: false
+      required: [organisationTypes, lifecycleStates, membershipStates, roleFamilies, permissions, conceptualApiPaths, coreEvents, p0Requirements, acceptanceScenarios, backendTenantIsolationEnforced, granularPermissionModelled, bookingAuthoritySeparatedFromMembership, bookerPassengerAndPayerSeparated, accessibilityAndSafetyOverrideOrganisationPolicy, organisationOwnsPassengerIdentity, universalOrganisationAdminAllowed, costCentreIsFinanceLedger, portalDirectDatabaseEditingAllowed, organisationStaffMutationsEnabled, externalIntegrationExecutionEnabled]
+      properties:
+        organisationTypes: { type: array, minItems: 7, maxItems: 7, items: { $ref: '#/components/schemas/OrganisationType' } }
+        lifecycleStates: { type: array, minItems: 10, maxItems: 10, items: { $ref: '#/components/schemas/OrganisationLifecycleState' } }
+        membershipStates: { type: array, minItems: 7, maxItems: 7, items: { $ref: '#/components/schemas/OrganisationMembershipState' } }
+        roleFamilies: { type: array, minItems: 9, maxItems: 9, items: { $ref: '#/components/schemas/OrganisationRoleFamily' } }
+        permissions: { type: array, minItems: 13, maxItems: 13, items: { $ref: '#/components/schemas/OrganisationPermission' } }
+        conceptualApiPaths:
+          type: array
+          minItems: 12
+          maxItems: 12
+          items: { type: string, enum: ['/organisations', '/organisations/{id}/sites', '/organisations/{id}/users', '/organisations/{id}/roles', '/organisations/{id}/contacts', '/organisations/{id}/policies', '/organisations/{id}/passengers', '/organisations/{id}/approvals', '/organisations/{id}/cost-centres', '/organisations/{id}/agreements', '/organisations/{id}/reports', '/organisations/{id}/api-clients'] }
+        coreEvents:
+          type: array
+          minItems: 20
+          maxItems: 20
+          items: { type: string, enum: [OrganisationCreated.v1, OrganisationActivated.v1, OrganisationRestricted.v1, OrganisationRestrictionLifted.v1, OrganisationUserInvited.v1, OrganisationMembershipActivated.v1, OrganisationMembershipRevoked.v1, OrganisationRoleChanged.v1, OrganisationContactChanged.v1, OrganisationAgreementActivated.v1, OrganisationAgreementExpired.v1, OrganisationPolicyChanged.v1, PassengerAddedToRoster.v1, PassengerRemovedFromRoster.v1, OrganisationApprovalRequested.v1, OrganisationApprovalGranted.v1, OrganisationApprovalRejected.v1, OrganisationApiCredentialRotated.v1, OrganisationOffboardingStarted.v1, OrganisationClosed.v1] }
+        p0Requirements: { type: array, minItems: 12, maxItems: 12, items: { type: string, enum: [ORG-ID-001, ORG-TEN-001, ORG-RBAC-001, ORG-PARTY-001, ORG-AUTH-001, ORG-ACC-001, ORG-SCH-001, ORG-FIN-001, ORG-ACT-001, ORG-API-001, ORG-EXP-001, ORG-AUD-001] } }
+        acceptanceScenarios: { type: array, minItems: 14, maxItems: 14, items: { type: string } }
+        backendTenantIsolationEnforced: { type: boolean, const: true }
+        granularPermissionModelled: { type: boolean, const: true }
+        bookingAuthoritySeparatedFromMembership: { type: boolean, const: true }
+        bookerPassengerAndPayerSeparated: { type: boolean, const: true }
+        accessibilityAndSafetyOverrideOrganisationPolicy: { type: boolean, const: true }
+        organisationOwnsPassengerIdentity: { type: boolean, const: false }
+        universalOrganisationAdminAllowed: { type: boolean, const: false }
+        costCentreIsFinanceLedger: { type: boolean, const: false }
+        portalDirectDatabaseEditingAllowed: { type: boolean, const: false }
+        organisationStaffMutationsEnabled: { type: boolean, const: false }
+        externalIntegrationExecutionEnabled: { type: boolean, const: false }
+    ActorOrganisationSummaryProjection:
+      type: object
+      additionalProperties: false
+      required: [organisationId, displayName, organisationType, organisationState, membershipId, membershipState, membershipValidUntil, roleFamilies, tenantScopedByAuthenticatedPerson]
+      properties:
+        organisationId: { type: string, format: uuid }
+        displayName: { type: string }
+        organisationType: { $ref: '#/components/schemas/OrganisationType' }
+        organisationState: { $ref: '#/components/schemas/OrganisationLifecycleState' }
+        membershipId: { type: string, format: uuid }
+        membershipState: { type: string, const: ACTIVE }
+        membershipValidUntil: { type: [string, 'null'], format: date-time }
+        roleFamilies: { type: array, items: { $ref: '#/components/schemas/OrganisationRoleFamily' } }
+        tenantScopedByAuthenticatedPerson: { type: boolean, const: true }
+    ActorOrganisationContextProjection:
+      allOf:
+        - $ref: '#/components/schemas/ActorOrganisationSummaryProjection'
+        - type: object
+          additionalProperties: false
+          required: [permissions, permittedSiteIds, permittedCostCentreKeys, permittedServiceTypes, permittedPassengerGroupReferences, activeSiteCount, activeCostCentreCount, activeAgreementCount, activeRestrictionCount, openApprovalCount, openSupportCaseCount, backendTenantIsolationEnforced, clientSuppliedOrganisationIdGrantsAccess, portalMutationEnabled, integrationExecutionEnabled]
+          properties:
+            permissions: { type: array, items: { $ref: '#/components/schemas/OrganisationPermission' } }
+            permittedSiteIds: { type: array, items: { type: string, format: uuid } }
+            permittedCostCentreKeys: { type: array, items: { type: string } }
+            permittedServiceTypes: { type: array, items: { type: string } }
+            permittedPassengerGroupReferences: { type: array, items: { type: string } }
+            activeSiteCount: { type: integer, minimum: 0 }
+            activeCostCentreCount: { type: integer, minimum: 0 }
+            activeAgreementCount: { type: integer, minimum: 0 }
+            activeRestrictionCount: { type: integer, minimum: 0 }
+            openApprovalCount: { type: integer, minimum: 0 }
+            openSupportCaseCount: { type: integer, minimum: 0 }
+            backendTenantIsolationEnforced: { type: boolean, const: true }
+            clientSuppliedOrganisationIdGrantsAccess: { type: boolean, const: false }
+            portalMutationEnabled: { type: boolean, const: false }
+            integrationExecutionEnabled: { type: boolean, const: false }

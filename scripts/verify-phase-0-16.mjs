@@ -153,11 +153,11 @@ for (const gate of ["'VIEW_PROFILE'", 'requirePrincipal']) {
 if (/app\.(?:post|put|patch|delete)\(/.test(routes)) errors.push('Communications closure routes expose an unapproved mutation');
 
 const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
-for (const value of [
-  'registerCommunicationsClosureRoutes', 'engineering-phase-0.16',
-  'NOT_REQUIRED_FOR_PHASE_0_16_COMMUNICATIONS_ENGINE_FINAL_CLOSURE_FOUNDATION',
-  'communicationsClosureExecution'
-]) if (!main.includes(value)) errors.push(`API bootstrap missing Phase 0.16 value: ${value}`);
+for (const value of ['registerCommunicationsClosureRoutes', 'communicationsClosureExecution']) {
+  if (!main.includes(value)) errors.push(`API bootstrap missing Phase 0.16 value: ${value}`);
+}
+const mainPhase = main.match(/checkpoint:\s*'engineering-phase-0\.(\d+)'/)?.[1];
+if (!mainPhase || Number(mainPhase) < 16) errors.push('API bootstrap checkpoint predates Phase 0.16');
 const config = readFileSync(join(root, 'services/api/src/config.ts'), 'utf8');
 for (const value of [
   "readonly communicationsClosureMode: 'disabled'",
@@ -200,12 +200,14 @@ for (const statement of [
   'communicationsClosureMutationsEnabled', 'conceptualCommandMutationsImplemented',
   'COM-CORE-001', 'SilentAssistance.v1', 'POST /communications/security/restrict-channel'
 ]) if (!api.includes(statement)) errors.push(`OpenAPI final-closure truth statement missing: ${statement}`);
-if (!api.includes('version: 0.0.16')) errors.push('OpenAPI is not versioned at 0.0.16');
+const apiVersion = api.match(/\n\s*version:\s*0\.0\.(\d+)/)?.[1];
+if (!apiVersion || Number(apiVersion) < 16) errors.push('OpenAPI version predates Phase 0.16');
 
 let currentVersion = null;
 for (const rel of ['package.json', 'packages/domain/package.json', 'packages/contracts/package.json', 'services/api/package.json', 'apps/driver/package.json', 'apps/rider/package.json', 'apps/control-room/package.json']) {
   const parsed = JSON.parse(readFileSync(join(root, rel), 'utf8'));
-  if (parsed.version !== '0.0.16') errors.push(`${rel} is not versioned at 0.0.16`);
+  const patch = Number(String(parsed.version).split('.')[2]);
+  if (!Number.isInteger(patch) || patch < 16) errors.push(`${rel} version predates Phase 0.16`);
   currentVersion ??= parsed.version;
   if (parsed.version !== currentVersion) errors.push(`${rel} is not aligned to the current checkpoint version`);
 }

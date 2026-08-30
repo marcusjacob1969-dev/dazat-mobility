@@ -3,7 +3,7 @@ import { dazatTokens } from '@dazat/design-system';
 export function App() {
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.16</p>
+      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.17</p>
       <h1>DAZAT Control Room</h1>
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.
@@ -137,6 +137,18 @@ export function App() {
         </p>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
           Eighteen acceptance cases and thirteen launch gates are explicit. Source evidence cannot substitute for provider selection, policy approval, staffing, privacy/retention approval, drills or runbooks. Unmanaged provider calls, closure mutations, real-user scenarios and pilot launch remain disabled.
+        </p>
+      </section>
+      <section aria-label="Organisation operations boundary" style={{ maxWidth: 720, marginTop: 16, padding: 24, border: `1px solid ${dazatTokens.color.border}`, borderRadius: dazatTokens.radius.card }}>
+        <h2 style={{ marginTop: 0 }}>Organisation access is tenant-, role- and purpose-scoped</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Business, school, authority, healthcare, care, community and partner accounts use one governed Organisation model. Membership is not universal authority: site, cost-centre, role, purpose, valid dates, booking rules and agreements are revalidated by the backend.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Control Room cannot make an organisation own a passenger, infer safeguarding authority from a finance role, downgrade accessibility or Safety, turn a cost centre into ledger truth, and cannot strand an active Journey because an account is in arrears.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Organisation mutations, external API execution, webhook delivery, export execution and direct database editing remain disabled. Offboarding revokes organisation authority without deleting lawful passenger, Booking, Journey, Safety or Finance history.
         </p>
       </section>
     </main>
