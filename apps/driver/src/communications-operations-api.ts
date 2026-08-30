@@ -1,4 +1,7 @@
 import type {
+  CommunicationsClosureCapabilitiesProjection,
+  CommunicationsClosureStatusProjection,
+  CommunicationsLaunchReadinessProjection,
   CommunicationsOperationsCapabilitiesProjection,
   CommunicationsOperationsStatusProjection,
   ContactCaseListProjection
@@ -24,6 +27,22 @@ export async function readContactCases(sessionToken: string): Promise<ContactCas
 
 export async function readCommunicationsOperationsStatus(sessionToken: string): Promise<CommunicationsOperationsStatusProjection> {
   return parse(await fetch(`${API_BASE}/v1/communications/operations/status`, {
+    headers: { Authorization: `Bearer ${sessionToken}` }
+  }));
+}
+
+export async function readCommunicationsClosureCapabilities(): Promise<CommunicationsClosureCapabilitiesProjection> {
+  return parse(await fetch(`${API_BASE}/v1/communications/closure/capabilities`));
+}
+
+export async function readCommunicationsClosureStatus(sessionToken: string): Promise<CommunicationsClosureStatusProjection> {
+  return parse(await fetch(`${API_BASE}/v1/communications/closure/status`, {
+    headers: { Authorization: `Bearer ${sessionToken}` }
+  }));
+}
+
+export async function readCommunicationsLaunchReadiness(sessionToken: string): Promise<CommunicationsLaunchReadinessProjection> {
+  return parse(await fetch(`${API_BASE}/v1/communications/closure/readiness`, {
     headers: { Authorization: `Bearer ${sessionToken}` }
   }));
 }

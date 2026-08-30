@@ -36,6 +36,7 @@ export interface ApiConfig {
   readonly voiceAssistantMode: 'disabled';
   readonly contactCentreMutationMode: 'disabled';
   readonly communicationsScenarioMode: 'disabled';
+  readonly communicationsClosureMode: 'disabled';
 }
 
 function parseInteger(env: NodeJS.ProcessEnv, name: string, fallback: number, min: number, max: number): number {
@@ -85,6 +86,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   }
   if (env.COMMUNICATIONS_SCENARIO_MODE && env.COMMUNICATIONS_SCENARIO_MODE !== 'disabled') {
     throw new Error('COMMUNICATIONS_SCENARIO_MODE must remain disabled until isolated fixtures and acceptance controls are approved');
+  }
+  if (env.COMMUNICATIONS_CLOSURE_MODE && env.COMMUNICATIONS_CLOSURE_MODE !== 'disabled') {
+    throw new Error('COMMUNICATIONS_CLOSURE_MODE must remain disabled until every launch gate and accountable approval passes');
   }
   let developmentQuoteAmountMinor: number | undefined;
   if (pricingMode === 'development_fixture') {
@@ -141,6 +145,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     telephonyProviderMode: 'disabled',
     voiceAssistantMode: 'disabled',
     contactCentreMutationMode: 'disabled',
-    communicationsScenarioMode: 'disabled'
+    communicationsScenarioMode: 'disabled',
+    communicationsClosureMode: 'disabled'
   };
 }

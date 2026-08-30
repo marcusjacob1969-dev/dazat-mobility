@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.15
-  description: Engineering Phase 0.15 API. Communication intent is separate from delivery and UNKNOWN is not delivery. Telephone remains provider-disabled; Caller ID is not authentication, confirmed structured fields outrank transcripts, and no external telephony or Voice Assistant execution is enabled. Every event-to-role/channel decision uses a versioned policy and current authoritative state; critical delivery failure becomes owned operational work. Contact Cases preserve channel history without replacing canonical domain cases, provider acceptance is not delivery, recovery suppresses stale replay, aggregate metrics exclude sensitive content, and all provider execution and Contact Centre staff mutation remain disabled.
+  version: 0.0.16
+  description: Engineering Phase 0.16 API. Communication intent is separate from delivery and UNKNOWN is not delivery. Telephone remains provider-disabled; Caller ID is not authentication, confirmed structured fields outrank transcripts, and no external telephony or Voice Assistant execution is enabled. Communications transports authoritative domain truth and never invents it. Canonical requests require immutable versioned events, idempotency, role permission, approved payload variables, state revalidation and versioned policy. Priority grants no additional data access, provider acceptance is not delivery, stale and duplicate work is suppressed, and Shield degradation pauses risky changes without stranding essential journey or safety truth. The complete acceptance and launch-gate catalogues are modelled, but external providers, closure commands, staff mutations and real-user scenarios remain disabled.
 servers:
   - url: http://localhost:3001
 paths:
@@ -931,6 +931,40 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/CommunicationsOperationsStatusProjection' }
         '401': { description: Missing, expired or revoked session. }
+  /v1/communications/closure/capabilities:
+    get:
+      summary: Read the Communications Engine final-closure capability boundary.
+      description: Canonical request/event envelopes, recipient permission, ordered routing, degraded mode, acceptance cases and launch gates are modelled. Endpoint access grants no domain authority and unmanaged provider bypass is prohibited.
+      responses:
+        '200':
+          description: Final-closure catalogues and explicit disabled-execution truth.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommunicationsClosureCapabilitiesProjection' }
+  /v1/communications/closure/status:
+    get:
+      summary: Read the authenticated recipient's canonical communication-request coverage.
+      description: Counts are recipient-scoped. Priority never expands data access, source events and role permission remain mandatory, and provider acceptance is not delivery.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Recipient-owned canonical request, stale-suppression and creation counts.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommunicationsClosureStatusProjection' }
+        '401': { description: Missing, expired or revoked session. }
+  /v1/communications/closure/readiness:
+    get:
+      summary: Read Communications launch-gate evidence without enabling launch.
+      description: All thirteen gates and separate accountable approvals are required. This checkpoint cannot enable a provider or claim pilot readiness.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Gate evidence defaults to NOT_TESTED and all production approvals remain false.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommunicationsLaunchReadinessProjection' }
+        '401': { description: Missing, expired or revoked session. }
 components:
   securitySchemes:
     bearerAuth:
@@ -1742,3 +1776,97 @@ components:
         aggregateMetricsExcludeSensitiveContent: { type: boolean, const: true }
         recoveryRevalidatesCurrentState: { type: boolean, const: true }
         externalProviderExecutionEnabled: { type: boolean, const: false }
+    CommunicationsClosureCapabilitiesProjection:
+      type: object
+      additionalProperties: false
+      required: [canonicalRequestContractModelled, versionedEventEnvelopeModelled, recipientPermissionMatrixModelled, orderedDeliveryDecisionModelled, degradedModeContractModelled, acceptanceCatalogueModelled, launchGateCatalogueModelled, criticalEventTypes, conceptualApiOperations, p0Requirements, sourceDomains, recipientRoles, acceptanceScenarios, launchGates, communicationsInventsBusinessState, endpointCallGrantsDomainAuthority, unmanagedProviderBypassAllowed, voiceAiHighRiskDecisionAllowed, externalProviderExecutionEnabled, communicationsClosureMutationsEnabled, conceptualCommandMutationsImplemented]
+      properties:
+        canonicalRequestContractModelled: { type: boolean, const: true }
+        versionedEventEnvelopeModelled: { type: boolean, const: true }
+        recipientPermissionMatrixModelled: { type: boolean, const: true }
+        orderedDeliveryDecisionModelled: { type: boolean, const: true }
+        degradedModeContractModelled: { type: boolean, const: true }
+        acceptanceCatalogueModelled: { type: boolean, const: true }
+        launchGateCatalogueModelled: { type: boolean, const: true }
+        criticalEventTypes:
+          type: array
+          minItems: 14
+          maxItems: 14
+          items: { type: string, enum: [DriverAssigned.v1, DriverArrived.v1, RideCheckMismatch.v1, PassengerOnboardBreakdown.v1, ReplacementDriverAssigned.v1, SafetySOS.v1, SilentAssistance.v1, SchoolHandoverFailed.v1, PaymentStatusUnknown.v1, PayoutDestinationChanged.v1, VehicleDoNotUse.v1, ContactPointChanged.v1, AccountRecoveryStarted.v1, CommunicationsChannelOutage.v1] }
+        conceptualApiOperations:
+          type: array
+          minItems: 15
+          maxItems: 15
+          items: { type: string, enum: ['POST /communications', 'POST /communications/{id}/acknowledge', 'GET /communications/{id}/status', 'GET/PUT /communication-preferences', 'POST /contact-points/verify', 'POST /contact-points/change', 'POST /conversations', 'POST /calls/masked', 'POST /telephone/sessions', 'POST /voice/dialogues', 'POST /account-recovery', 'POST /account-recovery/{id}/evidence', 'POST /account-recovery/{id}/complete', 'POST /communications/security/restrict-channel', 'GET /communications/channel-health'] }
+        p0Requirements:
+          type: array
+          minItems: 20
+          maxItems: 20
+          items: { type: string, enum: [COM-CORE-001, COM-CORE-002, COM-CORE-003, COM-DEL-001, COM-DEL-002, COM-DEL-003, COM-TEL-001, COM-TEL-002, COM-VOI-001, COM-SEC-001, COM-SEC-002, COM-SEC-003, COM-SAF-001, COM-SCH-001, COM-FIN-001, COM-PRV-001, COM-PRV-002, COM-RES-001, COM-AUD-001, COM-ACC-001] }
+        sourceDomains:
+          type: array
+          items: { type: string, enum: [BOOKING, JOURNEY, SAFETY, SCHOOL, FINANCE, DRIVER, FLEET, SUPPORT, SHIELD, SYSTEM, BUSINESS] }
+        recipientRoles:
+          type: array
+          items: { type: string, enum: [PASSENGER, BOOKER, PAYER, GUARDIAN_CARER, SCHOOL_CONTACT, DRIVER, BUSINESS_AUTHORITY_CONTACT, CONTROL_ROOM_OPERATOR, SAFETY_OPERATOR, PARTNER_RESCUE_PROVIDER] }
+        acceptanceScenarios:
+          type: array
+          minItems: 18
+          maxItems: 18
+          items: { type: string, enum: [NORMAL_APP_BOOKING, THIRD_PARTY_BOOKING, LANDLINE_ONLY_PASSENGER, DRIVER_REASSIGNMENT_RACE, RIDECHECK_MISMATCH, PASSENGER_ONBOARD_BREAKDOWN, SILENT_ASSISTANCE, SCHOOL_HANDOVER_FAILURE, PAYMENT_STATUS_UNKNOWN, PAYOUT_BANK_TAKEOVER, SIM_SWAP_OTP_FLOOD, TELEPHONY_AI_LOW_CONFIDENCE, SMS_OUTAGE, OUTAGE_RECOVERY, DUPLICATE_EVENT_DELIVERY, OUT_OF_ORDER_EVENTS, CONTACT_ABUSE, STAFF_SNOOPING] }
+        launchGates:
+          type: array
+          minItems: 13
+          maxItems: 13
+          items: { $ref: '#/components/schemas/CommunicationLaunchGate' }
+        communicationsInventsBusinessState: { type: boolean, const: false }
+        endpointCallGrantsDomainAuthority: { type: boolean, const: false }
+        unmanagedProviderBypassAllowed: { type: boolean, const: false }
+        voiceAiHighRiskDecisionAllowed: { type: boolean, const: false }
+        externalProviderExecutionEnabled: { type: boolean, const: false }
+        communicationsClosureMutationsEnabled: { type: boolean, const: false }
+        conceptualCommandMutationsImplemented: { type: boolean, const: false }
+    CommunicationsClosureStatusProjection:
+      type: object
+      additionalProperties: false
+      required: [communicationRequestCount, canonicalContractCount, suppressedStaleRequestCount, communicationCreatedCount, pendingOrEscalatedCount, recipientScoped, authoritativeEventRequired, rolePermissionRequired, priorityGrantsAdditionalDataAccess, providerAcceptanceTreatedAsDelivery, externalProviderExecutionEnabled]
+      properties:
+        communicationRequestCount: { type: integer, minimum: 0 }
+        canonicalContractCount: { type: integer, minimum: 0 }
+        suppressedStaleRequestCount: { type: integer, minimum: 0 }
+        communicationCreatedCount: { type: integer, minimum: 0 }
+        pendingOrEscalatedCount: { type: integer, minimum: 0 }
+        recipientScoped: { type: boolean, const: true }
+        authoritativeEventRequired: { type: boolean, const: true }
+        rolePermissionRequired: { type: boolean, const: true }
+        priorityGrantsAdditionalDataAccess: { type: boolean, const: false }
+        providerAcceptanceTreatedAsDelivery: { type: boolean, const: false }
+        externalProviderExecutionEnabled: { type: boolean, const: false }
+    CommunicationLaunchGate:
+      type: string
+      enum: [P0_POLICY_TEMPLATE_FALLBACK_APPROVED, RECIPIENT_PERMISSION_MATRIX_TESTED, NON_SMARTPHONE_FLOW_REHEARSED, VOICE_HANDOFF_RESUME_PAYMENT_TESTED, PROVIDER_OUTAGE_RECOVERY_SIMULATED, CRITICAL_WORKFLOW_DRILLS_PASSED, SECURITY_DEGRADED_FALLBACK_TESTED, DELIVERY_TELEMETRY_STATES_DISTINCT, UNMANAGED_PROVIDER_BYPASS_BLOCKED, CRITICAL_TEMPLATE_GOVERNANCE_READY, OPERATOR_ACCESS_AND_EXPORT_AUDIT_READY, PRIVACY_AND_RETENTION_RULES_APPROVED, OUTAGE_AND_ABUSE_RUNBOOKS_READY]
+    CommunicationLaunchGateProjection:
+      type: object
+      additionalProperties: false
+      required: [gate, status]
+      properties:
+        gate: { $ref: '#/components/schemas/CommunicationLaunchGate' }
+        status: { type: string, enum: [PASS, FAIL, NOT_TESTED] }
+        evidenceReference: { type: string }
+    CommunicationsLaunchReadinessProjection:
+      type: object
+      additionalProperties: false
+      required: [gates, evidenceComplete, productionPoliciesApproved, providerSelectedAndContracted, operationsStaffingApproved, privacyRetentionApproved, pilotReady, providerExecutionMayBeEnabledAtThisCheckpoint]
+      properties:
+        gates:
+          type: array
+          minItems: 13
+          maxItems: 13
+          items: { $ref: '#/components/schemas/CommunicationLaunchGateProjection' }
+        evidenceComplete: { type: boolean }
+        productionPoliciesApproved: { type: boolean, const: false }
+        providerSelectedAndContracted: { type: boolean, const: false }
+        operationsStaffingApproved: { type: boolean, const: false }
+        privacyRetentionApproved: { type: boolean, const: false }
+        pilotReady: { type: boolean, const: false }
+        providerExecutionMayBeEnabledAtThisCheckpoint: { type: boolean, const: false }

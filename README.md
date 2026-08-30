@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.15**.
+Current checkpoint: **Engineering Phase 0.16**.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 
@@ -71,6 +71,24 @@ Important omnichannel operations truth rules:
 - Communications SLO evidence excludes sensitive message content and unrestricted case surveillance.
 - Acceptance scenarios use approved fixtures, cover critical success/failure/fallback/stale/duplicate/order cases and never contact real users.
 - External providers, Contact Centre staff mutations and scenario execution remain disabled.
+
+Phase 0.16 closes the Communications Engine contract:
+
+`VERSIONED DOMAIN EVENT → CANONICAL REQUEST → ROLE PERMISSION → SAFE ROUTE ORDER → DELIVERY / FALLBACK / OWNED FAILURE → ACCEPTANCE EVIDENCE → LAUNCH GATES`
+
+Important final-closure truth rules:
+
+- Communications transports authoritative Booking, Journey, Safety, School, Finance, Driver, Fleet, Support and Shield truth; it never invents or overrides it.
+- Every request requires idempotency, an immutable versioned source event, an authoritative recipient reference and role, approved payload variables, a current state version, classification, acknowledgement policy and versioned fallback policy.
+- Fourteen named critical event types, fifteen conceptual API operations and all twenty Communications P0 requirements are first-class versioned catalogues; catalogued mutations remain disabled.
+- Raw phone/email destinations and arbitrary source-object dumps are rejected. Priority changes urgency and fallback, never data access.
+- Passenger, booker, payer, guardian/carer, school, Driver, organisation, Control Room, Safety and rescue-partner scopes remain distinct and minimum-necessary.
+- Channel selection follows the blueprint decision order and excludes compromised or purpose-ineligible contact points before any attempt.
+- Provider acceptance and SENT remain insufficient; fallback revalidates source state, attempt caps stop hammering, and critical failure becomes owned work.
+- Recovery discards duplicate and stale events. Shield outage pauses high-risk account/financial changes without stranding essential canonical Journey, Safety or safeguarding work.
+- All eighteen end-to-end acceptance cases are fixture-only and provider-disabled; scenario success cannot come from contacting real people.
+- All thirteen launch gates are separate from production policy, procurement/provider, staffing, security, accessibility and privacy/retention approvals.
+- Endpoint availability grants no domain authority. Unmanaged provider calls, closure mutations and pilot launch remain disabled.
 
 Important Communications Core truth rules:
 
@@ -178,4 +196,4 @@ The earlier Journey integrity and Safety rules remain enforced:
 - Completion closes Journey, Booking, leg and assignment and returns the Driver to `AVAILABLE` atomically.
 - Completion does not initiate or imply payment.
 
-See `BUILD_STATUS.md`, `docs/architecture/ADR-0015-omnichannel-contact-centre-observability-truth.md`, and `docs/engineering/phase-0-15-checklist.md` for evidence and limitations.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0016-communications-engine-final-closure.md`, and `docs/engineering/phase-0-16-checklist.md` for evidence and limitations.

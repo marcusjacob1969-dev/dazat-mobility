@@ -3,7 +3,7 @@ import { dazatTokens } from '@dazat/design-system';
 export function App() {
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.15</p>
+      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.16</p>
       <h1>DAZAT Control Room</h1>
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.
@@ -122,6 +122,21 @@ export function App() {
         </p>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
           Provider acceptance is not delivery. SLO metrics exclude sensitive content, contactability is temporary context rather than a personal rating, and outage recovery revalidates current state before releasing queued work. Providers, staff mutations and real-user scenario execution remain disabled.
+        </p>
+      </section>
+      <section aria-label="Communications final closure boundary" style={{ maxWidth: 720, marginTop: 16, padding: 24, border: `1px solid ${dazatTokens.color.border}`, borderRadius: dazatTokens.radius.card }}>
+        <h2 style={{ marginTop: 0 }}>Final closure does not grant operational authority</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Every canonical CommunicationRequest references an immutable versioned source event, authoritative recipient, approved payload variables, template version, state version, classification, acknowledgement rule and fallback policy. Priority changes urgency and routing; it never grants broader access.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Fourteen critical event contracts, fifteen conceptual API operations and all twenty P0 requirement IDs are explicit versioned catalogues. A catalogued operation is not an implemented command and cannot bypass its owning backend.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          The delivery decision order resolves current source state, role permission, purpose, safe contact points, accessibility and language, channel exclusions and active policy before any attempt. SENT remains insufficient, stale fallback is prohibited, and critical failure becomes an owned case.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Eighteen acceptance cases and thirteen launch gates are explicit. Source evidence cannot substitute for provider selection, policy approval, staffing, privacy/retention approval, drills or runbooks. Unmanaged provider calls, closure mutations, real-user scenarios and pilot launch remain disabled.
         </p>
       </section>
     </main>

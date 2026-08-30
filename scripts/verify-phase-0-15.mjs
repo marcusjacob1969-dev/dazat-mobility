@@ -122,10 +122,11 @@ if (/app\.(?:post|put|patch|delete)\(/.test(routes)) errors.push('Communications
 
 const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
 for (const value of [
-  'registerCommunicationsOperationsRoutes', 'engineering-phase-0.15',
-  'NOT_REQUIRED_FOR_PHASE_0_15_COMMUNICATIONS_OPERATIONS_FOUNDATION',
+  'registerCommunicationsOperationsRoutes',
   'contactCentreMutation', 'communicationsScenarioExecution'
 ]) if (!main.includes(value)) errors.push(`API bootstrap missing Phase 0.15 value: ${value}`);
+const mainPhase = main.match(/checkpoint:\s*'engineering-phase-0\.(\d+)'/)?.[1];
+if (!mainPhase || Number(mainPhase) < 15) errors.push('API bootstrap checkpoint predates Phase 0.15');
 const config = readFileSync(join(root, 'services/api/src/config.ts'), 'utf8');
 for (const value of [
   "readonly contactCentreMutationMode: 'disabled'", "readonly communicationsScenarioMode: 'disabled'",
@@ -147,10 +148,12 @@ for (const rel of ['apps/rider/src/communications-operations-api.ts', 'apps/driv
 for (const rel of ['apps/rider/App.tsx', 'apps/driver/App.tsx']) {
   const app = readFileSync(join(root, rel), 'utf8');
   for (const truth of [
-    'ENGINEERING PHASE 0.15', 'Refresh communications operations truth',
+    'Refresh communications operations truth',
     'PROVIDERS · CONTACT CENTRE MUTATIONS · REAL-USER SCENARIOS DISABLED',
     'provider execution: NO · staff mutation: NO'
   ]) if (!app.includes(truth)) errors.push(`${rel} missing communications operations truth surface: ${truth}`);
+  const phase = app.match(/ENGINEERING PHASE 0\.(\d+)/)?.[1];
+  if (!phase || Number(phase) < 15) errors.push(`${rel} checkpoint predates Phase 0.15`);
 }
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
 for (const truth of [
@@ -165,16 +168,18 @@ for (const path of ['/communications/operations/capabilities:', '/contact-centre
   if (!api.includes(path)) errors.push(`OpenAPI Phase 0.15 path missing: ${path}`);
 }
 for (const statement of [
-  'versioned policy and current authoritative state', 'critical delivery failure becomes owned operational work',
-  'provider acceptance is not delivery', 'recovery suppresses stale replay',
-  'aggregate metrics exclude sensitive content', 'Contact Centre staff mutation remain disabled'
+  'Notification/Delivery Policy', 'Cases preserve priority',
+  'provider acceptance is not delivery', 'RECOVERING revalidates current state',
+  'metrics exclude sensitive content', 'no provider, staff mutation or real-user scenario execution is enabled'
 ]) if (!api.includes(statement)) errors.push(`OpenAPI communications operations truth statement missing: ${statement}`);
-if (!api.includes('version: 0.0.15')) errors.push('OpenAPI is not versioned at 0.0.15');
+const apiVersion = api.match(/\n\s*version:\s*0\.0\.(\d+)/)?.[1];
+if (!apiVersion || Number(apiVersion) < 15) errors.push('OpenAPI version predates Phase 0.15');
 
 let currentVersion = null;
 for (const rel of ['package.json', 'packages/domain/package.json', 'packages/contracts/package.json', 'services/api/package.json', 'apps/driver/package.json', 'apps/rider/package.json', 'apps/control-room/package.json']) {
   const parsed = JSON.parse(readFileSync(join(root, rel), 'utf8'));
-  if (parsed.version !== '0.0.15') errors.push(`${rel} is not versioned at 0.0.15`);
+  const patch = Number(String(parsed.version).split('.')[2]);
+  if (!Number.isInteger(patch) || patch < 15) errors.push(`${rel} version predates Phase 0.15`);
   currentVersion ??= parsed.version;
   if (parsed.version !== currentVersion) errors.push(`${rel} is not aligned to the current checkpoint version`);
 }

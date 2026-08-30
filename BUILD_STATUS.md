@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.15 — Omnichannel Policy, Contact Centre Casework and Communications Observability Truth**
+**Engineering Phase 0.16 — Communications Engine Final Closure Contract**
 
 Status: **SOURCE IMPLEMENTED / STATIC AND PURE-DOMAIN GUARDS VERIFIED / PROVIDER, STAFF AND CHARGING MUTATIONS DISABLED / DATABASE, CONCURRENCY AND APP RUNTIME NOT YET VERIFIED**
 
@@ -127,11 +127,23 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Communication SLO observations by channel/region/purpose with sensitive content and unrestricted case surveillance excluded.
 - Provider-disabled scenario catalogue/run/results covering critical primary/fallback/failure/stale/duplicate/out-of-order and accessibility/template cases without real-user contact.
 - Public disabled capability read plus authenticated recipient-owned Contact Cases and assurance status APIs and Rider/Driver/Control Room truth surfaces.
+- Immutable versioned canonical event envelope with source domain, aggregate version, occurrence/recording time, region/service context, classification, correlation, causation and supported payload-schema truth.
+- Canonical CommunicationRequest closure contract requiring idempotency, immutable source event, authoritative recipient reference/role, approved payload variables, template/state versions, classification, acknowledgement and fallback policy.
+- First-class catalogue of fourteen P0/P1 event contracts, fifteen conceptual API operations and all twenty Communications P0 requirement IDs.
+- Hard rejection of raw source-domain contact destinations, arbitrary source-object payloads, priority-based data access and Communications-invented business state.
+- Recipient permission matrix preserving passenger, booker, payer, guardian/carer, school, Driver, organisation, Control Room, Safety and partner/rescue minimum-necessary scope.
+- Active-task requirement for Control Room communication access and no unrestricted relationship or internal-note visibility.
+- Ten-step delivery path resolution from current source state through role/purpose/contact/policy checks, primary evidence, revalidated fallback and owned terminal action.
+- Explicit Shield/provider degraded-mode decisions that discard duplicate/stale recovery work, pause high-risk changes and preserve essential canonical Journey/Safety/safeguarding work.
+- Complete eighteen-scenario final acceptance catalogue with fixture-only, no-real-user and no-external-provider constraints.
+- Complete thirteen-gate launch catalogue with evidence separated from policy, provider/procurement, staffing and privacy/retention approvals.
+- Public final-closure capabilities plus authenticated recipient request coverage and launch-evidence reads; no mutation or provider execution route.
+- Rider, Driver and Control Room final-closure truth surfaces with explicit no-pilot/no-provider authority.
 
 ### Verified in this checkpoint
 
-- All structural verifiers pass from the foundation through Phase 0.15.
-- All 112 executable Phase 0.5–0.15 source-domain tests pass.
+- All structural verifiers pass from the foundation through Phase 0.16.
+- All 141 executable Phase 0.5–0.16 source-domain tests pass.
 - Phase 0.9 supplier, terms, capability, insurance, deposit and assignment-boundary verifier: **PASSED**.
 - Pure-domain tests cover Fleet state, Marketplace publication, ownership-transfer terms, explicit capability, deposit deduction and assignment hard checks.
 - Blueprint §54.2 Fleet Marketplace/agreement/assignment traceability: **recorded**.
@@ -153,10 +165,13 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Phase 0.15 omnichannel policy, delivery assurance, Contact Case, provider health, SLO and scenario boundary verifier: **PASSED**.
 - Pure-domain tests cover authoritative events, role scope, stale suppression, consent, do-not-call, STATUS_UNKNOWN wording, continuity/safeguarding wording, delivery-state separation, failure cases, ownership, failover, recovery, privacy-safe observability and isolated critical scenarios.
 - Blueprint §55.3 Communications Part 3 traceability: **recorded**.
+- Phase 0.16 canonical request/envelope, role permission, ordered routing, degraded-mode, acceptance and launch-gate verifier: **PASSED**.
+- Pure-domain tests cover source-event/idempotency requirements, payload minimisation, stale/deduplication handling, recipient-role leakage, SENT ambiguity, fallback, Shield degradation, critical scenarios and all thirteen launch gates.
+- Blueprint §59.1–§59.16 Communications Engine Final Closure traceability: **recorded**.
 
 ### Not yet verified / deliberately not claimed
 
-- PostgreSQL/PostGIS migrations 0001–0015 and transaction/concurrency cases have not been executed in this workspace.
+- PostgreSQL/PostGIS migrations 0001–0016 and transaction/concurrency cases have not been executed in this workspace.
 - Fastify, Expo and Vite workspaces have not been compiled with installed workspace dependencies here.
 - Authorised school/hospital/specialist handover recording is not exposed until staff and operating-authority rules are implemented.
 - Production payment provider selection, adapter/webhook/reconciliation execution, refunds and payouts are not implemented.
@@ -178,6 +193,7 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Operator roles, scripts, queues, staffing, callback service levels, regional recording/transcription rules, emergency guidance, interpreter coverage and critical translations await accountable approval.
 - No production Notification/Delivery Policy catalogue, regional/legal variant, SLO target, Contact Centre permission/staffing model, provider failover plan or isolated scenario runner is approved or configured.
 - Contact Centre mutation, operator follow-up sends, provider retry/failover execution, channel-outage detection and scenario execution remain disabled.
+- Communications final-closure command endpoints, provider-bypass enforcement at deployed network/credential boundaries, acceptance execution and launch-gate assessment remain disabled/unverified.
 - No production Driver, vehicle, passenger, location, Safety, pricing, provider credentials or data are present.
 - Source creation is not production readiness, safeguarding approval, licensing approval, insurance cover, payment certification or security certification.
 
@@ -200,3 +216,5 @@ Selecting or enabling any push, SMS, email, telephony, masked-call, protected-ch
 Selecting or enabling telephony, Voice Assistant, contact-centre, recording, transcription, interpreter, voice-biometric or PCI IVR capability—and approving caller-verification policy, scripts, operator permissions, regional recording notices, retention, emergency procedures, accessibility/language assurance and staffing—remains a founder/legal/privacy/security/Operations/Safety/accessibility/procurement gate. Phase 0.14 exposes only provider-disabled capability and recipient-owned read surfaces.
 
 Approving production Notification/Delivery Policies, templates, regional/legal/retention variants, Communications SLOs, Contact Centre roles/queues/staffing, primary/secondary providers, failover authority, bulk-export controls and operational drills remains a founder/legal/privacy/security/Operations/Safety/accessibility/procurement gate. Phase 0.15 exposes only disabled capabilities and recipient-scoped reads; it sends nothing and grants no staff mutation authority.
+
+Passing the Phase 0.16 source catalogue does not approve launch. Enabling any Communications command or provider requires all thirteen launch gates plus explicit production policy, provider/procurement, operations staffing, security, accessibility, safeguarding and privacy/retention approval. This checkpoint exposes only disabled capabilities and authenticated read projections; it cannot enable a pilot.

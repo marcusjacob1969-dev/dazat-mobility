@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, CommunicationInboxProjection, CommunicationsOperationsCapabilitiesProjection, CommunicationsOperationsStatusProjection, ContactCaseListProjection, ContactPlanProjection, PaymentStatusProjection, RegistrationContactType, StartRideCheckResult, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection } from '@dazat/contracts';
+import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, CommunicationInboxProjection, CommunicationsClosureCapabilitiesProjection, CommunicationsClosureStatusProjection, CommunicationsLaunchReadinessProjection, CommunicationsOperationsCapabilitiesProjection, CommunicationsOperationsStatusProjection, ContactCaseListProjection, ContactPlanProjection, PaymentStatusProjection, RegistrationContactType, StartRideCheckResult, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection } from '@dazat/contracts';
 import {
   confirmRiderContactVerification,
   startRiderContactVerification,
@@ -14,7 +14,7 @@ import { getBookingJourney, requestJourneyStop, sendRiderSafetySignal, startPass
 import { prepareProviderDisabledPaymentIntent, readPaymentStatus } from './src/finance-api';
 import { readCommunicationInbox } from './src/communications-api';
 import { readContactPlan, readTelephonyCapabilities, readTelephonyInteractions } from './src/telephony-voice-api';
-import { readCommunicationsOperationsCapabilities, readCommunicationsOperationsStatus, readContactCases } from './src/communications-operations-api';
+import { readCommunicationsClosureCapabilities, readCommunicationsClosureStatus, readCommunicationsLaunchReadiness, readCommunicationsOperationsCapabilities, readCommunicationsOperationsStatus, readContactCases } from './src/communications-operations-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'BOOK' | 'QUOTE' | 'READY';
 
@@ -74,6 +74,9 @@ export default function RiderApp() {
   const [communicationsOperationsCapabilities, setCommunicationsOperationsCapabilities] = useState<CommunicationsOperationsCapabilitiesProjection | null>(null);
   const [contactCases, setContactCases] = useState<ContactCaseListProjection | null>(null);
   const [communicationsOperationsStatus, setCommunicationsOperationsStatus] = useState<CommunicationsOperationsStatusProjection | null>(null);
+  const [communicationsClosureCapabilities, setCommunicationsClosureCapabilities] = useState<CommunicationsClosureCapabilitiesProjection | null>(null);
+  const [communicationsClosureStatus, setCommunicationsClosureStatus] = useState<CommunicationsClosureStatusProjection | null>(null);
+  const [communicationsLaunchReadiness, setCommunicationsLaunchReadiness] = useState<CommunicationsLaunchReadinessProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -237,11 +240,23 @@ export default function RiderApp() {
     });
   }
 
+  function refreshCommunicationsClosureTruth() {
+    void run(async () => {
+      const [capabilities, status, readiness] = await Promise.all([
+        readCommunicationsClosureCapabilities(), readCommunicationsClosureStatus(sessionToken),
+        readCommunicationsLaunchReadiness(sessionToken)
+      ]);
+      setCommunicationsClosureCapabilities(capabilities);
+      setCommunicationsClosureStatus(status);
+      setCommunicationsLaunchReadiness(readiness);
+    });
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.15</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.16</Text>
         <Text style={styles.title}>DAZAT Rider journey</Text>
         <Text style={styles.body}>Verified Booking through protected pickup, active Journey visibility, governed changes and persistent Safety controls.</Text>
 
@@ -391,6 +406,19 @@ export default function RiderApp() {
                 {communication.priority} {communication.purpose}: {communication.status} · acknowledgement {communication.acknowledgementRequired ? 'required' : 'not required'}
               </Text>
             ))}
+          </View>
+        ) : null}
+
+        {sessionToken ? (
+          <View style={styles.notice} accessibilityRole="summary">
+            <Text style={styles.noticeTitle}>Communications closure preserves authority before delivery</Text>
+            <Text style={styles.body}>Every request carries an immutable source event, recipient role, approved payload variables, current source version and versioned fallback policy. Priority never grants access to another party&apos;s financial, Safety or support data.</Text>
+            <Text style={styles.body}>The complete acceptance and launch-gate catalogues are modelled. A green source test is not a provider approval, staffed operation, privacy sign-off or launch decision.</Text>
+            <SecondaryButton label="Refresh communications closure truth" onPress={refreshCommunicationsClosureTruth} />
+            <Text style={styles.devNotice}>PROVIDER BYPASS · CLOSURE COMMANDS · PILOT LAUNCH DISABLED</Text>
+            {communicationsClosureCapabilities ? <Text style={styles.body}>Canonical request/envelope: YES · critical events: {communicationsClosureCapabilities.criticalEventTypes.length} · P0 requirements: {communicationsClosureCapabilities.p0Requirements.length} · acceptance cases: {communicationsClosureCapabilities.acceptanceScenarios.length} · launch gates: {communicationsClosureCapabilities.launchGates.length}</Text> : null}
+            {communicationsClosureStatus ? <Text style={styles.body}>Recipient requests: {communicationsClosureStatus.communicationRequestCount} · stale suppressed: {communicationsClosureStatus.suppressedStaleRequestCount} · priority expands access: NO</Text> : null}
+            {communicationsLaunchReadiness ? <Text style={styles.body}>Launch evidence complete: {communicationsLaunchReadiness.evidenceComplete ? 'YES' : 'NO'} · pilot ready: NO · provider execution: NO</Text> : null}
           </View>
         ) : null}
 

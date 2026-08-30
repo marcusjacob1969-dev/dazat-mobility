@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, ArrivalCommunicationPlanProjection, CommunicationInboxProjection, CommunicationsOperationsCapabilitiesProjection, CommunicationsOperationsStatusProjection, ContactCaseListProjection, ContactPlanProjection, ConnectivityReconciliationProjection, DriverAppealSubjectType, DriverApplicationProjection, DriverDailyOperationsProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverFairTreatmentProjection, DriverIncentiveProjection, DriverOfferSummary, DriverOperatingEligibilityProjection, DriverSupplyProjection, DriverSupportCaseProjection, DriverSupportCategory, FleetAgreementProjection, FleetMarketplaceOfferProjection, PreShiftCheckProjection, RegistrationContactType, RiderConductCaseProjection, SubmitDriverAppealProjection, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection, VehicleAssignmentValidationProjection, VehicleMaintenanceProjection, VerifiedDriverPerkProjection, VerifyRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, ArrivalCommunicationPlanProjection, CommunicationInboxProjection, CommunicationsClosureCapabilitiesProjection, CommunicationsClosureStatusProjection, CommunicationsLaunchReadinessProjection, CommunicationsOperationsCapabilitiesProjection, CommunicationsOperationsStatusProjection, ContactCaseListProjection, ContactPlanProjection, ConnectivityReconciliationProjection, DriverAppealSubjectType, DriverApplicationProjection, DriverDailyOperationsProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverFairTreatmentProjection, DriverIncentiveProjection, DriverOfferSummary, DriverOperatingEligibilityProjection, DriverSupplyProjection, DriverSupportCaseProjection, DriverSupportCategory, FleetAgreementProjection, FleetMarketplaceOfferProjection, PreShiftCheckProjection, RegistrationContactType, RiderConductCaseProjection, SubmitDriverAppealProjection, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection, VehicleAssignmentValidationProjection, VehicleMaintenanceProjection, VerifiedDriverPerkProjection, VerifyRideCheckResult } from '@dazat/contracts';
 import {
   confirmDriverContactVerification,
   startDriverContactVerification,
@@ -35,7 +35,7 @@ import { listDriverIncentives, readDriverFairTreatment, submitAppeal, submitRide
 import { listSupportCases, openSupportCase, readArrivalPlan, readDriverDailyOperations, readSupplyDemand, reconcileConnectivity } from './src/driver-daily-operations-api';
 import { readCommunicationInbox } from './src/communications-api';
 import { readContactPlan, readTelephonyCapabilities, readTelephonyInteractions } from './src/telephony-voice-api';
-import { readCommunicationsOperationsCapabilities, readCommunicationsOperationsStatus, readContactCases } from './src/communications-operations-api';
+import { readCommunicationsClosureCapabilities, readCommunicationsClosureStatus, readCommunicationsLaunchReadiness, readCommunicationsOperationsCapabilities, readCommunicationsOperationsStatus, readContactCases } from './src/communications-operations-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'DRIVER_HOME';
 
@@ -120,6 +120,9 @@ export default function DriverApp() {
   const [communicationsOperationsCapabilities, setCommunicationsOperationsCapabilities] = useState<CommunicationsOperationsCapabilitiesProjection | null>(null);
   const [contactCases, setContactCases] = useState<ContactCaseListProjection | null>(null);
   const [communicationsOperationsStatus, setCommunicationsOperationsStatus] = useState<CommunicationsOperationsStatusProjection | null>(null);
+  const [communicationsClosureCapabilities, setCommunicationsClosureCapabilities] = useState<CommunicationsClosureCapabilitiesProjection | null>(null);
+  const [communicationsClosureStatus, setCommunicationsClosureStatus] = useState<CommunicationsClosureStatusProjection | null>(null);
+  const [communicationsLaunchReadiness, setCommunicationsLaunchReadiness] = useState<CommunicationsLaunchReadinessProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -481,11 +484,23 @@ export default function DriverApp() {
     });
   }
 
+  function refreshCommunicationsClosureTruth() {
+    void run(async () => {
+      const [capabilities, status, readiness] = await Promise.all([
+        readCommunicationsClosureCapabilities(), readCommunicationsClosureStatus(sessionToken),
+        readCommunicationsLaunchReadiness(sessionToken)
+      ]);
+      setCommunicationsClosureCapabilities(capabilities);
+      setCommunicationsClosureStatus(status);
+      setCommunicationsLaunchReadiness(readiness);
+    });
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.15</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.16</Text>
         <Text style={styles.title}>DAZAT Driver journey</Text>
         <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. The complete Driver day keeps secure session, approved vehicle, eligibility, scheduled work, informed offers, pickup, RideCheck, Journey, earnings, break, finishing-soon and end-shift truth separate. Weak-signal recovery replaces speculative state and never pretends queued Safety commands were already processed.</Text>
 
@@ -778,6 +793,19 @@ export default function DriverApp() {
                 {communication.priority} {communication.purpose}: {communication.status} · acknowledgement {communication.acknowledgementRequired ? 'required' : 'not required'}
               </Text>
             ))}
+          </View>
+        ) : null}
+
+        {sessionToken ? (
+          <View style={styles.notice} accessibilityRole="summary">
+            <Text style={styles.noticeTitle}>Communications closure keeps Driver data role-scoped</Text>
+            <Text style={styles.body}>A Driver receives only the minimum trip, passenger-requirement and protected-contact facts needed to perform the work—not payer data, unnecessary diagnoses, complaint history or whole account records.</Text>
+            <Text style={styles.body}>Canonical events, stale suppression, outage recovery, acceptance cases and all launch gates are modelled. None of that enables provider calls, payout/security decisions, Contact Centre commands or a pilot.</Text>
+            <SecondaryButton label="Refresh communications closure truth" onPress={refreshCommunicationsClosureTruth} />
+            <Text style={styles.devNotice}>PROVIDER BYPASS · CLOSURE COMMANDS · PILOT LAUNCH DISABLED</Text>
+            {communicationsClosureCapabilities ? <Text style={styles.body}>Canonical request/envelope: YES · critical events: {communicationsClosureCapabilities.criticalEventTypes.length} · P0 requirements: {communicationsClosureCapabilities.p0Requirements.length} · acceptance cases: {communicationsClosureCapabilities.acceptanceScenarios.length} · launch gates: {communicationsClosureCapabilities.launchGates.length}</Text> : null}
+            {communicationsClosureStatus ? <Text style={styles.body}>Driver-owned requests: {communicationsClosureStatus.communicationRequestCount} · stale suppressed: {communicationsClosureStatus.suppressedStaleRequestCount} · priority expands access: NO</Text> : null}
+            {communicationsLaunchReadiness ? <Text style={styles.body}>Launch evidence complete: {communicationsLaunchReadiness.evidenceComplete ? 'YES' : 'NO'} · pilot ready: NO · provider execution: NO</Text> : null}
           </View>
         ) : null}
 

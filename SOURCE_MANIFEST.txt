@@ -60,6 +60,7 @@
 ./database/migrations/0013_unified_communications_core_foundation.sql
 ./database/migrations/0014_telephone_voice_handoff_foundation.sql
 ./database/migrations/0015_omnichannel_contact_centre_observability_foundation.sql
+./database/migrations/0016_communications_engine_final_closure_foundation.sql
 ./database/seeds/README.md
 ./docs/architecture/ADR-0001-production-foundation.md
 ./docs/architecture/ADR-0002-identity-account-foundation.md
@@ -76,6 +77,7 @@
 ./docs/architecture/ADR-0013-unified-communications-core-truth.md
 ./docs/architecture/ADR-0014-telephone-voice-human-handoff-truth.md
 ./docs/architecture/ADR-0015-omnichannel-contact-centre-observability-truth.md
+./docs/architecture/ADR-0016-communications-engine-final-closure.md
 ./docs/architecture/domain-ownership.md
 ./docs/engineering/phase-0-10-checklist.md
 ./docs/engineering/phase-0-11-checklist.md
@@ -83,6 +85,7 @@
 ./docs/engineering/phase-0-13-checklist.md
 ./docs/engineering/phase-0-14-checklist.md
 ./docs/engineering/phase-0-15-checklist.md
+./docs/engineering/phase-0-16-checklist.md
 ./docs/engineering/phase-0-2-checklist.md
 ./docs/engineering/phase-0-3-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
@@ -100,6 +103,7 @@
 ./docs/traceability/phase-0-13-requirements.md
 ./docs/traceability/phase-0-14-requirements.md
 ./docs/traceability/phase-0-15-requirements.md
+./docs/traceability/phase-0-16-requirements.md
 ./docs/traceability/phase-0-3-requirements.md
 ./docs/traceability/phase-0-4-requirements.md
 ./docs/traceability/phase-0-5-requirements.md
@@ -111,6 +115,7 @@
 ./package.json
 ./packages/contracts/package.json
 ./packages/contracts/src/booking.ts
+./packages/contracts/src/communications-closure.ts
 ./packages/contracts/src/communications-operations.ts
 ./packages/contracts/src/communications.ts
 ./packages/contracts/src/dispatch.ts
@@ -133,6 +138,7 @@
 ./packages/domain/package.json
 ./packages/domain/src/authentication.ts
 ./packages/domain/src/booking-status.ts
+./packages/domain/src/communications-closure.ts
 ./packages/domain/src/communications-operations.ts
 ./packages/domain/src/communications.ts
 ./packages/domain/src/dispatch.ts
@@ -159,6 +165,7 @@
 ./scripts/verify-phase-0-13.mjs
 ./scripts/verify-phase-0-14.mjs
 ./scripts/verify-phase-0-15.mjs
+./scripts/verify-phase-0-16.mjs
 ./scripts/verify-phase-0-2.mjs
 ./scripts/verify-phase-0-3.mjs
 ./scripts/verify-phase-0-4.mjs
@@ -174,6 +181,8 @@
 ./services/api/src/modules/booking/booking-service.ts
 ./services/api/src/modules/booking/development-pricing-adapter.ts
 ./services/api/src/modules/booking/routes.ts
+./services/api/src/modules/communications-closure/communications-closure-service.ts
+./services/api/src/modules/communications-closure/routes.ts
 ./services/api/src/modules/communications-operations/communications-operations-service.ts
 ./services/api/src/modules/communications-operations/routes.ts
 ./services/api/src/modules/communications/communications-service.ts
@@ -212,6 +221,7 @@
 ./services/workers/tsconfig.json
 ./tests/domain/authentication.test.mjs
 ./tests/domain/booking-status.test.mjs
+./tests/domain/communications-closure-source.test.mjs
 ./tests/domain/communications-operations-source.test.mjs
 ./tests/domain/communications-source.test.mjs
 ./tests/domain/dispatch.test.mjs
