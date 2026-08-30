@@ -17,6 +17,7 @@
 ./apps/driver/app.json
 ./apps/driver/package.json
 ./apps/driver/src/README.md
+./apps/driver/src/communications-api.ts
 ./apps/driver/src/dispatch-api.ts
 ./apps/driver/src/driver-daily-operations-api.ts
 ./apps/driver/src/driver-fair-treatment-api.ts
@@ -32,6 +33,7 @@
 ./apps/rider/package.json
 ./apps/rider/src/README.md
 ./apps/rider/src/booking-api.ts
+./apps/rider/src/communications-api.ts
 ./apps/rider/src/dispatch-api.ts
 ./apps/rider/src/finance-api.ts
 ./apps/rider/src/identity-api.ts
@@ -51,6 +53,7 @@
 ./database/migrations/0010_maintenance_defect_reliability_foundation.sql
 ./database/migrations/0011_driver_fair_treatment_foundation.sql
 ./database/migrations/0012_driver_daily_operations_supply_support_foundation.sql
+./database/migrations/0013_unified_communications_core_foundation.sql
 ./database/seeds/README.md
 ./docs/architecture/ADR-0001-production-foundation.md
 ./docs/architecture/ADR-0002-identity-account-foundation.md
@@ -64,10 +67,12 @@
 ./docs/architecture/ADR-0010-maintenance-defect-reliability-truth.md
 ./docs/architecture/ADR-0011-driver-fair-treatment-truth.md
 ./docs/architecture/ADR-0012-driver-daily-operations-supply-support-truth.md
+./docs/architecture/ADR-0013-unified-communications-core-truth.md
 ./docs/architecture/domain-ownership.md
 ./docs/engineering/phase-0-10-checklist.md
 ./docs/engineering/phase-0-11-checklist.md
 ./docs/engineering/phase-0-12-checklist.md
+./docs/engineering/phase-0-13-checklist.md
 ./docs/engineering/phase-0-2-checklist.md
 ./docs/engineering/phase-0-3-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
@@ -82,6 +87,7 @@
 ./docs/traceability/phase-0-10-requirements.md
 ./docs/traceability/phase-0-11-requirements.md
 ./docs/traceability/phase-0-12-requirements.md
+./docs/traceability/phase-0-13-requirements.md
 ./docs/traceability/phase-0-3-requirements.md
 ./docs/traceability/phase-0-4-requirements.md
 ./docs/traceability/phase-0-5-requirements.md
@@ -93,6 +99,7 @@
 ./package.json
 ./packages/contracts/package.json
 ./packages/contracts/src/booking.ts
+./packages/contracts/src/communications.ts
 ./packages/contracts/src/dispatch.ts
 ./packages/contracts/src/driver-daily-operations.ts
 ./packages/contracts/src/driver-fair-treatment.ts
@@ -112,6 +119,7 @@
 ./packages/domain/package.json
 ./packages/domain/src/authentication.ts
 ./packages/domain/src/booking-status.ts
+./packages/domain/src/communications.ts
 ./packages/domain/src/dispatch.ts
 ./packages/domain/src/domain-event.ts
 ./packages/domain/src/driver-daily-operations.ts
@@ -132,6 +140,7 @@
 ./scripts/verify-phase-0-10.mjs
 ./scripts/verify-phase-0-11.mjs
 ./scripts/verify-phase-0-12.mjs
+./scripts/verify-phase-0-13.mjs
 ./scripts/verify-phase-0-2.mjs
 ./scripts/verify-phase-0-3.mjs
 ./scripts/verify-phase-0-4.mjs
@@ -147,6 +156,8 @@
 ./services/api/src/modules/booking/booking-service.ts
 ./services/api/src/modules/booking/development-pricing-adapter.ts
 ./services/api/src/modules/booking/routes.ts
+./services/api/src/modules/communications/communications-service.ts
+./services/api/src/modules/communications/routes.ts
 ./services/api/src/modules/dispatch/dispatch-service.ts
 ./services/api/src/modules/dispatch/routes.ts
 ./services/api/src/modules/driver-daily-operations/driver-daily-operations-service.ts
@@ -179,6 +190,7 @@
 ./services/workers/tsconfig.json
 ./tests/domain/authentication.test.mjs
 ./tests/domain/booking-status.test.mjs
+./tests/domain/communications-source.test.mjs
 ./tests/domain/dispatch.test.mjs
 ./tests/domain/driver-daily-operations-source.test.mjs
 ./tests/domain/driver-fair-treatment-source.test.mjs

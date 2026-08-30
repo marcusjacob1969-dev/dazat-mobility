@@ -1,5 +1,6 @@
-// Phase 0 worker shell.
-// First implementation target: publish booking.outbox_message rows with idempotent retry semantics.
-// The event transport is intentionally not selected in code yet; it will be hidden behind an adapter.
+// Phase 0.13 worker shell.
+// Communication intent, delivery plans and outbox truth now exist, but no external SMS, email,
+// push, telephony or chat adapter is selected. A future worker must revalidate source aggregate
+// versions before every attempt and retain UNKNOWN instead of retrying blindly.
 
-console.log('DAZAT workers: Phase 0.1 shell — no production worker started.');
+console.log('DAZAT workers: Phase 0.13 provider-disabled shell — no external delivery worker started.');

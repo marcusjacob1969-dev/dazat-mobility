@@ -132,19 +132,24 @@ for (const statement of [
   'contacts no external provider or emergency service automatically', 'No signal guarantees earnings',
   'passenger GPS is never assumed', 'communication execution is disabled'
 ]) if (!api.includes(statement)) errors.push(`OpenAPI daily-operations truth statement missing: ${statement}`);
-if (!api.includes('version: 0.0.12')) errors.push('OpenAPI is not versioned at 0.0.12');
+const apiVersion = api.match(/\n\s*version:\s*0\.0\.(\d+)/)?.[1];
+if (!apiVersion || Number(apiVersion) < 12) errors.push('OpenAPI version predates Phase 0.12');
 
+let currentVersion = null;
 for (const rel of ['package.json', 'packages/domain/package.json', 'packages/contracts/package.json', 'services/api/package.json', 'apps/driver/package.json', 'apps/rider/package.json', 'apps/control-room/package.json']) {
   const parsed = JSON.parse(readFileSync(join(root, rel), 'utf8'));
-  if (parsed.version !== '0.0.12') errors.push(`${rel} is not versioned at 0.0.12`);
+  const patch = Number(String(parsed.version).split('.')[2]);
+  if (!Number.isInteger(patch) || patch < 12) errors.push(`${rel} version predates Phase 0.12`);
+  currentVersion ??= parsed.version;
+  if (parsed.version !== currentVersion) errors.push(`${rel} is not aligned to the current checkpoint version`);
 }
 const apiPackage = JSON.parse(readFileSync(join(root, 'services/api/package.json'), 'utf8'));
-if (apiPackage.dependencies['@dazat/domain'] !== '0.0.12' || apiPackage.dependencies['@dazat/contracts'] !== '0.0.12') {
-  errors.push('API internal dependencies are not aligned to Phase 0.12');
+if (apiPackage.dependencies['@dazat/domain'] !== currentVersion || apiPackage.dependencies['@dazat/contracts'] !== currentVersion) {
+  errors.push('API internal dependencies are not aligned to the current checkpoint');
 }
 for (const rel of ['apps/driver/package.json', 'apps/rider/package.json']) {
   const parsed = JSON.parse(readFileSync(join(root, rel), 'utf8'));
-  if (parsed.dependencies['@dazat/contracts'] !== '0.0.12') errors.push(`${rel} contract dependency is not aligned to Phase 0.12`);
+  if (parsed.dependencies['@dazat/contracts'] !== currentVersion) errors.push(`${rel} contract dependency is not aligned to the current checkpoint`);
 }
 
 if (errors.length) {

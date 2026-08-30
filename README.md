@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.12**.
+Current checkpoint: **Engineering Phase 0.13**.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 
@@ -31,6 +31,23 @@ Phase 0.11 adds Driver performance and fair-treatment truth:
 Phase 0.12 adds the complete Driver daily-operations truth:
 
 `SECURE SESSION → APPROVED VEHICLE → ELIGIBILITY → SCHEDULED WORK → ONLINE → INFORMED OFFER → PICKUP → RIDECHECK → JOURNEY → EARNINGS REFRESH → NEXT OFFER / BREAK / FINISHING SOON → OFFLINE`
+
+Phase 0.13 adds the unified Communications Core truth:
+
+`PURPOSED COMMUNICATION → SCOPED RECIPIENT → VERSIONED TEMPLATE → SAFE ROUTE PLAN → SOURCE REVALIDATION → DELIVERY OBSERVATION → ACKNOWLEDGEMENT / HUMAN ESCALATION`
+
+Important Communications Core truth rules:
+
+- Booking, Journey, Safety, school safeguarding, payment, account-security, Driver, Support, business and marketing communications use one governed purpose-aware core.
+- A Communication is separate from each MessageDelivery attempt. QUEUED, SENT, DELIVERED, READ, FAILED, EXPIRED, UNKNOWN and SUPPRESSED_STALE remain distinct facts.
+- Marketing consent is separate and marketing cannot be relabelled as operational to bypass consent or quiet hours.
+- Recipient person and role are scoped. Third-party booking does not create unrestricted financial, Safety or location visibility.
+- Templates are immutable versions; critical templates require approval and account-security messages never request passwords, full PINs, OTPs or device-linking codes.
+- Source aggregate versions are revalidated before delivery. Old assignment, Booking, Journey or payment messages are suppressed rather than sent stale.
+- Critical acknowledgement failure, UNKNOWN delivery or a missed deadline can require human escalation; none is silently treated as acknowledged.
+- Silent Assistance never falls back to an unsafe automatic call. Unverified, unavailable and compromised channels are excluded.
+- Protected conversation and masked calling are time-bounded and never expose personal contact details.
+- Push, SMS, email, telephony and chat providers remain disabled; no queued intent is presented as sent or delivered.
 
 Important Driver daily-operations truth rules:
 
@@ -125,4 +142,4 @@ The earlier Journey integrity and Safety rules remain enforced:
 - Completion closes Journey, Booking, leg and assignment and returns the Driver to `AVAILABLE` atomically.
 - Completion does not initiate or imply payment.
 
-See `BUILD_STATUS.md`, `docs/architecture/ADR-0012-driver-daily-operations-supply-support-truth.md`, and `docs/engineering/phase-0-12-checklist.md` for evidence and limitations.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0013-unified-communications-core-truth.md`, and `docs/engineering/phase-0-13-checklist.md` for evidence and limitations.

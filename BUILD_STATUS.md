@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.12 — Driver Daily Operations, Informed Offers, Connectivity, Supply and Support Truth**
+**Engineering Phase 0.13 — Unified Communications, Delivery, Acknowledgement and Protected Contact Truth**
 
 Status: **SOURCE IMPLEMENTED / STATIC AND PURE-DOMAIN GUARDS VERIFIED / PROVIDER, STAFF AND CHARGING MUTATIONS DISABLED / DATABASE, CONCURRENCY AND APP RUNTIME NOT YET VERIFIED**
 
@@ -85,11 +85,24 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Typed Driver Support cases with mandatory human escalation for high-risk active cases and no automatic external-service contact.
 - Explicit unconfigured voice-readout, CarPlay and Android Auto roadmap truth with backend validation remaining authoritative.
 - Authenticated daily-operations, connectivity, support, supply and arrival-plan APIs plus Driver/Control Room truth surfaces.
+- One purpose-aware Communication aggregate across Booking, Journey, Safety, safeguarding, Finance, Driver, Support, business and marketing domains.
+- Immutable versioned communication templates with approval and hard security-secret request guards.
+- Versioned per-purpose communication preferences with explicit blocked channels, quiet-hours fields and separate evidenced marketing consent.
+- Recipient-person and recipient-role scoping without copying or exposing personal contact details.
+- Communication intent separated from ordered delivery plans and append-only MessageDelivery observations.
+- Safe route planning that excludes unavailable, unverified and compromised channels and preserves Silent Assistance no-auto-call behaviour.
+- Source aggregate version currentness and expiry guards that suppress stale messages before delivery.
+- Distinct QUEUED, SENT, DELIVERED, READ, FAILED, EXPIRED, UNKNOWN and SUPPRESSED_STALE delivery truth.
+- Immutable recipient acknowledgements with idempotent API handling and explicit human-escalation decisions.
+- Time-bounded protected conversation and masked-call models with personal-number disclosure prohibited.
+- Explicit channel-health projection and degraded/unknown provider truth.
+- External push, SMS, email, telephony and chat execution hard-disabled; no queued intent is presented as delivery.
+- Authenticated recipient inbox, detail and acknowledgement APIs plus Rider, Driver and Control Room boundary surfaces.
 
 ### Verified in this checkpoint
 
-- All structural verifiers pass from the foundation through Phase 0.12.
-- All 67 executable Phase 0.5–0.12 source-domain tests pass.
+- All structural verifiers pass from the foundation through Phase 0.13.
+- All 79 executable Phase 0.5–0.13 source-domain tests pass.
 - Phase 0.9 supplier, terms, capability, insurance, deposit and assignment-boundary verifier: **PASSED**.
 - Pure-domain tests cover Fleet state, Marketplace publication, ownership-transfer terms, explicit capability, deposit deduction and assignment hard checks.
 - Blueprint §54.2 Fleet Marketplace/agreement/assignment traceability: **recorded**.
@@ -102,10 +115,13 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Phase 0.12 Driver daily-operations, informed-offer, connectivity, supply and support boundary verifier: **PASSED**.
 - Pure-domain tests cover informed disclosure, Rider-fare separation, weak-signal recovery, canonical queued-event routing, Support escalation, supply evidence, homeward ranking and chosen-pickup communication safety.
 - Blueprint §45, §54.5 and §66 Driver/Dispatch P1 traceability: **recorded**.
+- Phase 0.13 unified communications, delivery, acknowledgement, stale-suppression and protected-contact boundary verifier: **PASSED**.
+- Pure-domain tests cover marketing separation, verified routing, critical fallback, Silent Assistance, stale/expired suppression, acknowledgement escalation, protected contact and secure templates.
+- Blueprint §55.1 and Communications P1 traceability: **recorded**.
 
 ### Not yet verified / deliberately not claimed
 
-- PostgreSQL/PostGIS migrations 0001–0012 and transaction/concurrency cases have not been executed in this workspace.
+- PostgreSQL/PostGIS migrations 0001–0013 and transaction/concurrency cases have not been executed in this workspace.
 - Fastify, Expo and Vite workspaces have not been compiled with installed workspace dependencies here.
 - Authorised school/hospital/specialist handover recording is not exposed until staff and operating-authority rules are implemented.
 - Production payment provider selection, adapter/webhook/reconciliation execution, refunds and payouts are not implemented.
@@ -122,6 +138,8 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Telemetry thresholds/radii and retention defaults await Operations, Safety, privacy, accessibility and safeguarding validation.
 - Route-time and Driver-earning estimate policy, scheduled-work protection windows, demand/forecast evidence producers, homeward matching and Driver Support staffing/service levels await accountable approval and production-like validation.
 - No voice, CarPlay, Android Auto, navigation, communications, support or emergency-service provider is selected, integrated or contacted.
+- No communication template approval authority, translation assurance, quiet-hours timezone policy, fallback/retention policy, provider callback verifier or acknowledgement escalation staffing is configured.
+- Telephone/Voice Assistant booking, caller identity assessment, call routing and human handoff remain the next §55.2 package.
 - No production Driver, vehicle, passenger, location, Safety, pricing, provider credentials or data are present.
 - Source creation is not production readiness, safeguarding approval, licensing approval, insurance cover, payment certification or security certification.
 
@@ -138,3 +156,5 @@ Selecting maintenance, recovery, parts, warranty, inspection, telematics or Driv
 Approving real Driver performance policy, complaint evidence access, restriction/offboarding authority, appeal reviewer roles and incentive terms remains a founder/legal/People/Operations/Safety/Finance gate. Phase 0.11 exposes Driver reporting and appeal submission but no staff adjudication editor, real incentive publication or destructive Driver-history deletion path.
 
 Approving real Driver earning estimates, route-time providers, scheduled-work protection policy, supply/forecast publication, homeward matching, arrival communications, Driver Support staffing and any external Safety/support escalation remains a founder/legal/Finance/Operations/Safety/privacy/procurement gate. Phase 0.12 fails closed on incomplete offers, publishes no demand signal without evidence, and contacts no external service.
+
+Selecting or enabling any push, SMS, email, telephony, masked-call, protected-chat or portal provider and approving production templates, translations, consent/quiet-hours/fallback/retention policies and acknowledgement escalation staffing remains a founder/legal/privacy/security/Operations/Safety/procurement gate. Phase 0.13 plans and audits communication without contacting any provider.

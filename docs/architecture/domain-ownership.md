@@ -14,7 +14,7 @@
 | Safety | SafetyEvent, SafeguardingCase |
 | Operations | OperationalCase, ControlRoomTask |
 | Finance | PaymentIntent, Payment, Refund, FinancialAccount, LedgerTransaction, DriverEarning, Payout, Invoice |
-| Communications | CommunicationRequest, ContactCase |
+| Communications | Communication, CommunicationTemplateVersion, CommunicationPreferenceVersion, CommunicationDeliveryPlan, MessageDelivery, CommunicationAcknowledgement, ProtectedConversation, MaskedCallSession, ChannelHealthObservation |
 | Organisation | Organisation, OrganisationAgreement |
 | School | SchoolPassengerProfile, SchoolTransportSeries |
 | Rescue | BreakdownEvent, ContinuityCase, RescueCase |

@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.12
-  description: Engineering Phase 0.12 API. Server/domain owners remain authoritative for identity, Booking, Dispatch, Journey, Safety, Finance, Driver operating permission, evidence-backed Fleet/maintenance/fair-treatment truth and complete Driver daily operations. Blind offers, pretend weak-signal execution and guaranteed-earning heatmaps are prohibited.
+  version: 0.0.13
+  description: Engineering Phase 0.13 API. Server/domain owners remain authoritative for identity, Booking, Dispatch, Journey, Safety, Finance, Driver/Fleet truth and the unified Communications Core. Communication intent is separate from delivery; stale source versions are suppressed, marketing stays consent-separated, UNKNOWN is not delivery and all external communication providers remain disabled.
 servers:
   - url: http://localhost:3001
 paths:
@@ -810,6 +810,59 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ArrivalCommunicationPlanProjection' }
         '403': { description: Booking is not assigned to this Driver. }
+  /v1/communications:
+    get:
+      summary: Read the authenticated recipient's communication inbox and channel-health truth.
+      description: Purpose, priority and acknowledgement state are authoritative. Missing or expired provider-health evidence is UNKNOWN; no external provider execution is enabled.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Recipient-scoped communication summaries and explicit channel health.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommunicationInboxProjection' }
+        '401': { description: Missing, expired or revoked session. }
+  /v1/communications/{communicationId}:
+    get:
+      summary: Read one recipient-owned Communication and its separate delivery observations.
+      description: QUEUED, SENT, DELIVERED, READ, FAILED, EXPIRED, UNKNOWN and SUPPRESSED_STALE stay distinct. Personal contact details are never exposed.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: communicationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Communication intent, delivery timeline and acknowledgement escalation truth.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommunicationProjection' }
+        '403': { description: Communication belongs to another recipient. }
+        '404': { description: Communication not found. }
+  /v1/communications/{communicationId}/acknowledgements:
+    post:
+      summary: Idempotently acknowledge a recipient-owned critical communication.
+      description: Acknowledgement is a separate immutable fact. Delivery failure, UNKNOWN or a missed deadline can still require human escalation; no external contact is performed here.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: communicationId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AcknowledgeCommunicationRequest' }
+      responses:
+        '200':
+          description: Acknowledgement persisted or the same idempotent result replayed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommunicationAcknowledgementProjection' }
+        '409': { description: Communication is not acknowledgeable or an idempotency identifier was reused. }
 components:
   securitySchemes:
     bearerAuth:
@@ -1395,3 +1448,82 @@ components:
         driverInstructions: { type: array, items: { type: string } }
         directContactDetailsExposed: { type: boolean, const: false }
         communicationExecutionEnabled: { type: boolean, const: false }
+    CommunicationSummaryProjection:
+      type: object
+      additionalProperties: false
+      required: [communicationId, purpose, priority, recipientRole, status, templateKey, templateVersion, sourceAggregateType, sourceAggregateId, sourceAggregateVersion, acknowledgementRequired, createdAt]
+      properties:
+        communicationId: { type: string, format: uuid }
+        purpose: { type: string, enum: [BOOKING_OPERATIONAL, JOURNEY_OPERATIONAL, SAFETY, SCHOOL_SAFEGUARDING, PAYMENT, ACCOUNT_SECURITY, DRIVER_OPERATIONS, SUPPORT, BUSINESS, MARKETING] }
+        priority: { type: string, enum: [P0, P1, P2, P3, P4] }
+        recipientRole: { type: string }
+        status: { type: string, enum: [QUEUED, DELIVERY_PENDING, DELIVERED, ACK_REQUIRED, ACKNOWLEDGED, FAILED, EXPIRED, SUPPRESSED] }
+        templateKey: { type: string }
+        templateVersion: { type: integer, minimum: 1 }
+        sourceAggregateType: { type: string }
+        sourceAggregateId: { type: string, format: uuid }
+        sourceAggregateVersion: { type: integer, minimum: 1 }
+        acknowledgementRequired: { type: boolean }
+        acknowledgementDeadline: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+    MessageDeliveryProjection:
+      type: object
+      additionalProperties: false
+      required: [deliveryId, channel, attemptNumber, state, providerReferenceStored, occurredAt, externalProviderExecutionEnabled]
+      properties:
+        deliveryId: { type: string, format: uuid }
+        channel: { type: string, enum: [IN_APP, PUSH, SMS, EMAIL, VOICE_CALL, MASKED_CALL, PROTECTED_CHAT, AUTHENTICATED_PORTAL] }
+        attemptNumber: { type: integer, minimum: 1 }
+        state: { type: string, enum: [QUEUED, SENT, DELIVERED, READ, FAILED, EXPIRED, UNKNOWN, SUPPRESSED_STALE] }
+        contactHint: { type: string, description: Masked hint only; never a raw personal contact. }
+        providerReferenceStored: { type: boolean }
+        failureCode: { type: string }
+        occurredAt: { type: string, format: date-time }
+        externalProviderExecutionEnabled: { type: boolean, const: false }
+    CommunicationProjection:
+      allOf:
+        - $ref: '#/components/schemas/CommunicationSummaryProjection'
+        - type: object
+          required: [deliveries, acknowledgementEscalation, personalContactDetailsExposed, marketingSeparatedFromOperational, staleDeliverySuppressionEnabled]
+          properties:
+            deliveries: { type: array, items: { $ref: '#/components/schemas/MessageDeliveryProjection' } }
+            acknowledgedAt: { type: string, format: date-time }
+            acknowledgementEscalation: { type: string, enum: [NOT_REQUIRED, WAITING, ACKNOWLEDGED, HUMAN_ESCALATION_REQUIRED] }
+            personalContactDetailsExposed: { type: boolean, const: false }
+            marketingSeparatedFromOperational: { type: boolean, const: true }
+            staleDeliverySuppressionEnabled: { type: boolean, const: true }
+    CommunicationInboxProjection:
+      type: object
+      additionalProperties: false
+      required: [communications, channelHealth, degradedModeExplicit, providerExecutionEnabled]
+      properties:
+        communications: { type: array, items: { $ref: '#/components/schemas/CommunicationSummaryProjection' } }
+        channelHealth:
+          type: array
+          items:
+            type: object
+            required: [channel, state]
+            properties:
+              channel: { type: string, enum: [IN_APP, PUSH, SMS, EMAIL, VOICE_CALL, MASKED_CALL, PROTECTED_CHAT, AUTHENTICATED_PORTAL] }
+              state: { type: string, enum: [HEALTHY, DEGRADED, UNAVAILABLE, UNKNOWN] }
+              observedAt: { type: string, format: date-time }
+        degradedModeExplicit: { type: boolean, const: true }
+        providerExecutionEnabled: { type: boolean, const: false }
+    AcknowledgeCommunicationRequest:
+      type: object
+      additionalProperties: false
+      required: [clientAcknowledgementId, acknowledgedAt]
+      properties:
+        clientAcknowledgementId: { type: string, format: uuid }
+        acknowledgedAt: { type: string, format: date-time }
+    CommunicationAcknowledgementProjection:
+      type: object
+      additionalProperties: false
+      required: [communicationId, acknowledgementId, status, acknowledgedAt, repeatedAcknowledgement]
+      properties:
+        communicationId: { type: string, format: uuid }
+        acknowledgementId: { type: string, format: uuid }
+        status: { type: string, const: ACKNOWLEDGED }
+        acknowledgedAt: { type: string, format: date-time }
+        repeatedAcknowledgement: { type: boolean }

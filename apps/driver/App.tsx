@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, ArrivalCommunicationPlanProjection, ConnectivityReconciliationProjection, DriverAppealSubjectType, DriverApplicationProjection, DriverDailyOperationsProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverFairTreatmentProjection, DriverIncentiveProjection, DriverOfferSummary, DriverOperatingEligibilityProjection, DriverSupplyProjection, DriverSupportCaseProjection, DriverSupportCategory, FleetAgreementProjection, FleetMarketplaceOfferProjection, PreShiftCheckProjection, RegistrationContactType, RiderConductCaseProjection, SubmitDriverAppealProjection, VehicleAssignmentValidationProjection, VehicleMaintenanceProjection, VerifiedDriverPerkProjection, VerifyRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, ArrivalCommunicationPlanProjection, CommunicationInboxProjection, ConnectivityReconciliationProjection, DriverAppealSubjectType, DriverApplicationProjection, DriverDailyOperationsProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverFairTreatmentProjection, DriverIncentiveProjection, DriverOfferSummary, DriverOperatingEligibilityProjection, DriverSupplyProjection, DriverSupportCaseProjection, DriverSupportCategory, FleetAgreementProjection, FleetMarketplaceOfferProjection, PreShiftCheckProjection, RegistrationContactType, RiderConductCaseProjection, SubmitDriverAppealProjection, VehicleAssignmentValidationProjection, VehicleMaintenanceProjection, VerifiedDriverPerkProjection, VerifyRideCheckResult } from '@dazat/contracts';
 import {
   confirmDriverContactVerification,
   startDriverContactVerification,
@@ -33,6 +33,7 @@ import { listDriverFleetAgreements, listFleetMarketplace, validateVehicleAssignm
 import { listVerifiedDriverPerks, readVehicleMaintenance, submitPreShiftCheck } from './src/maintenance-reliability-api';
 import { listDriverIncentives, readDriverFairTreatment, submitAppeal, submitRiderConductCase, terminateUnsafeJourney } from './src/driver-fair-treatment-api';
 import { listSupportCases, openSupportCase, readArrivalPlan, readDriverDailyOperations, readSupplyDemand, reconcileConnectivity } from './src/driver-daily-operations-api';
+import { readCommunicationInbox } from './src/communications-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'DRIVER_HOME';
 
@@ -110,6 +111,7 @@ export default function DriverApp() {
   const [supportCategory, setSupportCategory] = useState<DriverSupportCategory>('TECHNICAL');
   const [supportSummary, setSupportSummary] = useState('');
   const [arrivalPlan, setArrivalPlan] = useState<ArrivalCommunicationPlanProjection | null>(null);
+  const [communicationInbox, setCommunicationInbox] = useState<CommunicationInboxProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -444,11 +446,15 @@ export default function DriverApp() {
     });
   }
 
+  function refreshCommunications() {
+    void run(async () => setCommunicationInbox(await readCommunicationInbox(sessionToken)));
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.12</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.13</Text>
         <Text style={styles.title}>DAZAT Driver journey</Text>
         <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. The complete Driver day keeps secure session, approved vehicle, eligibility, scheduled work, informed offers, pickup, RideCheck, Journey, earnings, break, finishing-soon and end-shift truth separate. Weak-signal recovery replaces speculative state and never pretends queued Safety commands were already processed.</Text>
 
@@ -726,6 +732,21 @@ export default function DriverApp() {
                 )}
               </View>
             ) : null}
+          </View>
+        ) : null}
+
+        {sessionToken ? (
+          <View style={styles.notice} accessibilityRole="summary">
+            <Text style={styles.noticeTitle}>Communication inbox — intent is not delivery</Text>
+            <Text style={styles.body}>Driver operations, Safety, Support, payment and marketing stay purpose-separated. Silent Assistance never falls back to an automatic call, stale messages are suppressed and UNKNOWN never means delivered.</Text>
+            <SecondaryButton label="Refresh governed communications" onPress={refreshCommunications} />
+            <Text style={styles.devNotice}>EXTERNAL PUSH · SMS · EMAIL · TELEPHONY · CHAT PROVIDERS DISABLED</Text>
+            {communicationInbox ? <Text style={styles.body}>Messages: {communicationInbox.communications.length} · provider execution: NO · channel health is explicit, never assumed.</Text> : null}
+            {communicationInbox?.communications.map((communication) => (
+              <Text key={communication.communicationId} style={communication.acknowledgementRequired ? styles.status : styles.body}>
+                {communication.priority} {communication.purpose}: {communication.status} · acknowledgement {communication.acknowledgementRequired ? 'required' : 'not required'}
+              </Text>
+            ))}
           </View>
         ) : null}
 

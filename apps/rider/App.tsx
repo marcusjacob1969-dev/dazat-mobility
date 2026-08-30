@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, PaymentStatusProjection, RegistrationContactType, StartRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, CommunicationInboxProjection, PaymentStatusProjection, RegistrationContactType, StartRideCheckResult } from '@dazat/contracts';
 import {
   confirmRiderContactVerification,
   startRiderContactVerification,
@@ -12,6 +12,7 @@ import { confirmRiderBooking, createRiderBooking, quoteRiderBooking } from './sr
 import { getBookingDispatch, startBookingDispatch } from './src/dispatch-api';
 import { getBookingJourney, requestJourneyStop, sendRiderSafetySignal, startPassengerRideCheck } from './src/journey-api';
 import { prepareProviderDisabledPaymentIntent, readPaymentStatus } from './src/finance-api';
+import { readCommunicationInbox } from './src/communications-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'BOOK' | 'QUOTE' | 'READY';
 
@@ -64,6 +65,7 @@ export default function RiderApp() {
   const [changeLon, setChangeLon] = useState('');
   const [journeyNotice, setJourneyNotice] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusProjection | null>(null);
+  const [communicationInbox, setCommunicationInbox] = useState<CommunicationInboxProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -200,11 +202,15 @@ export default function RiderApp() {
     void run(async () => setPaymentStatus(await readPaymentStatus(sessionToken, paymentStatus.paymentIntentId)));
   }
 
+  function refreshCommunications() {
+    void run(async () => setCommunicationInbox(await readCommunicationInbox(sessionToken)));
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.7</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.13</Text>
         <Text style={styles.title}>DAZAT Rider journey</Text>
         <Text style={styles.body}>Verified Booking through protected pickup, active Journey visibility, governed changes and persistent Safety controls.</Text>
 
@@ -341,6 +347,21 @@ export default function RiderApp() {
             ) : null}
           </View>
         )}
+
+        {sessionToken ? (
+          <View style={styles.notice} accessibilityRole="summary">
+            <Text style={styles.noticeTitle}>Communication inbox — intent is not delivery</Text>
+            <Text style={styles.body}>Safety, Journey, payment, account and marketing purposes stay separate. Marketing cannot bypass consent, stale source versions are suppressed, and UNKNOWN never means delivered.</Text>
+            <SecondaryButton label="Refresh governed communications" onPress={refreshCommunications} />
+            <Text style={styles.devNotice}>EXTERNAL PUSH · SMS · EMAIL · TELEPHONY · CHAT PROVIDERS DISABLED</Text>
+            {communicationInbox ? <Text style={styles.body}>Messages: {communicationInbox.communications.length} · provider execution: NO · channel health is explicit, never assumed.</Text> : null}
+            {communicationInbox?.communications.map((communication) => (
+              <Text key={communication.communicationId} style={communication.acknowledgementRequired ? styles.status : styles.body}>
+                {communication.priority} {communication.purpose}: {communication.status} · acknowledgement {communication.acknowledgementRequired ? 'required' : 'not required'}
+              </Text>
+            ))}
+          </View>
+        ) : null}
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </ScrollView>

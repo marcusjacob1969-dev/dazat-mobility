@@ -31,6 +31,7 @@ export interface ApiConfig {
   readonly journeyCompletionRadiusMetres: number;
   readonly paymentProviderMode: 'disabled';
   readonly driverConnectivityFreshnessSeconds: number;
+  readonly communicationProviderMode: 'disabled';
 }
 
 function parseInteger(env: NodeJS.ProcessEnv, name: string, fallback: number, min: number, max: number): number {
@@ -65,6 +66,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   const pricingMode = env.PRICING_MODE === 'development_fixture' ? 'development_fixture' : 'disabled';
   if (env.PAYMENT_PROVIDER_MODE && env.PAYMENT_PROVIDER_MODE !== 'disabled') {
     throw new Error('PAYMENT_PROVIDER_MODE must remain disabled until a provider and production controls are approved');
+  }
+  if (env.COMMUNICATION_PROVIDER_MODE && env.COMMUNICATION_PROVIDER_MODE !== 'disabled') {
+    throw new Error('COMMUNICATION_PROVIDER_MODE must remain disabled until providers and production controls are approved');
   }
   let developmentQuoteAmountMinor: number | undefined;
   if (pricingMode === 'development_fixture') {
@@ -116,6 +120,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     journeyArrivingRadiusMetres: parseInteger(env, 'JOURNEY_ARRIVING_RADIUS_METRES', 1_000, 100, 5_000),
     journeyCompletionRadiusMetres: parseInteger(env, 'JOURNEY_COMPLETION_RADIUS_METRES', 250, 25, 2_000),
     paymentProviderMode: 'disabled',
-    driverConnectivityFreshnessSeconds: parseInteger(env, 'DRIVER_CONNECTIVITY_FRESHNESS_SECONDS', 60, 10, 600)
+    driverConnectivityFreshnessSeconds: parseInteger(env, 'DRIVER_CONNECTIVITY_FRESHNESS_SECONDS', 60, 10, 600),
+    communicationProviderMode: 'disabled'
   };
 }

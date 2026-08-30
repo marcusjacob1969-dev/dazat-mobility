@@ -18,6 +18,7 @@ import { registerFleetOperationsRoutes } from './modules/fleet-operations/routes
 import { registerMaintenanceReliabilityRoutes } from './modules/maintenance-reliability/routes.js';
 import { registerDriverFairTreatmentRoutes } from './modules/driver-fair-treatment/routes.js';
 import { registerDriverDailyOperationsRoutes } from './modules/driver-daily-operations/routes.js';
+import { registerCommunicationRoutes } from './modules/communications/routes.js';
 
 const config = loadConfig();
 const app = Fastify({ logger: { level: config.logLevel } });
@@ -44,10 +45,11 @@ app.get('/health/ready', async (_request, reply) => {
       status: 'READY',
       dependencies: {
         database: 'READY',
-        redis: 'NOT_REQUIRED_FOR_PHASE_0_12_DRIVER_DAILY_OPERATIONS_FOUNDATION',
+        redis: 'NOT_REQUIRED_FOR_PHASE_0_13_COMMUNICATIONS_CORE_FOUNDATION',
         verificationDelivery: config.verificationDeliveryMode.toUpperCase(),
         pricing: config.pricingMode.toUpperCase(),
-        paymentProvider: config.paymentProviderMode.toUpperCase()
+        paymentProvider: config.paymentProviderMode.toUpperCase(),
+        communicationProvider: config.communicationProviderMode.toUpperCase()
       }
     });
   } catch {
@@ -60,8 +62,8 @@ app.get('/health/ready', async (_request, reply) => {
 
 app.get('/v1/build-info', async () => ({
   product: 'DAZAT Mobility',
-  checkpoint: 'engineering-phase-0.12',
-  implementationStatus: 'DRIVER_DAILY_OPERATIONS_INFORMED_OFFERS_CONNECTIVITY_SUPPLY_SUPPORT_FOUNDATION_SOURCE_CREATED_NOT_PRODUCTION_VERIFIED'
+  checkpoint: 'engineering-phase-0.13',
+  implementationStatus: 'UNIFIED_COMMUNICATIONS_PURPOSE_ROUTING_DELIVERY_ACKNOWLEDGEMENT_FOUNDATION_SOURCE_CREATED_PROVIDERS_DISABLED_NOT_PRODUCTION_VERIFIED'
 }));
 
 registerIdentityRoutes(app, database, config, verificationDelivery);
@@ -75,6 +77,7 @@ registerFleetOperationsRoutes(app, database);
 registerMaintenanceReliabilityRoutes(app, database);
 registerDriverFairTreatmentRoutes(app, database);
 registerDriverDailyOperationsRoutes(app, database, config);
+registerCommunicationRoutes(app, database);
 
 app.addHook('onClose', async () => {
   await database.end();

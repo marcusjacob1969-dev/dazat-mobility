@@ -3,7 +3,7 @@ import { dazatTokens } from '@dazat/design-system';
 export function App() {
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.12</p>
+      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.13</p>
       <h1>DAZAT Control Room</h1>
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.
@@ -86,6 +86,18 @@ export function App() {
         <h2 style={{ marginTop: 0 }}>Completion is a governed command</h2>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
           Silence, disconnect or a map animation never completes a Journey. Completion requires ARRIVING state, fresh destination evidence, an active assignment, no completion hold and any required handover. Payment is not initiated by this Phase 0.6 command.
+        </p>
+      </section>
+      <section aria-label="Communications authority boundary" style={{ maxWidth: 720, marginTop: 16, padding: 24, border: `1px solid ${dazatTokens.color.border}`, borderRadius: dazatTokens.radius.card }}>
+        <h2 style={{ marginTop: 0 }}>Communication intent is not delivery truth</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Booking, Journey, Safety, safeguarding, payment, account security, Driver operations, Support, business and marketing messages use one purpose-aware core. Marketing consent is separate and marketing cannot be relabelled as operational. Recipient roles are scoped, templates are versioned and critical templates require approval.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          QUEUED, SENT, DELIVERED, READ, FAILED, EXPIRED and UNKNOWN remain distinct delivery observations. Stale source versions are suppressed before delivery, silent assistance never falls back to an unsafe voice call, and failed critical acknowledgement requires human escalation. Protected conversation and masked calling never expose personal contact details.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          SMS, email, push, telephony and chat providers remain disabled. Control Room cannot claim a message was sent, blindly retry UNKNOWN, override recipient consent or turn caller ID into identity proof.
         </p>
       </section>
     </main>
