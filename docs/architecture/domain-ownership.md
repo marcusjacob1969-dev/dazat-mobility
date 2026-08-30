@@ -4,9 +4,9 @@
 |---|---|
 | Identity | Person, UserAccount, authentication/session ownership |
 | Rider | RiderProfile |
-| Driver | DriverProfile, DriverApplication, TrainingModule/Record, DriverPermission, DriverRestriction, operating/availability state |
+| Driver | DriverProfile, DriverApplication, TrainingModule/Record, DriverPermission, DriverRestriction, MaintenanceComplianceAssessment, DriverPerksProgramme, operating/availability state |
 | Compliance | RequirementDefinition, DriverDocument/VerificationReview, DriverComplianceProfile, VehicleComplianceProfile |
-| Vehicle/Fleet | FleetOrganisation, Vehicle, VehicleCapability, MarketplaceOffer, FleetAgreement, VehicleFinanceAgreement, DepositObligation, VehicleHandoverRecord, VehicleAssignment |
+| Vehicle/Fleet | FleetOrganisation, Vehicle, VehicleCapability, MarketplaceOffer, FleetAgreement, VehicleFinanceAgreement, DepositObligation, VehicleHandoverRecord, VehicleAssignment, VehicleMaintenancePlan, MaintenanceRequirement, VehicleDefect, VehicleRestriction, MaintenanceCase, Repair/ReturnToService, VehicleReplacementRequest, VehicleReliabilityObservation |
 | Booking | Booking, BookingParty, BookingRequirement, BookingStateTransition |
 | Pricing | Quote, FareAgreement |
 | Dispatch | DispatchAttempt, DriverOffer, DriverAssignment |

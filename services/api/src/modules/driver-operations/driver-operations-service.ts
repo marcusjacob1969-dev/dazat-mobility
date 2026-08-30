@@ -210,17 +210,27 @@ export async function getDriverOperatingEligibilityProjection(
       WHERE driver_profile_id = $1 ORDER BY evaluated_at DESC LIMIT 1`,
     [actor.driverProfileId]
   );
-  const vehicle = selectedVehicleId ? await pool.query<{ authorised: boolean; status: string | null; valid_until: Date | null }>(
+  const vehicle = selectedVehicleId ? await pool.query<{
+    authorised: boolean;
+    status: string | null;
+    valid_until: Date | null;
+    maintenance_operating_permitted: boolean | null;
+    maintenance_restricted_service_codes: string[] | null;
+  }>(
     `SELECT EXISTS (
               SELECT 1 FROM driver.current_driver_vehicle_authorisation a
                WHERE a.driver_profile_id = $1 AND a.vehicle_id = $2
             ) AS authorised,
-            s.status, s.valid_until
+            s.status, s.valid_until,
+            maintenance.operating_permitted AS maintenance_operating_permitted,
+            maintenance.restricted_service_codes AS maintenance_restricted_service_codes
        FROM (SELECT 1) seed
        LEFT JOIN LATERAL (
          SELECT status, valid_until FROM compliance.vehicle_eligibility_snapshot
           WHERE vehicle_id = $2 ORDER BY evaluated_at DESC LIMIT 1
-       ) s ON true`,
+       ) s ON true
+       LEFT JOIN vehicle_fleet.current_vehicle_maintenance_gate maintenance
+         ON maintenance.vehicle_id = $2`,
     [actor.driverProfileId, selectedVehicleId]
   ) : null;
   const permissions = await pool.query<{ service_code: string }>(
@@ -246,17 +256,31 @@ export async function getDriverOperatingEligibilityProjection(
     complianceCurrent: complianceRow?.status === 'ELIGIBLE' && complianceRow.valid_until.getTime() > now.getTime(),
     selectedVehiclePresent: Boolean(selectedVehicleId),
     selectedVehicleAuthorised: vehicleRow?.authorised ?? false,
-    selectedVehicleEligible: vehicleRow?.status === 'ELIGIBLE' && Boolean(vehicleRow.valid_until && vehicleRow.valid_until.getTime() > now.getTime()),
+    selectedVehicleEligible: vehicleRow?.status === 'ELIGIBLE'
+      && Boolean(vehicleRow.valid_until && vehicleRow.valid_until.getTime() > now.getTime())
+      && vehicleRow.maintenance_operating_permitted === true,
     currentPermissionServiceCodes: permissions.rows.map((row) => row.service_code),
     activeRestrictionScopes: restrictions.rows.map((row) => row.scope)
   });
+  const maintenanceRestrictedServices = new Set(vehicleRow?.maintenance_restricted_service_codes ?? []);
+  const eligibleServiceCodes = decision.eligibleServiceCodes.filter(
+    (serviceCode) => !maintenanceRestrictedServices.has(serviceCode)
+  );
+  const maintenanceScopedRestriction = eligibleServiceCodes.length < decision.eligibleServiceCodes.length;
+  const status = decision.status === 'NOT_ELIGIBLE' || (decision.eligibleServiceCodes.length > 0 && eligibleServiceCodes.length === 0)
+    ? 'NOT_ELIGIBLE'
+    : maintenanceScopedRestriction ? 'PARTIALLY_ELIGIBLE' : decision.status;
+  const blockers = [...decision.blockers];
+  if (maintenanceScopedRestriction && !eligibleServiceCodes.length) blockers.push('ALL_CURRENT_SERVICES_MAINTENANCE_RESTRICTED');
   return {
     driverProfileId: actor.driverProfileId,
     ...(selectedVehicleId ? { selectedVehicleId } : {}),
-    status: decision.status,
-    eligibleServiceCodes: decision.eligibleServiceCodes,
+    status,
+    eligibleServiceCodes: status === 'NOT_ELIGIBLE' ? [] : eligibleServiceCodes,
     activeRestrictionScopes: restrictions.rows.map((row) => row.scope),
-    blockers: decision.blockers,
+    blockers,
+    maintenanceOperatingPermitted: vehicleRow?.maintenance_operating_permitted === true,
+    maintenanceRestrictedServiceCodes: [...maintenanceRestrictedServices].sort(),
     availabilityEvaluatedSeparately: true,
     source: 'AUTHORITATIVE_CURRENT_PROJECTION',
     evaluatedAt: now.toISOString()

@@ -41,6 +41,8 @@ export interface VehicleAssignmentValidationProjection {
   readonly blockers: readonly string[];
   readonly pairInsuranceCurrent: boolean;
   readonly capabilitiesExplicit: boolean;
+  readonly maintenancePlanCurrent: boolean;
+  readonly maintenanceOperatingPermitted: boolean;
   readonly externalFleetOrganisation: boolean;
   readonly externalFleetOrganisationActive: boolean;
   readonly externalTenancyBypassAllowed: false;

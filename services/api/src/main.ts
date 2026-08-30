@@ -15,6 +15,7 @@ import { registerSafetyRoutes } from './modules/safety/routes.js';
 import { registerFinanceRoutes } from './modules/finance/routes.js';
 import { registerDriverOperationsRoutes } from './modules/driver-operations/routes.js';
 import { registerFleetOperationsRoutes } from './modules/fleet-operations/routes.js';
+import { registerMaintenanceReliabilityRoutes } from './modules/maintenance-reliability/routes.js';
 
 const config = loadConfig();
 const app = Fastify({ logger: { level: config.logLevel } });
@@ -41,7 +42,7 @@ app.get('/health/ready', async (_request, reply) => {
       status: 'READY',
       dependencies: {
         database: 'READY',
-        redis: 'NOT_REQUIRED_FOR_PHASE_0_9_READ_ONLY_FLEET_OPERATIONS_FOUNDATION',
+        redis: 'NOT_REQUIRED_FOR_PHASE_0_10_MAINTENANCE_RELIABILITY_FOUNDATION',
         verificationDelivery: config.verificationDeliveryMode.toUpperCase(),
         pricing: config.pricingMode.toUpperCase(),
         paymentProvider: config.paymentProviderMode.toUpperCase()
@@ -57,8 +58,8 @@ app.get('/health/ready', async (_request, reply) => {
 
 app.get('/v1/build-info', async () => ({
   product: 'DAZAT Mobility',
-  checkpoint: 'engineering-phase-0.9',
-  implementationStatus: 'FLEET_MARKETPLACE_AGREEMENT_HANDOVER_ASSIGNMENT_FOUNDATION_SOURCE_CREATED_NOT_PRODUCTION_VERIFIED'
+  checkpoint: 'engineering-phase-0.10',
+  implementationStatus: 'MAINTENANCE_DEFECT_RELIABILITY_REPLACEMENT_PERKS_FOUNDATION_SOURCE_CREATED_NOT_PRODUCTION_VERIFIED'
 }));
 
 registerIdentityRoutes(app, database, config, verificationDelivery);
@@ -69,6 +70,7 @@ registerSafetyRoutes(app, database);
 registerFinanceRoutes(app, database);
 registerDriverOperationsRoutes(app, database);
 registerFleetOperationsRoutes(app, database);
+registerMaintenanceReliabilityRoutes(app, database);
 
 app.addHook('onClose', async () => {
   await database.end();

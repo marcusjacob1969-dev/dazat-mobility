@@ -9,3 +9,5 @@ Phase 0.7 documents the Finance projection boundary: no direct balance edits, no
 Phase 0.8 documents the Driver authority boundary. Application progress, document extraction, authorised review, assessed competency, scoped service permission, selected-vehicle eligibility, restrictions and availability are separate truths. No staff mutation route is exposed until role, separation-of-duty, evidence and appeal rules exist.
 
 Phase 0.9 documents Fleet supplier/terms/capability/insurance/agreement/handover/deposit/assignment boundaries. No staff mutation route can publish an offer, invent a discount, accept an agreement, apply a deposit deduction or assign a vehicle.
+
+Phase 0.10 documents maintenance-plan, defect, restriction, recall, warranty-first repair, inspection, return-to-service, reliability, replacement and verified-perk boundaries. No staff mutation route can diagnose a defect, override a restriction, approve repair, return a vehicle to service, assign a replacement or publish an unverified benefit.

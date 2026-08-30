@@ -2,9 +2,9 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.9 — Fleet Marketplace, Vehicle Tiers, Rental, Lease and Assignment Truth**
+**Engineering Phase 0.10 — Maintenance, Defect, Recall, Reliability, Replacement and Verified Perks Truth**
 
-Status: **SOURCE IMPLEMENTED / STATIC AND PURE-DOMAIN GUARDS VERIFIED / SUPPLIER, AGREEMENT AND CHARGING MUTATIONS DISABLED / DATABASE, CONCURRENCY AND APP RUNTIME NOT YET VERIFIED**
+Status: **SOURCE IMPLEMENTED / STATIC AND PURE-DOMAIN GUARDS VERIFIED / PROVIDER, STAFF AND CHARGING MUTATIONS DISABLED / DATABASE, CONCURRENCY AND APP RUNTIME NOT YET VERIFIED**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
@@ -54,18 +54,30 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Immutable condition/equipment VehicleHandoverRecord.
 - Fresh full assignment/replacement validation and deferred active-assignment guard.
 - Read-only Marketplace, agreement and assignment-validation APIs plus Driver/Control Room truth surfaces.
+- Immutable versioned maintenance plans and multi-source current requirements with explicit urgency.
+- Concise immutable pre-shift observation supporting uncertainty without Driver diagnosis or automatic fault finding.
+- Transactional concern handling across defect/restriction history, precautionary quarantine, safe offline transition, Journey continuity and outbox evidence.
+- Guarded defect, vehicle restriction, maintenance case and replacement-request lifecycle histories.
+- Separate recall/resolution, warranty evaluation, estimate, authorisation, invoice, completion, inspection and independent return-to-service truth.
+- Provider-quality and repeat-defect evidence plus separate reliability and Driver maintenance-compliance records.
+- Verified versioned Driver perks and complete whole-life cost evidence that prohibits brochure-price-only evaluation.
+- One authoritative maintenance gate integrated into Marketplace, assignment validation, Driver eligibility, Dispatch and Journey protected start.
+- Authenticated maintenance/perks reads and idempotent Driver pre-shift command plus Driver/Control Room truth surfaces.
 
 ### Verified in this checkpoint
 
-- All structural verifiers pass from the foundation through Phase 0.9.
-- All 36 executable Phase 0.5–0.9 source-domain tests pass.
+- All structural verifiers pass from the foundation through Phase 0.10.
+- All 46 executable Phase 0.5–0.10 source-domain tests pass.
 - Phase 0.9 supplier, terms, capability, insurance, deposit and assignment-boundary verifier: **PASSED**.
 - Pure-domain tests cover Fleet state, Marketplace publication, ownership-transfer terms, explicit capability, deposit deduction and assignment hard checks.
 - Blueprint §54.2 Fleet Marketplace/agreement/assignment traceability: **recorded**.
+- Phase 0.10 maintenance/defect/reliability boundary verifier: **PASSED**.
+- Pure-domain tests cover pre-shift uncertainty, maintenance urgency/restrictions, defect history, warranty-first repair, reviewed return to service, verified perks and whole-life evidence.
+- Blueprint §54.3 and §66.21 maintenance/reliability traceability: **recorded**.
 
 ### Not yet verified / deliberately not claimed
 
-- PostgreSQL/PostGIS migrations 0001–0009 and transaction/concurrency cases have not been executed in this workspace.
+- PostgreSQL/PostGIS migrations 0001–0010 and transaction/concurrency cases have not been executed in this workspace.
 - Fastify, Expo and Vite workspaces have not been compiled with installed workspace dependencies here.
 - Authorised school/hospital/specialist handover recording is not exposed until staff and operating-authority rules are implemented.
 - Production payment provider selection, adapter/webhook/reconciliation execution, refunds and payouts are not implemented.
@@ -74,6 +86,8 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Authorised review roles, separation of duties, evidence upload/scanning, appeals, expiry/recomputation and offboarding workflows are not implemented.
 - No Fleet supplier, stock/warranty feed, rental/lease/finance product or agreement terms are selected, contracted, seeded or contacted.
 - Marketplace publication/reservation, agreement acceptance/activation, handover acknowledgement, deposit funding/deduction and vehicle assignment workflows are not implemented.
+- No maintenance/recovery/parts/warranty/inspection/telematics/perk provider, policy or operational threshold is selected, contracted, seeded or contacted.
+- Staff defect triage, provider booking, estimate/repair approval, invoice reconciliation, independent return-to-service and replacement fulfilment workflows are not implemented.
 - Rental/lease/credit, deposit safeguarding, consumer/commercial terms, tax/VAT and supplier obligations require accountable approval.
 - Chart of accounts, principal/agent status, tax/VAT, revenue recognition and Driver economics await accountable approval.
 - PCI scope, fraud, dispute/chargeback, secrets, observability and payment incident controls require formal validation.
@@ -88,3 +102,5 @@ Selecting, contracting and enabling a production payment/payout provider remains
 Selecting or contracting an identity/document verification provider, and approving regional licensing/insurance policy, also remain accountable founder/compliance decisions. Phase 0.8 contains no provider call and no invented eligibility rule; those paths must remain disabled until the decisions and required privacy, safeguarding, security and operational controls exist.
 
 Selecting Fleet suppliers and approving any rental, lease, finance, deposit or ownership-transfer terms is also a founder/procurement/legal/Finance gate. Phase 0.9 stores no real offer and exposes no mutation that can reserve, contract, charge, deduct or assign a vehicle.
+
+Selecting maintenance, recovery, parts, warranty, inspection, telematics or Driver-perk providers and approving service/recall/return-to-service policy is a founder/procurement/legal/Operations/Safety gate. Phase 0.10 stores no real provider offer and exposes no staff mutation that can book repair, approve spend, return a vehicle to service, assign a replacement or market an unverified benefit.

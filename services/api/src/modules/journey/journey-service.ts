@@ -814,6 +814,9 @@ async function assignmentStillEligible(client: Pick<PoolClient, 'query'>, journe
               FROM compliance.vehicle_eligibility_snapshot ves
              WHERE ves.vehicle_id = da.vehicle_id
              ORDER BY ves.evaluated_at DESC LIMIT 1)
+       AND (SELECT maintenance.operating_permitted
+              FROM vehicle_fleet.current_vehicle_maintenance_gate maintenance
+             WHERE maintenance.vehicle_id = da.vehicle_id)
      ) IS TRUE AS eligible
        FROM dispatch.driver_assignment da
        JOIN driver.driver_profile dp ON dp.id = da.driver_profile_id
@@ -825,8 +828,9 @@ async function assignmentStillEligible(client: Pick<PoolClient, 'query'>, journe
   const context = await client.query<{
     service_capabilities: Record<string, unknown>;
     requirements: { type: string; value: unknown }[];
+    restricted_service_codes: string[];
   }>(
-    `SELECT ves.service_capabilities,
+    `SELECT ves.service_capabilities, maintenance.restricted_service_codes,
             COALESCE(jsonb_agg(jsonb_build_object('type', br.requirement_type, 'value', br.requirement_value))
               FILTER (WHERE br.id IS NOT NULL), '[]'::jsonb) AS requirements
        FROM dispatch.driver_assignment da
@@ -836,13 +840,22 @@ async function assignmentStillEligible(client: Pick<PoolClient, 'query'>, journe
           WHERE snapshot.vehicle_id = da.vehicle_id
           ORDER BY snapshot.evaluated_at DESC LIMIT 1
        ) ves ON true
+       JOIN vehicle_fleet.current_vehicle_maintenance_gate maintenance ON maintenance.vehicle_id = da.vehicle_id
        LEFT JOIN booking.booking_requirement br ON br.booking_id = da.booking_id
       WHERE da.id = $1
-      GROUP BY ves.service_capabilities`,
+      GROUP BY ves.service_capabilities, maintenance.restricted_service_codes`,
     [journey.assignmentId]
   );
   const row = context.rows[0];
   if (!row) return false;
+  const requiredServices = new Set<string>();
+  const requirementTypes = row.requirements.map((requirement) => requirement.type.trim().toUpperCase());
+  if (requirementTypes.some((type) => type.includes('SCHOOL'))) requiredServices.add('SCHOOL');
+  if (requirementTypes.some((type) => type.includes('WAV') || type.includes('WHEELCHAIR'))) requiredServices.add('WAV');
+  if (requirementTypes.some((type) => type.includes('HOSPITAL'))) requiredServices.add('HOSPITAL');
+  if (requirementTypes.some((type) => type.includes('SPECIALIST') || type.includes('HANDOVER'))) requiredServices.add('SPECIALIST');
+  if (!requiredServices.size) requiredServices.add('STANDARD');
+  if (row.restricted_service_codes.some((serviceCode) => requiredServices.has(serviceCode))) return false;
   return row.requirements.every((requirement) => {
     const actual = row.service_capabilities[requirement.type];
     if (actual === undefined) return false;

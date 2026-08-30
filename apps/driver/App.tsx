@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, DriverApplicationProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverOfferSummary, DriverOperatingEligibilityProjection, FleetAgreementProjection, FleetMarketplaceOfferProjection, RegistrationContactType, VehicleAssignmentValidationProjection, VerifyRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, DriverApplicationProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverOfferSummary, DriverOperatingEligibilityProjection, FleetAgreementProjection, FleetMarketplaceOfferProjection, PreShiftCheckProjection, RegistrationContactType, VehicleAssignmentValidationProjection, VehicleMaintenanceProjection, VerifiedDriverPerkProjection, VerifyRideCheckResult } from '@dazat/contracts';
 import {
   confirmDriverContactVerification,
   startDriverContactVerification,
@@ -30,6 +30,7 @@ import {
 import { readDriverEarnings } from './src/finance-api';
 import { readDriverOperatingEligibility, startOrResumeDriverApplication } from './src/driver-operations-api';
 import { listDriverFleetAgreements, listFleetMarketplace, validateVehicleAssignment } from './src/fleet-operations-api';
+import { listVerifiedDriverPerks, readVehicleMaintenance, submitPreShiftCheck } from './src/maintenance-reliability-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'DRIVER_HOME';
 
@@ -79,6 +80,11 @@ export default function DriverApp() {
   const [fleetOffers, setFleetOffers] = useState<readonly FleetMarketplaceOfferProjection[]>([]);
   const [fleetAgreements, setFleetAgreements] = useState<readonly FleetAgreementProjection[]>([]);
   const [assignmentValidation, setAssignmentValidation] = useState<VehicleAssignmentValidationProjection | null>(null);
+  const [maintenance, setMaintenance] = useState<VehicleMaintenanceProjection | null>(null);
+  const [preShiftResult, setPreShiftResult] = useState<PreShiftCheckProjection | null>(null);
+  const [odometer, setOdometer] = useState('');
+  const [vehicleConcern, setVehicleConcern] = useState('');
+  const [verifiedPerks, setVerifiedPerks] = useState<readonly VerifiedDriverPerkProjection[]>([]);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -136,6 +142,38 @@ export default function DriverApp() {
       setFleetAgreements(agreementsResult);
       if (vehicleId) setAssignmentValidation(await validateVehicleAssignment(sessionToken, regionCode, vehicleId));
       else setAssignmentValidation(null);
+    });
+  }
+
+  function refreshMaintenanceTruth() {
+    if (!vehicleId) return;
+    void run(async () => {
+      const [maintenanceResult, perksResult] = await Promise.all([
+        readVehicleMaintenance(sessionToken, vehicleId, operatingEligibility?.eligibleServiceCodes ?? ['STANDARD']),
+        listVerifiedDriverPerks(sessionToken, regionCode)
+      ]);
+      setMaintenance(maintenanceResult);
+      setVerifiedPerks(perksResult);
+    });
+  }
+
+  function recordPreShift(concern: boolean) {
+    if (!vehicleId) return;
+    void run(async () => {
+      const parsedOdometer = Number(odometer);
+      if (!Number.isSafeInteger(parsedOdometer) || parsedOdometer < 0) throw new Error('Enter the current whole-number odometer reading.');
+      const result = await submitPreShiftCheck(sessionToken, vehicleId, {
+        occurredAt: new Date().toISOString(),
+        odometer: parsedOdometer,
+        items: {
+          TYRES: 'PASS', LIGHTS: 'PASS', BRAKES: 'PASS', STEERING: 'PASS',
+          MIRRORS: 'PASS', SEATBELTS: 'PASS', WARNING_INDICATORS: concern ? 'NOT_SURE' : 'PASS',
+          ACCESSIBILITY_EQUIPMENT: 'PASS'
+        },
+        ...(concern ? { uncertainConcernText: vehicleConcern.trim() || 'Something does not feel right.' } : {})
+      });
+      setPreShiftResult(result);
+      setMaintenance(await readVehicleMaintenance(sessionToken, vehicleId, operatingEligibility?.eligibleServiceCodes ?? ['STANDARD']));
     });
   }
 
@@ -271,7 +309,7 @@ export default function DriverApp() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.9</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.10</Text>
         <Text style={styles.title}>DAZAT Driver journey</Text>
         <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. Pickup evidence and RideCheck protect the start. During an active Journey, telemetry confidence, Safety state, destination evidence and completion requirements remain separate backend-owned truths.</Text>
 
@@ -359,6 +397,34 @@ export default function DriverApp() {
               {assignmentValidation ? <Text style={assignmentValidation.assignable ? styles.status : styles.error}>
                 Assignment {assignmentValidation.assignable ? 'VALIDATED' : `BLOCKED: ${assignmentValidation.blockers.join(', ')}`}
               </Text> : null}
+            </View>
+            <View style={styles.notice} accessibilityRole="summary">
+              <Text style={styles.noticeTitle}>Vehicle maintenance and pre-shift check</Text>
+              <Text style={styles.body}>You can report “something does not feel right” without diagnosing a fault. Safety concerns stop vehicle use for review and do not create a Driver fault finding.</Text>
+              <SecondaryButton label="Refresh maintenance and verified perks" onPress={refreshMaintenanceTruth} />
+              {maintenance ? (
+                <>
+                  <Text style={maintenance.operatingPermitted ? styles.status : styles.error}>
+                    Vehicle use {maintenance.operatingPermitted ? 'PERMITTED' : `BLOCKED: ${maintenance.blockers.join(', ')}`}
+                  </Text>
+                  <Text style={styles.body}>Plan: {maintenance.activePlanPresent ? 'current' : 'missing'} · urgency: {maintenance.highestUrgency ?? 'none'} · open defects: {maintenance.openDefectCount}</Text>
+                  <Text style={maintenance.unresolvedSafetyCriticalRecall ? styles.error : styles.body}>Safety-critical recall: {maintenance.unresolvedSafetyCriticalRecall ? 'UNRESOLVED — vehicle use blocked' : 'none unresolved'}</Text>
+                  <Text style={styles.body}>Restricted services: {maintenance.restrictedServiceCodes.length ? maintenance.restrictedServiceCodes.join(', ') : 'none'}</Text>
+                </>
+              ) : null}
+              <Field label="Current odometer" value={odometer} onChangeText={setOdometer} />
+              <Field label="Concern in your own words (no diagnosis needed)" value={vehicleConcern} onChangeText={setVehicleConcern} />
+              <View style={styles.row}>
+                <SecondaryButton label="Record all-clear pre-shift" onPress={() => recordPreShift(false)} />
+                <SecondaryButton label="Report something feels wrong" onPress={() => recordPreShift(true)} />
+              </View>
+              {preShiftResult ? <Text style={preShiftResult.vehicleUsePermitted ? styles.status : styles.error}>
+                Check {preShiftResult.outcome} · use {preShiftResult.vehicleUsePermitted ? 'permitted' : 'stopped for review'} · no Driver fault finding
+              </Text> : null}
+              <Text style={styles.body}>Verified current perks: {verifiedPerks.length}</Text>
+              {verifiedPerks.map((perk) => <Text key={perk.perkOfferId} style={styles.body}>
+                {perk.category} · {perk.programmeName}: {perk.benefitTerms.join(', ')}
+              </Text>)}
             </View>
             {eligibility ? (
               <View style={styles.notice} accessibilityRole="summary">

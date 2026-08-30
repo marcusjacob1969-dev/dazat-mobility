@@ -146,6 +146,8 @@ export async function validateDriverVehicleAssignment(
     agreement_active: boolean;
     external_tenancy: boolean;
     external_tenancy_active: boolean;
+    maintenance_plan_current: boolean | null;
+    maintenance_operating_permitted: boolean | null;
   }>(
     `SELECT vehicle.fleet_state,
             EXISTS (
@@ -155,6 +157,8 @@ export async function validateDriverVehicleAssignment(
             insurance.status AS insurance_status, insurance.valid_until AS insurance_valid_until,
             vehicle_eligibility.status AS vehicle_status, vehicle_eligibility.valid_until AS vehicle_valid_until,
             capability.valid_until AS capability_valid_until,
+            maintenance.active_plan_present AS maintenance_plan_current,
+            maintenance.operating_permitted AS maintenance_operating_permitted,
             EXISTS (
               SELECT 1 FROM vehicle_fleet.current_fleet_agreement agreement
                WHERE agreement.driver_profile_id = $1 AND agreement.vehicle_id = $2 AND agreement.status = 'ACTIVE'
@@ -184,6 +188,7 @@ export async function validateDriverVehicleAssignment(
           WHERE snapshot.vehicle_id = vehicle.id ORDER BY snapshot.evaluated_at DESC LIMIT 1
        ) vehicle_eligibility ON true
        LEFT JOIN vehicle_fleet.current_vehicle_capability capability ON capability.vehicle_id = vehicle.id
+       LEFT JOIN vehicle_fleet.current_vehicle_maintenance_gate maintenance ON maintenance.vehicle_id = vehicle.id
       WHERE vehicle.id = $2`,
     [actor.driverProfileId, vehicleId]
   );
@@ -193,7 +198,8 @@ export async function validateDriverVehicleAssignment(
   const pairInsuranceCurrent = row.insurance_status === 'ELIGIBLE'
     && Boolean(row.insurance_valid_until && row.insurance_valid_until.getTime() > now.getTime());
   const vehicleEligible = row.vehicle_status === 'ELIGIBLE'
-    && Boolean(row.vehicle_valid_until && row.vehicle_valid_until.getTime() > now.getTime());
+    && Boolean(row.vehicle_valid_until && row.vehicle_valid_until.getTime() > now.getTime())
+    && row.maintenance_operating_permitted === true;
   const capabilitiesExplicit = Boolean(row.capability_valid_until && row.capability_valid_until.getTime() > now.getTime());
   const decision = evaluateVehicleAssignmentPermission({
     driverOperatingEligible: operating.status !== 'NOT_ELIGIBLE',
@@ -215,6 +221,8 @@ export async function validateDriverVehicleAssignment(
     blockers: decision.blockers,
     pairInsuranceCurrent,
     capabilitiesExplicit,
+    maintenancePlanCurrent: row.maintenance_plan_current === true,
+    maintenanceOperatingPermitted: row.maintenance_operating_permitted === true,
     externalFleetOrganisation: row.external_tenancy,
     externalFleetOrganisationActive: row.external_tenancy_active,
     externalTenancyBypassAllowed: false,

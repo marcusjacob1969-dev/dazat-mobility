@@ -19,6 +19,8 @@ export interface DriverOperatingEligibilityProjection {
   readonly eligibleServiceCodes: readonly string[];
   readonly activeRestrictionScopes: readonly string[];
   readonly blockers: readonly string[];
+  readonly maintenanceOperatingPermitted: boolean;
+  readonly maintenanceRestrictedServiceCodes: readonly string[];
   readonly availabilityEvaluatedSeparately: true;
   readonly source: 'AUTHORITATIVE_CURRENT_PROJECTION';
   readonly evaluatedAt: string;

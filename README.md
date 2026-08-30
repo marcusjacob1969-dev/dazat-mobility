@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.9**.
+Current checkpoint: **Engineering Phase 0.10**.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 
@@ -19,6 +19,22 @@ Phase 0.8 adds the evidence and authority boundary required before Driver operat
 Phase 0.9 adds evidence-backed Fleet access and assignment truth:
 
 `VERIFIED SUPPLIER TERMS → VERSIONED MARKETPLACE OFFER → VERSIONED AGREEMENT → HANDOVER EVIDENCE → PAIR INSURANCE → FRESH VEHICLE ASSIGNMENT VALIDATION`
+
+Phase 0.10 adds maintenance, defect and vehicle-reliability truth:
+
+`CURRENT MAINTENANCE PLAN → PRE-SHIFT OBSERVATION → DEFECT / RESTRICTION → WARRANTY-FIRST REPAIR → INSPECTION → REVIEWED RETURN TO SERVICE`
+
+Important maintenance and reliability truth rules:
+
+- Every operating vehicle fails closed without a current maintenance plan and current requirements.
+- A Driver can say “something does not feel right” without diagnosis; a concern creates a precautionary restriction, not a Driver fault finding.
+- Safety-review, do-not-use and unresolved safety-critical recall truth blocks Driver eligibility, Dispatch, Journey start, Marketplace visibility and assignment validation through one authoritative gate.
+- Due/overdue work requires action but does not itself prove neglect or invent a legal prohibition.
+- Defect, restriction, case, recall, warranty, estimate, authorisation, invoice, completion, inspection and return-to-service records remain separate and auditable.
+- Repair authorisation requires warranty evaluation first; return to service requires completion, passed inspection, independent review, no active restriction and evidence.
+- Breakdown/reliability evidence is separate from Driver maintenance compliance. Replacement is separate from passenger continuity and cannot penalise reporting.
+- Driver perks are shown only after provider verification with explicit terms; whole-life cost includes acquisition through resale rather than brochure price alone.
+- No real provider is selected and no staff repair, return-to-service or replacement mutation is exposed.
 
 Important Fleet truth rules:
 
@@ -75,4 +91,4 @@ The earlier Journey integrity and Safety rules remain enforced:
 - Completion closes Journey, Booking, leg and assignment and returns the Driver to `AVAILABLE` atomically.
 - Completion does not initiate or imply payment.
 
-See `BUILD_STATUS.md`, `docs/architecture/ADR-0009-fleet-marketplace-agreement-assignment-truth.md`, and `docs/engineering/phase-0-9-checklist.md` for evidence and limitations.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0010-maintenance-defect-reliability-truth.md`, and `docs/engineering/phase-0-10-checklist.md` for evidence and limitations.

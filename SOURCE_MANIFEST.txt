@@ -23,6 +23,7 @@
 ./apps/driver/src/fleet-operations-api.ts
 ./apps/driver/src/identity-api.ts
 ./apps/driver/src/journey-api.ts
+./apps/driver/src/maintenance-reliability-api.ts
 ./apps/driver/tsconfig.json
 ./apps/rider/App.tsx
 ./apps/rider/app.json
@@ -45,6 +46,7 @@
 ./database/migrations/0007_payment_finance_ledger_truth_foundation.sql
 ./database/migrations/0008_driver_onboarding_competency_permissions_foundation.sql
 ./database/migrations/0009_fleet_marketplace_agreement_assignment_foundation.sql
+./database/migrations/0010_maintenance_defect_reliability_foundation.sql
 ./database/seeds/README.md
 ./docs/architecture/ADR-0001-production-foundation.md
 ./docs/architecture/ADR-0002-identity-account-foundation.md
@@ -55,7 +57,9 @@
 ./docs/architecture/ADR-0007-provider-neutral-finance-ledger-truth.md
 ./docs/architecture/ADR-0008-driver-onboarding-operating-permission-truth.md
 ./docs/architecture/ADR-0009-fleet-marketplace-agreement-assignment-truth.md
+./docs/architecture/ADR-0010-maintenance-defect-reliability-truth.md
 ./docs/architecture/domain-ownership.md
+./docs/engineering/phase-0-10-checklist.md
 ./docs/engineering/phase-0-2-checklist.md
 ./docs/engineering/phase-0-3-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
@@ -67,6 +71,7 @@
 ./docs/engineering/phase-0-checklist.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
+./docs/traceability/phase-0-10-requirements.md
 ./docs/traceability/phase-0-3-requirements.md
 ./docs/traceability/phase-0-4-requirements.md
 ./docs/traceability/phase-0-5-requirements.md
@@ -86,6 +91,7 @@
 ./packages/contracts/src/index.ts
 ./packages/contracts/src/journey.ts
 ./packages/contracts/src/live-journey.ts
+./packages/contracts/src/maintenance-reliability.ts
 ./packages/contracts/tsconfig.json
 ./packages/design-system/package.json
 ./packages/design-system/src/index.ts
@@ -104,10 +110,12 @@
 ./packages/domain/src/index.ts
 ./packages/domain/src/journey.ts
 ./packages/domain/src/live-journey.ts
+./packages/domain/src/maintenance-reliability.ts
 ./packages/domain/src/money.ts
 ./packages/domain/src/pricing.ts
 ./packages/domain/tsconfig.json
 ./scripts/verify-foundation.mjs
+./scripts/verify-phase-0-10.mjs
 ./scripts/verify-phase-0-2.mjs
 ./scripts/verify-phase-0-3.mjs
 ./scripts/verify-phase-0-4.mjs
@@ -140,6 +148,8 @@
 ./services/api/src/modules/journey/journey-service.ts
 ./services/api/src/modules/journey/live-journey-service.ts
 ./services/api/src/modules/journey/routes.ts
+./services/api/src/modules/maintenance-reliability/maintenance-reliability-service.ts
+./services/api/src/modules/maintenance-reliability/routes.ts
 ./services/api/src/modules/safety/routes.ts
 ./services/api/src/modules/safety/safety-service.ts
 ./services/api/src/security/secret-utils.ts
@@ -156,6 +166,7 @@
 ./tests/domain/identity.test.mjs
 ./tests/domain/journey-source.test.mjs
 ./tests/domain/live-journey-source.test.mjs
+./tests/domain/maintenance-reliability-source.test.mjs
 ./tests/domain/money.test.mjs
 ./tests/domain/pricing.test.mjs
 ./tsconfig.base.json

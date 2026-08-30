@@ -82,6 +82,16 @@ function requiredPermissionServiceCodes(
   return [...services].sort();
 }
 
+function maintenancePermitsServices(
+  operatingPermitted: boolean | null,
+  restrictedServiceCodes: readonly string[] | null,
+  requestedServiceCodes: readonly string[]
+): boolean {
+  if (operatingPermitted !== true) return false;
+  const restricted = new Set(restrictedServiceCodes ?? []);
+  return !requestedServiceCodes.some((serviceCode) => restricted.has(serviceCode));
+}
+
 async function readDriverEligibility(
   client: Pick<PoolClient, 'query'>,
   actor: AuthenticatedPrincipal,
@@ -109,6 +119,8 @@ async function readDriverEligibility(
     active_assignment: boolean;
     service_permission_match: boolean;
     operating_restriction_active: boolean;
+    maintenance_operating_permitted: boolean | null;
+    maintenance_restricted_service_codes: string[] | null;
   }>(
     `SELECT dp.onboarding_status,
             av.status AS availability_status,
@@ -122,6 +134,8 @@ async function readDriverEligibility(
             ves.status AS vehicle_status,
             ves.valid_until AS vehicle_valid_until,
             ves.service_capabilities,
+            maintenance.operating_permitted AS maintenance_operating_permitted,
+            maintenance.restricted_service_codes AS maintenance_restricted_service_codes,
             EXISTS (
               SELECT 1 FROM driver.current_driver_vehicle_authorisation dva
                WHERE dva.driver_profile_id = dp.id
@@ -182,6 +196,8 @@ async function readDriverEligibility(
           WHERE s.vehicle_id = $2
           ORDER BY s.evaluated_at DESC LIMIT 1
        ) ves ON true
+       LEFT JOIN vehicle_fleet.current_vehicle_maintenance_gate maintenance
+         ON maintenance.vehicle_id = $2
       WHERE dp.id = $1`,
     [actor.driverProfileId, vehicleId, regionCode, requiredServiceCodes]
   );
@@ -194,7 +210,11 @@ async function readDriverEligibility(
     complianceStatus: row.compliance_status,
     complianceValidUntil: row.compliance_valid_until,
     vehicleAuthorised: Boolean(vehicleId) && row.vehicle_authorised,
-    vehicleStatus: row.vehicle_status,
+    vehicleStatus: maintenancePermitsServices(
+      row.maintenance_operating_permitted,
+      row.maintenance_restricted_service_codes,
+      requiredServiceCodes
+    ) ? row.vehicle_status : 'INELIGIBLE',
     vehicleValidUntil: row.vehicle_valid_until,
     servicePermissionMatch: row.service_permission_match,
     operatingRestrictionActive: row.operating_restriction_active,
@@ -481,6 +501,8 @@ export async function startBookingDispatch(
       vehicle_authorised: boolean; active_assignment: boolean;
       service_permission_match: boolean; operating_restriction_active: boolean;
       current_permission_ids: string[]; active_restriction_ids: string[];
+      maintenance_plan_version_id: string | null; maintenance_operating_permitted: boolean | null;
+      maintenance_restricted_service_codes: string[] | null; vehicle_restriction_ids: string[] | null;
     }>(
       `SELECT av.driver_profile_id, av.vehicle_id, av.version AS availability_version,
               av.status AS availability_status, av.location_observed_at, av.location_confidence,
@@ -488,6 +510,10 @@ export async function startBookingDispatch(
               des.id AS compliance_snapshot_id, des.status AS compliance_status, des.valid_until AS compliance_valid_until,
               ves.id AS vehicle_snapshot_id, ves.status AS vehicle_status, ves.valid_until AS vehicle_valid_until,
               ves.service_capabilities,
+              maintenance.plan_version_id AS maintenance_plan_version_id,
+              maintenance.operating_permitted AS maintenance_operating_permitted,
+              maintenance.restricted_service_codes AS maintenance_restricted_service_codes,
+              maintenance.active_restriction_ids AS vehicle_restriction_ids,
               round(ST_Distance(av.location, ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography)) AS provisional_distance_metres,
               EXISTS (
                 SELECT 1 FROM driver.current_driver_vehicle_authorisation dva
@@ -541,6 +567,8 @@ export async function startBookingDispatch(
            SELECT s.id, s.status, s.valid_until, s.service_capabilities FROM compliance.vehicle_eligibility_snapshot s
             WHERE s.vehicle_id = av.vehicle_id ORDER BY s.evaluated_at DESC LIMIT 1
          ) ves ON true
+         LEFT JOIN vehicle_fleet.current_vehicle_maintenance_gate maintenance
+           ON maintenance.vehicle_id = av.vehicle_id
         WHERE av.region_code = $3 AND av.status IN ('AVAILABLE','FINISHING_SOON') AND av.location IS NOT NULL
         ORDER BY provisional_distance_metres ASC NULLS LAST, av.updated_at ASC
         LIMIT 200`,
@@ -553,7 +581,11 @@ export async function startBookingDispatch(
       complianceStatus: row.compliance_status,
       complianceValidUntil: row.compliance_valid_until,
       vehicleAuthorised: row.vehicle_authorised,
-      vehicleStatus: row.vehicle_status,
+      vehicleStatus: maintenancePermitsServices(
+        row.maintenance_operating_permitted,
+        row.maintenance_restricted_service_codes,
+        requiredServices
+      ) ? row.vehicle_status : 'INELIGIBLE',
       vehicleValidUntil: row.vehicle_valid_until,
       servicePermissionMatch: row.service_permission_match,
       operatingRestrictionActive: row.operating_restriction_active,
@@ -593,12 +625,14 @@ export async function startBookingDispatch(
         `INSERT INTO dispatch.candidate_snapshot
            (dispatch_attempt_id, driver_profile_id, vehicle_id, driver_eligibility_snapshot_id,
             vehicle_eligibility_snapshot_id, availability_version, provisional_pickup_distance_metres,
-            rank_position, rank_factors, required_service_codes, driver_permission_ids, active_restriction_ids)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12) RETURNING id`,
+            rank_position, rank_factors, required_service_codes, driver_permission_ids, active_restriction_ids,
+            vehicle_maintenance_plan_version_id, vehicle_restriction_ids)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12,$13,$14) RETURNING id`,
         [attemptId, row.driver_profile_id, row.vehicle_id, row.compliance_snapshot_id, row.vehicle_snapshot_id,
           Number(row.availability_version), row.provisional_distance_metres === null ? null : Number(row.provisional_distance_metres),
           rank, JSON.stringify({ provisionalStraightLineDistanceOnly: true, hardFiltersPassed: true }),
-          requiredServices, row.current_permission_ids, row.active_restriction_ids]
+          requiredServices, row.current_permission_ids, row.active_restriction_ids,
+          row.maintenance_plan_version_id, row.vehicle_restriction_ids ?? []]
       );
       if (rank <= config.dispatchOfferWaveSize) {
         offeredCount += 1;
