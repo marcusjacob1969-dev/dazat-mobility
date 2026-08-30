@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.11 — Driver Performance, Fair Treatment, Conduct Protection, Appeal and Incentive Truth**
+**Engineering Phase 0.12 — Driver Daily Operations, Informed Offers, Connectivity, Supply and Support Truth**
 
 Status: **SOURCE IMPLEMENTED / STATIC AND PURE-DOMAIN GUARDS VERIFIED / PROVIDER, STAFF AND CHARGING MUTATIONS DISABLED / DATABASE, CONCURRENCY AND APP RUNTIME NOT YET VERIFIED**
 
@@ -75,11 +75,21 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Versioned, evidence-backed and Finance-approved incentive truth separated from base earnings, acceptance coercion, fatigue pressure and hidden Dispatch priority.
 - Offboarding records that preserve earnings, disputes, vehicle-return obligations and historical Safety/Finance truth.
 - Authenticated fair-treatment, conduct, unsafe-termination, appeal and incentive APIs plus Driver/Control Room truth surfaces.
+- Authoritative complete Driver daily-operations projection without collapsing approval, eligibility, schedule, work intent, assignment, Journey, earnings or support truth.
+- Append-only Driver shift/work-intent evidence with normal BREAK and FINISHING_SOON handling and ordinary Driver-app location cleared while OFFLINE.
+- Evidence-backed scheduled-work commitments integrated into Dispatch candidate and acceptance conflict checks without self-conflicting the committed Booking.
+- Immutable Driver-offer disclosure with pickup distance/ETA, service/Journey context and an independent Driver-earning basis; incomplete acceptance fails closed.
+- Weak-signal reconciliation that restores authoritative availability/Journey versions and never pretends queued critical events were executed.
+- Versioned arrival communication using the chosen Booking pickup with scoped recipients, protected contacts and provider execution disabled.
+- Capability-aware, evidence-backed current/forecast supply projections that never guarantee earnings.
+- Typed Driver Support cases with mandatory human escalation for high-risk active cases and no automatic external-service contact.
+- Explicit unconfigured voice-readout, CarPlay and Android Auto roadmap truth with backend validation remaining authoritative.
+- Authenticated daily-operations, connectivity, support, supply and arrival-plan APIs plus Driver/Control Room truth surfaces.
 
 ### Verified in this checkpoint
 
-- All structural verifiers pass from the foundation through Phase 0.11.
-- All 56 executable Phase 0.5–0.11 source-domain tests pass.
+- All structural verifiers pass from the foundation through Phase 0.12.
+- All 67 executable Phase 0.5–0.12 source-domain tests pass.
 - Phase 0.9 supplier, terms, capability, insurance, deposit and assignment-boundary verifier: **PASSED**.
 - Pure-domain tests cover Fleet state, Marketplace publication, ownership-transfer terms, explicit capability, deposit deduction and assignment hard checks.
 - Blueprint §54.2 Fleet Marketplace/agreement/assignment traceability: **recorded**.
@@ -89,10 +99,13 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Phase 0.11 Driver fair-treatment boundary verifier: **PASSED**.
 - Pure-domain tests cover ratings, complaint stages, exact offer outcomes, reliability attribution, restrictions, appeals, unsafe termination, incentives and offboarding preservation.
 - Blueprint §54.4, §66.22 and fair-treatment P1 traceability: **recorded**.
+- Phase 0.12 Driver daily-operations, informed-offer, connectivity, supply and support boundary verifier: **PASSED**.
+- Pure-domain tests cover informed disclosure, Rider-fare separation, weak-signal recovery, canonical queued-event routing, Support escalation, supply evidence, homeward ranking and chosen-pickup communication safety.
+- Blueprint §45, §54.5 and §66 Driver/Dispatch P1 traceability: **recorded**.
 
 ### Not yet verified / deliberately not claimed
 
-- PostgreSQL/PostGIS migrations 0001–0011 and transaction/concurrency cases have not been executed in this workspace.
+- PostgreSQL/PostGIS migrations 0001–0012 and transaction/concurrency cases have not been executed in this workspace.
 - Fastify, Expo and Vite workspaces have not been compiled with installed workspace dependencies here.
 - Authorised school/hospital/specialist handover recording is not exposed until staff and operating-authority rules are implemented.
 - Production payment provider selection, adapter/webhook/reconciliation execution, refunds and payouts are not implemented.
@@ -107,6 +120,8 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Chart of accounts, principal/agent status, tax/VAT, revenue recognition and Driver economics await accountable approval.
 - PCI scope, fraud, dispute/chargeback, secrets, observability and payment incident controls require formal validation.
 - Telemetry thresholds/radii and retention defaults await Operations, Safety, privacy, accessibility and safeguarding validation.
+- Route-time and Driver-earning estimate policy, scheduled-work protection windows, demand/forecast evidence producers, homeward matching and Driver Support staffing/service levels await accountable approval and production-like validation.
+- No voice, CarPlay, Android Auto, navigation, communications, support or emergency-service provider is selected, integrated or contacted.
 - No production Driver, vehicle, passenger, location, Safety, pricing, provider credentials or data are present.
 - Source creation is not production readiness, safeguarding approval, licensing approval, insurance cover, payment certification or security certification.
 
@@ -121,3 +136,5 @@ Selecting Fleet suppliers and approving any rental, lease, finance, deposit or o
 Selecting maintenance, recovery, parts, warranty, inspection, telematics or Driver-perk providers and approving service/recall/return-to-service policy is a founder/procurement/legal/Operations/Safety gate. Phase 0.10 stores no real provider offer and exposes no staff mutation that can book repair, approve spend, return a vehicle to service, assign a replacement or market an unverified benefit.
 
 Approving real Driver performance policy, complaint evidence access, restriction/offboarding authority, appeal reviewer roles and incentive terms remains a founder/legal/People/Operations/Safety/Finance gate. Phase 0.11 exposes Driver reporting and appeal submission but no staff adjudication editor, real incentive publication or destructive Driver-history deletion path.
+
+Approving real Driver earning estimates, route-time providers, scheduled-work protection policy, supply/forecast publication, homeward matching, arrival communications, Driver Support staffing and any external Safety/support escalation remains a founder/legal/Finance/Operations/Safety/privacy/procurement gate. Phase 0.12 fails closed on incomplete offers, publishes no demand signal without evidence, and contacts no external service.

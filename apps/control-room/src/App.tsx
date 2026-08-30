@@ -3,7 +3,7 @@ import { dazatTokens } from '@dazat/design-system';
 export function App() {
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.11</p>
+      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.12</p>
       <h1>DAZAT Control Room</h1>
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.
@@ -65,6 +65,21 @@ export function App() {
         </p>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
           RiderConductCase is Safety-owned and protects Drivers reporting violence, harassment, discrimination, fraud or dangerous behaviour. Safe Journey termination opens passenger continuity, protects the Driver rating and creates no automatic Driver fault finding.
+        </p>
+      </section>
+      <section aria-label="Driver daily operations boundary" style={{ maxWidth: 720, marginTop: 16, padding: 24, border: `1px solid ${dazatTokens.color.border}`, borderRadius: dazatTokens.radius.card }}>
+        <h2 style={{ marginTop: 0 }}>Driver daily operations stay truthful under pressure</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Secure session, approved vehicle, eligibility, scheduled work, availability, informed offer, pickup, RideCheck, Journey, earnings, break, FINISHING_SOON and end-shift remain separate states. BREAK and FINISHING_SOON are normal work intent, not misconduct; OFFLINE ends ordinary Driver-app location collection.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Blind offers fail closed. Pickup distance and ETA, service type, permitted Journey context and a Finance-approved Driver-earning estimate must be visible before acceptance. The Rider fare is never reused as the Driver earning, and ordinary decline remains non-punitive.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Weak-signal reconciliation replaces speculative client state but never marks queued SOS, silent assistance, conduct or location events as executed. Current demand and forecast are labelled separately, supply is measured by capability, and no heatmap guarantees earnings.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Driver Support separates safety, breakdown, payment, account, compliance, technical, passenger and fleet cases. High-risk active cases require human escalation; this checkpoint contacts no external provider or emergency service automatically.
         </p>
       </section>
       <section aria-label="Completion boundary" style={{ maxWidth: 720, marginTop: 16, padding: 24, border: `1px solid ${dazatTokens.color.border}`, borderRadius: dazatTokens.radius.card }}>

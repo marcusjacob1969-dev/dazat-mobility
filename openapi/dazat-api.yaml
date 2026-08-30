@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.11
-  description: Engineering Phase 0.11 API. Server/domain owners remain authoritative for identity, Booking, Dispatch, Journey, Safety, Finance, Driver operating permission, evidence-backed Fleet/maintenance truth and fair treatment without an opaque Driver Score.
+  version: 0.0.12
+  description: Engineering Phase 0.12 API. Server/domain owners remain authoritative for identity, Booking, Dispatch, Journey, Safety, Finance, Driver operating permission, evidence-backed Fleet/maintenance/fair-treatment truth and complete Driver daily operations. Blind offers, pretend weak-signal execution and guaranteed-earning heatmaps are prohibited.
 servers:
   - url: http://localhost:3001
 paths:
@@ -160,7 +160,8 @@ paths:
         '409': { description: Driver is not eligible; blocker codes returned. }
   /v1/driver/offers:
     get:
-      summary: List the authenticated Driver's live, meaningful, non-punitive offers.
+      summary: List the authenticated Driver's live, informed-choice and non-punitive offers.
+      description: Pickup distance and ETA, service context and a Driver-earning estimate remain explicit. Acceptance fails closed when any required disclosure is unavailable; the Rider fare is never reused as the Driver earning.
       security: [{ bearerAuth: [] }]
       responses:
         '200': { description: Unexpired controlled offers. }
@@ -722,6 +723,93 @@ paths:
                 required: [incentives]
                 properties:
                   incentives: { type: array, items: { $ref: '#/components/schemas/DriverIncentiveProjection' } }
+  /v1/driver/daily-operations:
+    get:
+      summary: Read the authenticated Driver's complete authoritative daily-operations projection.
+      description: Secure session, approved vehicle, eligibility, scheduled work, offers, assignment, Journey, earnings, BREAK, FINISHING_SOON and end-shift remain separate. OFFLINE stops ordinary app location collection.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Current daily truth with explicit weak-signal state and unconfigured voice/CarPlay/Android Auto roadmap labels.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverDailyOperationsProjection' }
+  /v1/driver/connectivity/reconciliations:
+    post:
+      summary: Replace speculative weak-signal state with authoritative server truth.
+      description: Reconciliation never pretends queued SOS, silent assistance, Rider conduct, location or communication acknowledgements were executed; each requires canonical idempotent submission.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ConnectivityReconciliationRequest' }
+      responses:
+        '200':
+          description: Authoritative availability/Journey versions and safe resubmission routes.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConnectivityReconciliationProjection' }
+  /v1/driver/support-cases:
+    get:
+      summary: List the authenticated Driver's support cases.
+      description: Safety, breakdown, payment, account, compliance, technical, passenger and fleet support remain typed and auditable.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Driver-owned support cases with explicit human-escalation state. }
+    post:
+      summary: Open a governed Driver Support case.
+      description: High-risk active cases require human escalation. This checkpoint contacts no external provider or emergency service automatically.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OpenDriverSupportCaseRequest' }
+      responses:
+        '201':
+          description: Support case persisted with risk and escalation truth.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverSupportCaseProjection' }
+  /v1/driver/supply-demand:
+    get:
+      summary: Read evidence-backed current and forecast supply/demand by capability.
+      description: Current observation and forecast remain separate; WAV, School and other capability supply are not hidden in a raw Driver count. No signal guarantees earnings.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: regionCode
+          in: query
+          required: true
+          schema: { type: string, minLength: 2, maxLength: 32 }
+        - name: capabilityCodes
+          in: query
+          description: Optional comma-separated capability codes.
+          schema: { type: string, maxLength: 500 }
+      responses:
+        '200':
+          description: Current published evidence signals, or an empty list when none exist.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DriverSupplyProjection' }
+  /v1/driver/bookings/{bookingId}/arrival-plan:
+    get:
+      summary: Read the assigned Driver's scoped arrival communication plan and chosen Booking pickup.
+      description: The chosen Booking pickup is authoritative; passenger GPS is never assumed. Direct contact details remain protected and communication execution is disabled in this foundation.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+      responses:
+        '200':
+          description: Authoritative pickup with a configured or explicitly not-configured arrival plan.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArrivalCommunicationPlanProjection' }
+        '403': { description: Booking is not assigned to this Driver. }
 components:
   securitySchemes:
     bearerAuth:
@@ -1185,3 +1273,125 @@ components:
         fatiguePressureAllowed: { type: boolean, const: false }
         secretDispatchPriorityBoostAllowed: { type: boolean, const: false }
         financeApproved: { type: boolean, const: true }
+    DriverDailyOperationsProjection:
+      type: object
+      required: [driverProfileId, availabilityStatus, availabilityVersion, operatingEligibilityEvaluatedSeparately, scheduledWork, openOfferCount, postedEarningCount, openSupportCaseCount, connectivity, ordinaryAppLocationCollectionActive, breakIsMisconduct, finishingSoonIsMisconduct, voiceReadoutConfigured, carPlayConfigured, androidAutoConfigured, voiceInputBypassesBackendValidation, source, evaluatedAt]
+      properties:
+        driverProfileId: { type: string, format: uuid }
+        availabilityStatus: { type: string, enum: [OFFLINE, AVAILABLE, OFFERED, ASSIGNED, BREAK, FINISHING_SOON] }
+        availabilityVersion: { type: integer, minimum: 0 }
+        shiftId: { type: string, format: uuid }
+        shiftStartedAt: { type: string, format: date-time }
+        selectedVehicleId: { type: string, format: uuid }
+        regionCode: { type: string }
+        operatingEligibilityEvaluatedSeparately: { type: boolean, const: true }
+        scheduledWork: { type: array, items: { type: object, additionalProperties: true } }
+        activeAssignmentId: { type: string, format: uuid }
+        activeJourneyId: { type: string, format: uuid }
+        activeJourneyVersion: { type: integer, minimum: 1 }
+        openOfferCount: { type: integer, minimum: 0 }
+        postedEarningCount: { type: integer, minimum: 0 }
+        openSupportCaseCount: { type: integer, minimum: 0 }
+        connectivity:
+          type: object
+          required: [state, authoritativeSnapshotRequired, speculativeStateMayBeTrusted]
+          properties:
+            state: { type: string, enum: [ONLINE, DEGRADED, OFFLINE, RECOVERING, STALE] }
+            lastReconciledAt: { type: string, format: date-time }
+            authoritativeSnapshotRequired: { type: boolean }
+            speculativeStateMayBeTrusted: { type: boolean, const: false }
+        ordinaryAppLocationCollectionActive: { type: boolean }
+        breakIsMisconduct: { type: boolean, const: false }
+        finishingSoonIsMisconduct: { type: boolean, const: false }
+        voiceReadoutConfigured: { type: boolean, const: false }
+        carPlayConfigured: { type: boolean, const: false }
+        androidAutoConfigured: { type: boolean, const: false }
+        voiceInputBypassesBackendValidation: { type: boolean, const: false }
+        source: { type: string, const: AUTHORITATIVE_CURRENT_PROJECTION }
+        evaluatedAt: { type: string, format: date-time }
+    ConnectivityReconciliationRequest:
+      type: object
+      additionalProperties: false
+      required: [clientObservationId, networkReachable, observedAt, queuedCriticalEvents]
+      properties:
+        clientObservationId: { type: string, format: uuid }
+        networkReachable: { type: boolean }
+        observedAt: { type: string, format: date-time }
+        lastServerSyncAt: { type: string, format: date-time }
+        knownAvailabilityVersion: { type: integer, minimum: 1 }
+        knownActiveJourneyId: { type: string, format: uuid }
+        knownActiveJourneyVersion: { type: integer, minimum: 1 }
+        queuedCriticalEvents:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            required: [clientEventId, kind, observedAt]
+            properties:
+              clientEventId: { type: string, format: uuid }
+              kind: { type: string, enum: [SOS, SILENT_ASSISTANCE, RIDER_CONDUCT, LOCATION_OBSERVATION, ARRIVAL_COMMUNICATION_ACK] }
+              observedAt: { type: string, format: date-time }
+    ConnectivityReconciliationProjection:
+      type: object
+      required: [reconciliationId, state, authoritativeAvailabilityStatus, authoritativeAvailabilityVersion, authoritativeSnapshotRequired, speculativeStateMayBeTrusted, queuedCriticalEventsExecuted, queuedCriticalEvents, reconciledAt]
+      properties:
+        reconciliationId: { type: string, format: uuid }
+        state: { type: string, enum: [ONLINE, DEGRADED, OFFLINE, RECOVERING, STALE] }
+        authoritativeAvailabilityStatus: { type: string }
+        authoritativeAvailabilityVersion: { type: integer, minimum: 1 }
+        authoritativeActiveJourneyId: { type: string, format: uuid }
+        authoritativeActiveJourneyVersion: { type: integer, minimum: 1 }
+        authoritativeSnapshotRequired: { type: boolean }
+        speculativeStateMayBeTrusted: { type: boolean, const: false }
+        queuedCriticalEventsExecuted: { type: boolean, const: false }
+        queuedCriticalEvents: { type: array, items: { type: object, additionalProperties: true } }
+        reconciledAt: { type: string, format: date-time }
+    OpenDriverSupportCaseRequest:
+      type: object
+      additionalProperties: false
+      required: [category, summaryReference, immediateDanger, serviceContinuityAtRisk]
+      properties:
+        category: { type: string, enum: [SAFETY, BREAKDOWN, PAYMENTS, ACCOUNT, COMPLIANCE, TECHNICAL, PASSENGER, FLEET] }
+        summaryReference: { type: string, minLength: 3, maxLength: 2000 }
+        journeyId: { type: string, format: uuid }
+        bookingId: { type: string, format: uuid }
+        vehicleId: { type: string, format: uuid }
+        immediateDanger: { type: boolean }
+        serviceContinuityAtRisk: { type: boolean }
+    DriverSupportCaseProjection:
+      type: object
+      required: [supportCaseId, category, risk, status, humanEscalationRequired, externalServiceContacted, createdAt]
+      properties:
+        supportCaseId: { type: string, format: uuid }
+        category: { type: string, enum: [SAFETY, BREAKDOWN, PAYMENTS, ACCOUNT, COMPLIANCE, TECHNICAL, PASSENGER, FLEET] }
+        risk: { type: string, enum: [ROUTINE, PRIORITY, HIGH_RISK_ACTIVE] }
+        status: { type: string, enum: [OPEN, HUMAN_ESCALATION_REQUIRED, IN_PROGRESS, RESOLVED, CLOSED] }
+        journeyId: { type: string, format: uuid }
+        bookingId: { type: string, format: uuid }
+        vehicleId: { type: string, format: uuid }
+        humanEscalationRequired: { type: boolean }
+        externalServiceContacted: { type: boolean, const: false }
+        createdAt: { type: string, format: date-time }
+    DriverSupplyProjection:
+      type: object
+      required: [regionCode, signals, currentAndForecastKeptSeparate, supplyMeasuredByCapability, guaranteedEarnings]
+      properties:
+        regionCode: { type: string }
+        signals: { type: array, items: { type: object, additionalProperties: true } }
+        currentAndForecastKeptSeparate: { type: boolean, const: true }
+        supplyMeasuredByCapability: { type: boolean, const: true }
+        guaranteedEarnings: { type: boolean, const: false }
+    ArrivalCommunicationPlanProjection:
+      type: object
+      required: [bookingId, planStatus, pickup, passengerGpsAssumedAsPickup, channels, recipientRoles, driverInstructions, directContactDetailsExposed, communicationExecutionEnabled]
+      properties:
+        bookingId: { type: string, format: uuid }
+        planStatus: { type: string, enum: [CONFIGURED, NOT_CONFIGURED] }
+        version: { type: integer, minimum: 1 }
+        pickup: { type: object, additionalProperties: true }
+        passengerGpsAssumedAsPickup: { type: boolean, const: false }
+        channels: { type: array, items: { type: string, enum: [IN_APP, PUSH, SMS, TELEPHONE, CARER_OR_RECEPTION] } }
+        recipientRoles: { type: array, items: { type: string } }
+        driverInstructions: { type: array, items: { type: string } }
+        directContactDetailsExposed: { type: boolean, const: false }
+        communicationExecutionEnabled: { type: boolean, const: false }

@@ -1,4 +1,5 @@
 import type { LocationInput } from './booking.js';
+import type { DriverOfferDisclosureProjection } from './driver-daily-operations.js';
 
 export interface DriverEligibilitySummary {
   readonly driverProfileId: string;
@@ -52,6 +53,7 @@ export interface DriverOfferSummary {
   readonly dropoff: LocationInput;
   readonly scheduledFor?: string;
   readonly provisionalPickupDistanceMetres?: number;
+  readonly disclosure: DriverOfferDisclosureProjection;
 }
 
 export interface AcceptDriverOfferResult {

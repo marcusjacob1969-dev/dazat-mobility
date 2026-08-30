@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, DriverAppealSubjectType, DriverApplicationProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverFairTreatmentProjection, DriverIncentiveProjection, DriverOfferSummary, DriverOperatingEligibilityProjection, FleetAgreementProjection, FleetMarketplaceOfferProjection, PreShiftCheckProjection, RegistrationContactType, RiderConductCaseProjection, SubmitDriverAppealProjection, VehicleAssignmentValidationProjection, VehicleMaintenanceProjection, VerifiedDriverPerkProjection, VerifyRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, ArrivalCommunicationPlanProjection, ConnectivityReconciliationProjection, DriverAppealSubjectType, DriverApplicationProjection, DriverDailyOperationsProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverFairTreatmentProjection, DriverIncentiveProjection, DriverOfferSummary, DriverOperatingEligibilityProjection, DriverSupplyProjection, DriverSupportCaseProjection, DriverSupportCategory, FleetAgreementProjection, FleetMarketplaceOfferProjection, PreShiftCheckProjection, RegistrationContactType, RiderConductCaseProjection, SubmitDriverAppealProjection, VehicleAssignmentValidationProjection, VehicleMaintenanceProjection, VerifiedDriverPerkProjection, VerifyRideCheckResult } from '@dazat/contracts';
 import {
   confirmDriverContactVerification,
   startDriverContactVerification,
@@ -32,6 +32,7 @@ import { readDriverOperatingEligibility, startOrResumeDriverApplication } from '
 import { listDriverFleetAgreements, listFleetMarketplace, validateVehicleAssignment } from './src/fleet-operations-api';
 import { listVerifiedDriverPerks, readVehicleMaintenance, submitPreShiftCheck } from './src/maintenance-reliability-api';
 import { listDriverIncentives, readDriverFairTreatment, submitAppeal, submitRiderConductCase, terminateUnsafeJourney } from './src/driver-fair-treatment-api';
+import { listSupportCases, openSupportCase, readArrivalPlan, readDriverDailyOperations, readSupplyDemand, reconcileConnectivity } from './src/driver-daily-operations-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'DRIVER_HOME';
 
@@ -46,6 +47,14 @@ function formatMinorUnits(amountMinor: number, currency: string): string {
   const formatter = new Intl.NumberFormat('en-GB', { style: 'currency', currency });
   const fractionDigits = formatter.resolvedOptions().maximumFractionDigits;
   return formatter.format(amountMinor / (10 ** fractionDigits));
+}
+
+function clientUuid(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+    const random = Math.floor(Math.random() * 16);
+    const value = character === 'x' ? random : (random & 0x3) | 0x8;
+    return value.toString(16);
+  });
 }
 
 export default function DriverApp() {
@@ -94,6 +103,13 @@ export default function DriverApp() {
   const [appealSubjectId, setAppealSubjectId] = useState('');
   const [appealStatement, setAppealStatement] = useState('');
   const [appealResult, setAppealResult] = useState<SubmitDriverAppealProjection | null>(null);
+  const [dailyOperations, setDailyOperations] = useState<DriverDailyOperationsProjection | null>(null);
+  const [connectivity, setConnectivity] = useState<ConnectivityReconciliationProjection | null>(null);
+  const [supplyDemand, setSupplyDemand] = useState<DriverSupplyProjection | null>(null);
+  const [supportCases, setSupportCases] = useState<readonly DriverSupportCaseProjection[]>([]);
+  const [supportCategory, setSupportCategory] = useState<DriverSupportCategory>('TECHNICAL');
+  const [supportSummary, setSupportSummary] = useState('');
+  const [arrivalPlan, setArrivalPlan] = useState<ArrivalCommunicationPlanProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -139,6 +155,76 @@ export default function DriverApp() {
 
   function checkOperatingEligibility() {
     void run(async () => setOperatingEligibility(await readDriverOperatingEligibility(sessionToken, regionCode, vehicleId || undefined)));
+  }
+
+  function refreshDailyOperationsTruth() {
+    void run(async () => {
+      const [daily, supply, cases] = await Promise.all([
+        readDriverDailyOperations(sessionToken),
+        readSupplyDemand(sessionToken, regionCode, operatingEligibility?.eligibleServiceCodes ?? []),
+        listSupportCases(sessionToken)
+      ]);
+      setDailyOperations(daily);
+      setSupplyDemand(supply);
+      setSupportCases(cases);
+      setAvailability(daily.availabilityStatus);
+    });
+  }
+
+  function reconcileAuthoritativeState() {
+    void run(async () => {
+      const result = await reconcileConnectivity(sessionToken, {
+        clientObservationId: clientUuid(),
+        networkReachable: true,
+        observedAt: new Date().toISOString(),
+        ...(connectivity?.reconciledAt ? { lastServerSyncAt: connectivity.reconciledAt } : {}),
+        ...(dailyOperations && dailyOperations.availabilityVersion > 0
+          ? { knownAvailabilityVersion: dailyOperations.availabilityVersion }
+          : {}),
+        ...(dailyOperations?.activeJourneyId ? { knownActiveJourneyId: dailyOperations.activeJourneyId } : {}),
+        ...(dailyOperations?.activeJourneyVersion ? { knownActiveJourneyVersion: dailyOperations.activeJourneyVersion } : {}),
+        queuedCriticalEvents: []
+      });
+      setConnectivity(result);
+      setDailyOperations(await readDriverDailyOperations(sessionToken));
+    });
+  }
+
+  function changeWorkIntent(status: 'AVAILABLE' | 'BREAK' | 'FINISHING_SOON') {
+    void run(async () => {
+      const request = status === 'BREAK'
+        ? { status } as const
+        : {
+            status,
+            regionCode,
+            vehicleId,
+            location: {
+              latitude: Number(latitude), longitude: Number(longitude), observedAt: new Date().toISOString(),
+              source: 'DEVICE_GPS' as const, confidence: 0.9
+            }
+          };
+      const result = await setDriverAvailability(sessionToken, request);
+      setAvailability(result.status);
+      setEligibility(result.eligibility);
+      setDailyOperations(await readDriverDailyOperations(sessionToken));
+    });
+  }
+
+  function createSupportCase() {
+    void run(async () => {
+      if (!supportSummary.trim()) throw new Error('Describe what help you need.');
+      await openSupportCase(sessionToken, {
+        category: supportCategory,
+        summaryReference: supportSummary.trim(),
+        ...(journey ? { journeyId: journey.journeyId, bookingId: journey.bookingId } : {}),
+        ...(['SAFETY', 'BREAKDOWN', 'FLEET'].includes(supportCategory) && vehicleId ? { vehicleId } : {}),
+        immediateDanger: supportCategory === 'SAFETY' && Boolean(journey),
+        serviceContinuityAtRisk: ['SAFETY', 'BREAKDOWN'].includes(supportCategory) && Boolean(journey)
+      });
+      setSupportSummary('');
+      setSupportCases(await listSupportCases(sessionToken));
+      setDailyOperations(await readDriverDailyOperations(sessionToken));
+    });
   }
 
   function refreshFleetTruth() {
@@ -243,6 +329,7 @@ export default function DriverApp() {
       });
       setAvailability(result.status);
       setEligibility(result.eligibility);
+      setDailyOperations(await readDriverDailyOperations(sessionToken));
     });
   }
 
@@ -252,6 +339,7 @@ export default function DriverApp() {
       setAvailability(result.status);
       setEligibility(result.eligibility);
       setOffers([]);
+      setDailyOperations(await readDriverDailyOperations(sessionToken));
     });
   }
 
@@ -266,6 +354,7 @@ export default function DriverApp() {
       setAssignedBookingId(result.bookingId);
       setAvailability('ASSIGNED');
       setOffers([]);
+      setArrivalPlan(await readArrivalPlan(sessionToken, result.bookingId));
     });
   }
 
@@ -359,9 +448,9 @@ export default function DriverApp() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.11</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.12</Text>
         <Text style={styles.title}>DAZAT Driver journey</Text>
-        <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. Pickup evidence and RideCheck protect the start. During an active Journey, telemetry confidence, Safety state, destination evidence and completion requirements remain separate backend-owned truths.</Text>
+        <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. The complete Driver day keeps secure session, approved vehicle, eligibility, scheduled work, informed offers, pickup, RideCheck, Journey, earnings, break, finishing-soon and end-shift truth separate. Weak-signal recovery replaces speculative state and never pretends queued Safety commands were already processed.</Text>
 
         {flow === 'REGISTER' ? (
           <View style={styles.section}>
@@ -422,6 +511,53 @@ export default function DriverApp() {
                 <Text style={styles.body}>Availability is evaluated separately. A permission never makes the Driver online.</Text>
               </View>
             ) : null}
+            <View style={styles.notice} accessibilityRole="summary">
+              <Text style={styles.noticeTitle}>Daily operations, work intent and weak-signal truth</Text>
+              <Text style={styles.body}>BREAK and FINISHING_SOON are normal work states, not misconduct. OFFLINE stops ordinary Driver-app location collection. Voice readout, CarPlay and Android Auto remain unconfigured roadmaps; voice can never bypass backend validation.</Text>
+              <View style={styles.row}>
+                <SecondaryButton label="Refresh authoritative daily state" onPress={refreshDailyOperationsTruth} />
+                <SecondaryButton label="Reconcile after weak signal" onPress={reconcileAuthoritativeState} />
+              </View>
+              {dailyOperations ? (
+                <>
+                  <Text style={styles.status}>Work intent: {dailyOperations.availabilityStatus} · version {dailyOperations.availabilityVersion}</Text>
+                  <Text style={styles.body}>Shift: {dailyOperations.shiftId ?? 'not active'} · scheduled commitments: {dailyOperations.scheduledWork.length} · open offers: {dailyOperations.openOfferCount}</Text>
+                  <Text style={styles.body}>Connectivity: {dailyOperations.connectivity.state} · speculative state trusted: NO · ordinary app location: {dailyOperations.ordinaryAppLocationCollectionActive ? 'ACTIVE' : 'STOPPED'}</Text>
+                  <Text style={styles.body}>Posted earnings: {dailyOperations.postedEarningCount} · open support cases: {dailyOperations.openSupportCaseCount}</Text>
+                  {dailyOperations.scheduledWork.map((commitment) => <Text key={commitment.commitmentId} style={styles.body}>
+                    Scheduled {commitment.serviceCode}: {commitment.scheduledFor} · accepted commitment protected from conflicting work
+                  </Text>)}
+                </>
+              ) : null}
+              {connectivity ? <Text style={connectivity.authoritativeSnapshotRequired ? styles.error : styles.status}>
+                Reconciliation {connectivity.state} · queued events executed automatically: NO · {connectivity.authoritativeSnapshotRequired ? 'replace speculative state' : 'authoritative state aligned'}
+              </Text> : null}
+              {availability !== 'ASSIGNED' && availability !== 'OFFLINE' ? (
+                <View style={styles.row}>
+                  {availability !== 'BREAK' ? <SecondaryButton label="Take a normal break" onPress={() => changeWorkIntent('BREAK')} /> : null}
+                  {availability !== 'FINISHING_SOON' ? <SecondaryButton label="Finishing soon" onPress={() => changeWorkIntent('FINISHING_SOON')} /> : null}
+                  {availability !== 'AVAILABLE' ? <SecondaryButton label="Resume available" onPress={() => changeWorkIntent('AVAILABLE')} /> : null}
+                </View>
+              ) : null}
+              <Text style={styles.noticeTitle}>Capability-based supply — never guaranteed earnings</Text>
+              <Text style={styles.body}>Current observation and forecast remain visibly separate. WAV, School and other capability supply are not hidden inside a raw Driver count.</Text>
+              {supplyDemand?.signals.length ? supplyDemand.signals.map((signal) => <Text key={signal.observationId} style={styles.body}>
+                {signal.kind}: {signal.capabilityCode} · demand {signal.demandCount} · eligible supply {signal.eligibleSupplyCount} · confidence {signal.confidence} · guaranteed earnings NO
+              </Text>) : <Text style={styles.body}>No evidence-backed supply signal is currently published.</Text>}
+              <Text style={styles.noticeTitle}>Driver Support</Text>
+              <View style={styles.row}>
+                {(['SAFETY', 'BREAKDOWN', 'PAYMENTS', 'ACCOUNT', 'COMPLIANCE', 'TECHNICAL', 'PASSENGER', 'FLEET'] as const).map((category) => (
+                  <Pressable key={category} onPress={() => setSupportCategory(category)} style={[styles.secondaryButton, supportCategory === category && styles.selected]}>
+                    <Text style={styles.secondaryText}>{category}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              <Field label="What help do you need?" value={supportSummary} onChangeText={setSupportSummary} />
+              <SecondaryButton label="Open Driver Support case" onPress={createSupportCase} />
+              {supportCases.map((supportCase) => <Text key={supportCase.supportCaseId} style={supportCase.humanEscalationRequired ? styles.error : styles.body}>
+                {supportCase.category}: {supportCase.status} · risk {supportCase.risk} · human escalation {supportCase.humanEscalationRequired ? 'REQUIRED' : 'not required'} · external service contacted NO
+              </Text>)}
+            </View>
             <View style={styles.notice} accessibilityRole="summary">
               <Text style={styles.noticeTitle}>Fleet Marketplace and assignment truth</Text>
               <Text style={styles.body}>Supplier stock, warranty, total cost, deposit, term, mileage and end-of-term terms must be verified. DAZAT does not promise a generic discount.</Text>
@@ -520,9 +656,15 @@ export default function DriverApp() {
             {offers.map((offer) => (
               <View key={offer.offerId} style={styles.notice}>
                 <Text style={styles.noticeTitle}>{offer.pickup.displayLabel} → {offer.dropoff.displayLabel}</Text>
+                <Text style={styles.body}>Services: {offer.disclosure.serviceCodes.join(', ') || 'not disclosed'} · context: {offer.disclosure.journeyContextLabels.join(', ') || 'not disclosed'}</Text>
+                <Text style={styles.body}>Provisional straight-line pickup distance: {offer.disclosure.pickupDistanceMetres ?? 'unavailable'} m · route ETA: {offer.disclosure.pickupEta.status === 'AVAILABLE' ? `${offer.disclosure.pickupEta.minutes} minutes` : 'not configured'}</Text>
+                <Text style={offer.disclosure.expectedEarning.status === 'VERIFIED_ESTIMATE' ? styles.status : styles.error}>Expected earning: {offer.disclosure.expectedEarning.status === 'VERIFIED_ESTIMATE'
+                  ? formatMinorUnits(offer.disclosure.expectedEarning.amountMinor!, offer.disclosure.expectedEarning.currency!)
+                  : 'not available until Finance-approved Driver earning policy exists'}</Text>
+                <Text style={offer.disclosure.informedChoiceReady ? styles.status : styles.error}>Informed choice: {offer.disclosure.informedChoiceReady ? 'READY' : `BLOCKED — ${offer.disclosure.missingDisclosures.join(', ')}`}</Text>
                 <Text style={styles.body}>Expires {offer.expiresAt}. Declining or letting this expire is not an ordinary acceptance-rate punishment.</Text>
                 <View style={styles.row}>
-                  <PrimaryButton busy={busy} label="Accept this offer" onPress={() => accept(offer.offerId)} />
+                  {offer.disclosure.acceptanceAllowed ? <PrimaryButton busy={busy} label="Accept this offer" onPress={() => accept(offer.offerId)} /> : null}
                   <SecondaryButton label="Decline without penalty" onPress={() => decline(offer.offerId)} />
                 </View>
               </View>
@@ -531,6 +673,13 @@ export default function DriverApp() {
               <View style={styles.notice}>
                 <Text style={styles.noticeTitle}>Atomic assignment confirmed</Text>
                 <Text style={styles.body}>{assignment}</Text>
+                {arrivalPlan ? (
+                  <View style={styles.section}>
+                    <Text style={styles.noticeTitle}>Chosen Booking pickup — not assumed passenger GPS</Text>
+                    <Text style={styles.body}>{arrivalPlan.pickup.displayLabel} · plan {arrivalPlan.planStatus}</Text>
+                    <Text style={styles.body}>Channels: {arrivalPlan.channels.join(', ') || 'not configured'} · recipients: {arrivalPlan.recipientRoles.join(', ') || 'not configured'} · direct contact details exposed NO</Text>
+                  </View>
+                ) : null}
                 {!journey ? <PrimaryButton busy={busy} label="Acknowledge and navigate to pickup" onPress={acknowledge} /> : (
                   <>
                     <Text style={styles.status}>Journey: {journey.journeyStatus}</Text>

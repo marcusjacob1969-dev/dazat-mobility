@@ -553,6 +553,7 @@ export async function completeJourney(
       assignmentCompleted: completedAssignment.rowCount === 1
     })) throw new JourneyConflictError('Driver availability release did not satisfy governed completion');
     const nextAvailabilityVersion = Number(availability.rows[0]!.version) + 1;
+    const availabilityCommandId = randomUUID();
     await client.query(
       `UPDATE driver.availability_state SET status = 'AVAILABLE', version = $2, updated_at = now()
         WHERE driver_profile_id = $1`,
@@ -562,7 +563,16 @@ export async function completeJourney(
       `INSERT INTO driver.availability_transition
          (driver_profile_id, from_status, to_status, version, command_id, reason_code)
        VALUES ($1,'ASSIGNED','AVAILABLE',$2,$3,'JOURNEY_COMPLETED')`,
-      [journey.driverProfileId, nextAvailabilityVersion, randomUUID()]
+      [journey.driverProfileId, nextAvailabilityVersion, availabilityCommandId]
+    );
+    await client.query(
+      `INSERT INTO driver.driver_shift_event
+         (driver_shift_session_id, driver_profile_id, event_type, from_availability,
+          to_availability, availability_version, command_id, reason_code)
+       SELECT shift.id, $1, 'JOURNEY_COMPLETED_AVAILABLE', 'ASSIGNED', 'AVAILABLE', $2, $3, 'JOURNEY_COMPLETED'
+         FROM driver.driver_shift_session shift
+        WHERE shift.driver_profile_id = $1 AND shift.status = 'ACTIVE'`,
+      [journey.driverProfileId, nextAvailabilityVersion, availabilityCommandId]
     );
     await client.query(
       `INSERT INTO dispatch.outbox_message

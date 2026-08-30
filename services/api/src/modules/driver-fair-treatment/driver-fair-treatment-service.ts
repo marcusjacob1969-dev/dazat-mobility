@@ -452,6 +452,7 @@ async function createRiderConductCase(
         safetyTerminationPersisted: true,
         passengerContinuityOpened: true
       })) throw new DriverFairTreatmentConflictError('Driver break transition requires the committed Safety termination boundary');
+      const availabilityCommandId = randomUUID();
       await client.query(
         `UPDATE driver.availability_state
             SET status = 'BREAK', version = $2, updated_at = now()
@@ -462,7 +463,16 @@ async function createRiderConductCase(
         `INSERT INTO driver.availability_transition
            (driver_profile_id, from_status, to_status, version, command_id, reason_code)
          VALUES ($1, 'ASSIGNED', 'BREAK', $2, $3, 'DRIVER_SAFETY_TERMINATION')`,
-        [actor.driverProfileId, nextAvailabilityVersion, randomUUID()]
+        [actor.driverProfileId, nextAvailabilityVersion, availabilityCommandId]
+      );
+      await client.query(
+        `INSERT INTO driver.driver_shift_event
+           (driver_shift_session_id, driver_profile_id, event_type, from_availability,
+            to_availability, availability_version, command_id, reason_code)
+         SELECT shift.id, $1, 'UNSAFE_TERMINATION_BREAK', 'ASSIGNED', 'BREAK', $2, $3, 'DRIVER_SAFETY_TERMINATION'
+           FROM driver.driver_shift_session shift
+          WHERE shift.driver_profile_id = $1 AND shift.status = 'ACTIVE'`,
+        [actor.driverProfileId, nextAvailabilityVersion, availabilityCommandId]
       );
       response = {
         riderConductCaseId: conductCaseId,

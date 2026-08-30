@@ -5,6 +5,7 @@ import type { ApiConfig } from '../../config.js';
 import {
   assertDriverAvailabilityTransition,
   evaluateDriverDispatchEligibility,
+  evaluateDriverOfferDisclosure,
   type BookingStatus,
   type DriverAvailabilityStatus,
   type DriverDispatchEligibilityDecision,
@@ -42,6 +43,58 @@ interface InternalEligibility {
   readonly serviceCapabilities: Readonly<Record<string, unknown>>;
   readonly availabilityVersion: number;
   readonly availabilityStatus: DriverAvailabilityStatus;
+}
+
+async function recordDriverShiftAvailabilityEvent(
+  client: Pick<PoolClient, 'query'>,
+  input: {
+    readonly driverProfileId: string;
+    readonly from: DriverAvailabilityStatus;
+    readonly to: DriverAvailabilityStatus;
+    readonly availabilityVersion: number;
+    readonly regionCode: string | null;
+    readonly vehicleId: string | null;
+    readonly commandId: string;
+    readonly reasonCode: string;
+  }
+): Promise<void> {
+  let shiftStarted = false;
+  let active = await client.query<{ id: string }>(
+    `SELECT id FROM driver.driver_shift_session
+      WHERE driver_profile_id = $1 AND status = 'ACTIVE' FOR UPDATE`,
+    [input.driverProfileId]
+  );
+  if (!active.rowCount && input.to !== 'OFFLINE') {
+    if (!input.regionCode || !input.vehicleId) throw new DispatchConflictError('An active shift requires region and selected vehicle truth');
+    active = await client.query<{ id: string }>(
+      `INSERT INTO driver.driver_shift_session
+         (driver_profile_id, status, region_code, selected_vehicle_id, start_availability_version)
+       VALUES ($1,'ACTIVE',$2,$3,$4) RETURNING id`,
+      [input.driverProfileId, input.regionCode, input.vehicleId, input.availabilityVersion]
+    );
+    shiftStarted = true;
+  }
+  if (!active.rowCount) return;
+  const eventType = shiftStarted ? 'SHIFT_STARTED'
+    : input.to === 'OFFLINE' ? 'SHIFT_ENDED'
+    : input.to === 'ASSIGNED' ? 'OFFER_ACCEPTED'
+      : 'WORK_INTENT_CHANGED';
+  if (input.to === 'OFFLINE') {
+    await client.query(
+      `UPDATE driver.driver_shift_session
+          SET status = 'ENDED', ended_at = now(), end_availability_version = $2, end_reason = $3
+        WHERE id = $1`,
+      [active.rows[0]!.id, input.availabilityVersion, input.reasonCode]
+    );
+  }
+  await client.query(
+    `INSERT INTO driver.driver_shift_event
+       (driver_shift_session_id, driver_profile_id, event_type, from_availability,
+        to_availability, availability_version, command_id, reason_code)
+     VALUES ($1,$2,$3,$4::driver.availability_status,$5::driver.availability_status,$6,$7,$8)`,
+    [active.rows[0]!.id, input.driverProfileId, eventType, input.from, input.to,
+      input.availabilityVersion, input.commandId, input.reasonCode]
+  );
 }
 
 interface BookingDispatchContext {
@@ -99,7 +152,9 @@ async function readDriverEligibility(
   regionCode: string | null,
   config: ApiConfig,
   requirements: BookingDispatchContext['requirements'] = [],
-  requiredServiceCodes: readonly string[] = requiredPermissionServiceCodes(requirements)
+  requiredServiceCodes: readonly string[] = requiredPermissionServiceCodes(requirements),
+  serviceAt: Date | null = null,
+  excludedCommitmentBookingId: string | null = null
 ): Promise<InternalEligibility> {
   if (!actor.driverProfileId) throw new DispatchForbiddenError('A Driver profile is required');
   const result = await client.query<{
@@ -119,6 +174,7 @@ async function readDriverEligibility(
     active_assignment: boolean;
     service_permission_match: boolean;
     operating_restriction_active: boolean;
+    schedule_conflict: boolean;
     maintenance_operating_permitted: boolean | null;
     maintenance_restricted_service_codes: string[] | null;
   }>(
@@ -182,6 +238,13 @@ async function readDriverEligibility(
                    OR (restriction.scope = 'WAV_ONLY' AND 'WAV' = ANY($4::text[]))
                  )
             ) AS operating_restriction_active
+            ,CASE WHEN $5::timestamptz IS NULL THEN false ELSE EXISTS (
+              SELECT 1 FROM driver.scheduled_work_commitment commitment
+               WHERE commitment.driver_profile_id = dp.id AND commitment.status = 'ACCEPTED'
+                 AND ($6::uuid IS NULL OR commitment.booking_id <> $6::uuid)
+                 AND $5::timestamptz >= commitment.protected_from
+                 AND $5::timestamptz <= commitment.protected_until
+            ) END AS schedule_conflict
        FROM driver.driver_profile dp
        LEFT JOIN driver.availability_state av ON av.driver_profile_id = dp.id
        LEFT JOIN LATERAL (
@@ -199,7 +262,8 @@ async function readDriverEligibility(
        LEFT JOIN vehicle_fleet.current_vehicle_maintenance_gate maintenance
          ON maintenance.vehicle_id = $2
       WHERE dp.id = $1`,
-    [actor.driverProfileId, vehicleId, regionCode, requiredServiceCodes]
+    [actor.driverProfileId, vehicleId, regionCode, requiredServiceCodes,
+      serviceAt?.toISOString() ?? null, excludedCommitmentBookingId]
   );
   if (!result.rowCount) throw new DispatchNotFoundError('Driver profile not found');
   const row = result.rows[0]!;
@@ -224,7 +288,7 @@ async function readDriverEligibility(
     minimumLocationConfidence: config.dispatchMinimumLocationConfidence,
     maxLocationAgeSeconds: config.dispatchLocationMaxAgeSeconds,
     hasActiveAssignment: row.active_assignment,
-    hasScheduleConflict: false,
+    hasScheduleConflict: row.schedule_conflict,
     hardRequirementsMatch: hardRequirementsMatch(requirements, capabilities)
   });
   return {
@@ -354,9 +418,37 @@ export async function setDriverAvailability(
        VALUES ($1, $2::driver.availability_status, $3::driver.availability_status, $4, $5, $6)`,
       [actor.driverProfileId, from, desired, nextVersion, commandId, `DRIVER_${desired}`]
     );
+    await recordDriverShiftAvailabilityEvent(client, {
+      driverProfileId: actor.driverProfileId,
+      from,
+      to: desired,
+      availabilityVersion: nextVersion,
+      regionCode: upsert.rows[0]!.region_code,
+      vehicleId: upsert.rows[0]!.vehicle_id,
+      commandId,
+      reasonCode: `DRIVER_${desired}`
+    });
+    if (desired === 'BREAK' || desired === 'OFFLINE') {
+      await client.query(
+        `WITH withdrawn AS (
+           UPDATE dispatch.driver_offer
+              SET status = 'WITHDRAWN', responded_at = now(), response_reason = 'DRIVER_WORK_INTENT_CHANGE'
+            WHERE driver_profile_id = $1 AND status = 'OFFERED'
+            RETURNING id, driver_profile_id
+         )
+         INSERT INTO dispatch.driver_offer_outcome_attribution
+           (driver_offer_id, driver_profile_id, outcome, cause_class, reason_code,
+            ordinary_decline, automatically_creates_misconduct,
+            acceptance_rate_penalty_applied, dispatch_priority_penalty_applied)
+         SELECT id, driver_profile_id, 'WITHDRAWN', 'DRIVER_CHOICE', 'DRIVER_WORK_INTENT_CHANGE',
+                false, false, false, false FROM withdrawn
+         ON CONFLICT (driver_offer_id) DO NOTHING`,
+        [actor.driverProfileId]
+      );
+    }
     const eligibility = desired === 'OFFLINE'
       ? await readDriverEligibility(client, actor, null, null, config, [], [])
-      : await readDriverEligibility(client, actor, vehicleId, request.regionCode!, config, [], []);
+      : await readDriverEligibility(client, actor, upsert.rows[0]!.vehicle_id, upsert.rows[0]!.region_code, config, [], []);
     const row = upsert.rows[0]!;
     const response: DriverAvailabilitySummary = {
       driverProfileId: actor.driverProfileId,
@@ -499,7 +591,7 @@ export async function startBookingDispatch(
       vehicle_snapshot_id: string | null; vehicle_status: DriverEligibilityStatus | null; vehicle_valid_until: Date | null;
       service_capabilities: Record<string, unknown> | null; provisional_distance_metres: string | number | null;
       vehicle_authorised: boolean; active_assignment: boolean;
-      service_permission_match: boolean; operating_restriction_active: boolean;
+      service_permission_match: boolean; operating_restriction_active: boolean; schedule_conflict: boolean;
       current_permission_ids: string[]; active_restriction_ids: string[];
       maintenance_plan_version_id: string | null; maintenance_operating_permitted: boolean | null;
       maintenance_restricted_service_codes: string[] | null; vehicle_restriction_ids: string[] | null;
@@ -543,6 +635,14 @@ export async function startBookingDispatch(
                      OR (restriction.scope = 'WAV_ONLY' AND 'WAV' = ANY($4::text[]))
                    )
               ) AS operating_restriction_active,
+              EXISTS (
+                SELECT 1 FROM driver.scheduled_work_commitment commitment
+                 WHERE commitment.driver_profile_id = av.driver_profile_id
+                   AND commitment.status = 'ACCEPTED'
+                   AND commitment.booking_id <> $5
+                   AND COALESCE($6::timestamptz, now()) >= commitment.protected_from
+                   AND COALESCE($6::timestamptz, now()) <= commitment.protected_until
+              ) AS schedule_conflict,
               ARRAY(
                 SELECT permission.id FROM driver.current_permission_projection permission
                  WHERE permission.driver_profile_id = av.driver_profile_id
@@ -572,7 +672,8 @@ export async function startBookingDispatch(
         WHERE av.region_code = $3 AND av.status IN ('AVAILABLE','FINISHING_SOON') AND av.location IS NOT NULL
         ORDER BY provisional_distance_metres ASC NULLS LAST, av.updated_at ASC
         LIMIT 200`,
-      [context.pickup.latitude, context.pickup.longitude, context.regionCode, requiredServices]
+      [context.pickup.latitude, context.pickup.longitude, context.regionCode, requiredServices,
+        context.bookingId, context.scheduledFor?.toISOString() ?? null]
     );
     const now = new Date();
     const eligible = rawCandidates.rows.filter((row) => evaluateDriverDispatchEligibility({
@@ -595,7 +696,7 @@ export async function startBookingDispatch(
       minimumLocationConfidence: config.dispatchMinimumLocationConfidence,
       maxLocationAgeSeconds: config.dispatchLocationMaxAgeSeconds,
       hasActiveAssignment: row.active_assignment,
-      hasScheduleConflict: false,
+      hasScheduleConflict: row.schedule_conflict,
       hardRequirementsMatch: hardRequirementsMatch(context.requirements, row.service_capabilities ?? {})
     }, now).eligible);
 
@@ -637,16 +738,42 @@ export async function startBookingDispatch(
       if (rank <= config.dispatchOfferWaveSize) {
         offeredCount += 1;
         const expiresAt = new Date(now.getTime() + config.dispatchOfferTtlSeconds * 1_000);
-        await client.query(
+        const insertedOffer = await client.query<{ id: string }>(
           `INSERT INTO dispatch.driver_offer
              (dispatch_attempt_id, candidate_snapshot_id, booking_id, driver_profile_id, vehicle_id,
               wave_number, status, meaningful_offer_payload, expires_at)
-           VALUES ($1,$2,$3,$4,$5,1,'OFFERED',$6::jsonb,$7)`,
+           VALUES ($1,$2,$3,$4,$5,1,'OFFERED',$6::jsonb,$7) RETURNING id`,
           [attemptId, candidate.rows[0]!.id, bookingId, row.driver_profile_id, row.vehicle_id,
             JSON.stringify({ regionCode: context.regionCode, pickup: context.pickup, dropoff: context.dropoff,
               scheduledFor: context.scheduledFor?.toISOString() ?? null,
               provisionalPickupDistanceMetres: row.provisional_distance_metres === null ? null : Number(row.provisional_distance_metres),
               noAcceptanceRatePenaltyForDecline: true }), expiresAt.toISOString()]
+        );
+        const journeyContextLabels = [
+          context.scheduledFor ? 'SCHEDULED' : 'ON_DEMAND',
+          ...context.requirements.map((requirement) => requirement.type.trim().toUpperCase()).filter(Boolean)
+        ];
+        const disclosure = evaluateDriverOfferDisclosure({
+          pickupDistanceMetres: row.provisional_distance_metres === null ? null : Number(row.provisional_distance_metres),
+          pickupEtaMinutes: null,
+          serviceCodes: requiredServices,
+          journeyContextLabels,
+          expectedEarningAmountMinor: null,
+          expectedEarningCurrency: null,
+          expectedEarningPolicyVersion: null,
+          expectedEarningDerivedFromRiderFare: false,
+          ordinaryDeclinePenaltyApplied: false
+        });
+        await client.query(
+          `INSERT INTO dispatch.driver_offer_disclosure
+             (driver_offer_id, service_codes, journey_context_labels, pickup_distance_metres,
+              pickup_eta_status, expected_earning_status, informed_choice_ready, acceptance_allowed,
+              missing_disclosures)
+           VALUES ($1,$2,$3,$4,'UNAVAILABLE_ROUTE_ESTIMATE_NOT_CONFIGURED',
+                   'UNAVAILABLE_FINANCE_POLICY_NOT_APPROVED',$5,$6,$7)`,
+          [insertedOffer.rows[0]!.id, requiredServices, journeyContextLabels,
+            row.provisional_distance_metres === null ? null : Number(row.provisional_distance_metres),
+            disclosure.informedChoiceReady, disclosure.acceptanceAllowed, disclosure.missingDisclosures]
         );
       }
     }
@@ -701,11 +828,24 @@ export async function listDriverOffers(pool: DatabasePool, actor: AuthenticatedP
       regionCode: string; pickup: DriverOfferSummary['pickup']; dropoff: DriverOfferSummary['dropoff'];
       scheduledFor?: string | null; provisionalPickupDistanceMetres?: number | null;
     };
+    service_codes: string[] | null; journey_context_labels: string[] | null;
+    pickup_distance_metres: string | number | null; pickup_eta_status: 'AVAILABLE' | 'UNAVAILABLE_ROUTE_ESTIMATE_NOT_CONFIGURED' | null;
+    pickup_eta_minutes: string | number | null;
+    expected_earning_status: 'VERIFIED_ESTIMATE' | 'UNAVAILABLE_FINANCE_POLICY_NOT_APPROVED' | null;
+    expected_earning_amount_minor: string | number | null; expected_earning_currency: string | null;
+    expected_earning_policy_version: string | null; informed_choice_ready: boolean | null;
+    acceptance_allowed: boolean | null; missing_disclosures: string[] | null;
   }>(
-    `SELECT id, dispatch_attempt_id, booking_id, status, expires_at, meaningful_offer_payload
-       FROM dispatch.driver_offer
-      WHERE driver_profile_id = $1 AND status = 'OFFERED' AND expires_at > now()
-      ORDER BY offered_at ASC`,
+    `SELECT offer.id, offer.dispatch_attempt_id, offer.booking_id, offer.status, offer.expires_at,
+            offer.meaningful_offer_payload, disclosure.service_codes, disclosure.journey_context_labels,
+            disclosure.pickup_distance_metres, disclosure.pickup_eta_status, disclosure.pickup_eta_minutes,
+            disclosure.expected_earning_status, disclosure.expected_earning_amount_minor,
+            disclosure.expected_earning_currency, disclosure.expected_earning_policy_version,
+            disclosure.informed_choice_ready, disclosure.acceptance_allowed, disclosure.missing_disclosures
+       FROM dispatch.driver_offer offer
+       LEFT JOIN dispatch.driver_offer_disclosure disclosure ON disclosure.driver_offer_id = offer.id
+      WHERE offer.driver_profile_id = $1 AND offer.status = 'OFFERED' AND offer.expires_at > now()
+      ORDER BY offer.offered_at ASC`,
     [actor.driverProfileId]
   );
   return result.rows.map((row) => ({
@@ -719,7 +859,28 @@ export async function listDriverOffers(pool: DatabasePool, actor: AuthenticatedP
     dropoff: row.meaningful_offer_payload.dropoff,
     ...(row.meaningful_offer_payload.scheduledFor ? { scheduledFor: row.meaningful_offer_payload.scheduledFor } : {}),
     ...(row.meaningful_offer_payload.provisionalPickupDistanceMetres !== null && row.meaningful_offer_payload.provisionalPickupDistanceMetres !== undefined
-      ? { provisionalPickupDistanceMetres: row.meaningful_offer_payload.provisionalPickupDistanceMetres } : {})
+      ? { provisionalPickupDistanceMetres: row.meaningful_offer_payload.provisionalPickupDistanceMetres } : {}),
+    disclosure: {
+      serviceCodes: row.service_codes ?? [],
+      journeyContextLabels: row.journey_context_labels ?? [],
+      ...(row.pickup_distance_metres !== null ? { pickupDistanceMetres: Number(row.pickup_distance_metres) } : {}),
+      pickupEta: {
+        status: row.pickup_eta_status ?? 'UNAVAILABLE_ROUTE_ESTIMATE_NOT_CONFIGURED',
+        ...(row.pickup_eta_minutes !== null ? { minutes: Number(row.pickup_eta_minutes) } : {})
+      },
+      expectedEarning: {
+        status: row.expected_earning_status ?? 'UNAVAILABLE_FINANCE_POLICY_NOT_APPROVED',
+        ...(row.expected_earning_amount_minor !== null ? { amountMinor: Number(row.expected_earning_amount_minor) } : {}),
+        ...(row.expected_earning_currency ? { currency: row.expected_earning_currency } : {}),
+        ...(row.expected_earning_policy_version ? { policyVersion: row.expected_earning_policy_version } : {}),
+        derivedFromRiderFare: false
+      },
+      informedChoiceReady: row.informed_choice_ready ?? false,
+      acceptanceAllowed: row.acceptance_allowed ?? false,
+      missingDisclosures: row.missing_disclosures ?? ['DISCLOSURE_RECORD'],
+      blindOfferProhibited: true,
+      ordinaryDeclinePenaltyApplied: false
+    }
   }));
 }
 
@@ -835,9 +996,14 @@ export async function acceptDriverOffer(
     );
     const offerResult = await client.query<{
       id: string; dispatch_attempt_id: string; booking_id: string; driver_profile_id: string;
-      vehicle_id: string; status: string; expires_at: Date;
-    }>(`SELECT id, dispatch_attempt_id, booking_id, driver_profile_id, vehicle_id, status, expires_at
-          FROM dispatch.driver_offer WHERE id = $1 FOR UPDATE`, [offerId]);
+      vehicle_id: string; status: string; expires_at: Date; acceptance_allowed: boolean | null;
+      missing_disclosures: string[] | null;
+    }>(`SELECT offer.id, offer.dispatch_attempt_id, offer.booking_id, offer.driver_profile_id,
+               offer.vehicle_id, offer.status, offer.expires_at,
+               disclosure.acceptance_allowed, disclosure.missing_disclosures
+          FROM dispatch.driver_offer offer
+          LEFT JOIN dispatch.driver_offer_disclosure disclosure ON disclosure.driver_offer_id = offer.id
+         WHERE offer.id = $1 FOR UPDATE OF offer`, [offerId]);
     if (!offerResult.rowCount) throw new DispatchNotFoundError('Driver offer not found');
     const offer = offerResult.rows[0]!;
     if (offer.driver_profile_id !== actor.driverProfileId) throw new DispatchForbiddenError('Driver offer belongs to another Driver');
@@ -858,9 +1024,15 @@ export async function acceptDriverOffer(
       transactionOpen = false;
       throw new DispatchConflictError('Offer expired before acceptance');
     }
+    if (offer.acceptance_allowed !== true) {
+      throw new DispatchConflictError(`Offer is not actionable until informed-choice disclosures are complete: ${(offer.missing_disclosures ?? ['DISCLOSURE_RECORD']).join(', ')}`);
+    }
     const booking = await readBookingContext(client, offer.booking_id);
     if (booking.status !== 'SEARCHING_FOR_DRIVER') throw new DispatchConflictError(`Booking is ${booking.status}`);
-    const eligibility = await readDriverEligibility(client, actor, offer.vehicle_id, booking.regionCode, config, booking.requirements);
+    const eligibility = await readDriverEligibility(
+      client, actor, offer.vehicle_id, booking.regionCode, config, booking.requirements,
+      requiredPermissionServiceCodes(booking.requirements), booking.scheduledFor ?? new Date(), booking.bookingId
+    );
     if (!eligibility.decision.eligible) {
       await client.query(
         `UPDATE dispatch.driver_offer
@@ -921,6 +1093,7 @@ export async function acceptDriverOffer(
     );
     if (!availability.rowCount) throw new DriverNotEligibleError(['NOT_AVAILABLE']);
     const nextAvailabilityVersion = Number(availability.rows[0]!.version) + 1;
+    const availabilityCommandId = randomUUID();
     assertDriverAvailabilityTransition(availability.rows[0]!.status, 'ASSIGNED');
     await client.query(
       `UPDATE driver.availability_state SET status = 'ASSIGNED', version = $2, updated_at = now() WHERE driver_profile_id = $1`,
@@ -930,8 +1103,23 @@ export async function acceptDriverOffer(
       `INSERT INTO driver.availability_transition
          (driver_profile_id, from_status, to_status, version, command_id, reason_code)
        VALUES ($1,$2::driver.availability_status,'ASSIGNED',$3,$4,'OFFER_ACCEPTED')`,
-      [actor.driverProfileId, availability.rows[0]!.status, nextAvailabilityVersion, randomUUID()]
+      [actor.driverProfileId, availability.rows[0]!.status, nextAvailabilityVersion, availabilityCommandId]
     );
+    const currentShift = await client.query<{ region_code: string; selected_vehicle_id: string }>(
+      `SELECT region_code, selected_vehicle_id FROM driver.driver_shift_session
+        WHERE driver_profile_id = $1 AND status = 'ACTIVE'`,
+      [actor.driverProfileId]
+    );
+    await recordDriverShiftAvailabilityEvent(client, {
+      driverProfileId: actor.driverProfileId,
+      from: availability.rows[0]!.status,
+      to: 'ASSIGNED',
+      availabilityVersion: nextAvailabilityVersion,
+      regionCode: currentShift.rows[0]?.region_code ?? booking.regionCode,
+      vehicleId: currentShift.rows[0]?.selected_vehicle_id ?? offer.vehicle_id,
+      commandId: availabilityCommandId,
+      reasonCode: 'OFFER_ACCEPTED'
+    });
     await appendBookingTransition(client, booking, 'DRIVER_ASSIGNED', actor.accountId, 'DRIVER_OFFER_ACCEPTED', correlationId, commandId);
     await client.query(
       `INSERT INTO dispatch.outbox_message

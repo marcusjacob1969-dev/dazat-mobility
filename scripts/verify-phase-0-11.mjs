@@ -139,11 +139,12 @@ for (const statement of [
   'Ordinary declines never create a hidden priority penalty', 'protects the Driver rating',
   'unsafe fatigue pressure or a secret Dispatch-priority boost'
 ]) if (!api.includes(statement)) errors.push(`OpenAPI fair-treatment truth statement missing: ${statement}`);
-if (!api.includes('version: 0.0.11')) errors.push('OpenAPI is not versioned at 0.0.11');
+if (!/version: 0\.0\.(?:1[1-9]|[2-9][0-9])\b/.test(api)) errors.push('OpenAPI is older than Phase 0.11');
 
 for (const rel of ['package.json', 'packages/domain/package.json', 'packages/contracts/package.json', 'services/api/package.json', 'apps/driver/package.json', 'apps/rider/package.json', 'apps/control-room/package.json']) {
   const parsed = JSON.parse(readFileSync(join(root, rel), 'utf8'));
-  if (parsed.version !== '0.0.11') errors.push(`${rel} is not versioned at 0.0.11`);
+  const patch = Number(String(parsed.version).split('.')[2]);
+  if (!Number.isInteger(patch) || patch < 11) errors.push(`${rel} is older than Phase 0.11`);
 }
 
 if (errors.length) {

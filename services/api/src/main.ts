@@ -17,6 +17,7 @@ import { registerDriverOperationsRoutes } from './modules/driver-operations/rout
 import { registerFleetOperationsRoutes } from './modules/fleet-operations/routes.js';
 import { registerMaintenanceReliabilityRoutes } from './modules/maintenance-reliability/routes.js';
 import { registerDriverFairTreatmentRoutes } from './modules/driver-fair-treatment/routes.js';
+import { registerDriverDailyOperationsRoutes } from './modules/driver-daily-operations/routes.js';
 
 const config = loadConfig();
 const app = Fastify({ logger: { level: config.logLevel } });
@@ -43,7 +44,7 @@ app.get('/health/ready', async (_request, reply) => {
       status: 'READY',
       dependencies: {
         database: 'READY',
-        redis: 'NOT_REQUIRED_FOR_PHASE_0_11_DRIVER_FAIR_TREATMENT_FOUNDATION',
+        redis: 'NOT_REQUIRED_FOR_PHASE_0_12_DRIVER_DAILY_OPERATIONS_FOUNDATION',
         verificationDelivery: config.verificationDeliveryMode.toUpperCase(),
         pricing: config.pricingMode.toUpperCase(),
         paymentProvider: config.paymentProviderMode.toUpperCase()
@@ -59,8 +60,8 @@ app.get('/health/ready', async (_request, reply) => {
 
 app.get('/v1/build-info', async () => ({
   product: 'DAZAT Mobility',
-  checkpoint: 'engineering-phase-0.11',
-  implementationStatus: 'DRIVER_FAIR_TREATMENT_CONDUCT_APPEAL_INCENTIVE_OFFBOARDING_FOUNDATION_SOURCE_CREATED_NOT_PRODUCTION_VERIFIED'
+  checkpoint: 'engineering-phase-0.12',
+  implementationStatus: 'DRIVER_DAILY_OPERATIONS_INFORMED_OFFERS_CONNECTIVITY_SUPPLY_SUPPORT_FOUNDATION_SOURCE_CREATED_NOT_PRODUCTION_VERIFIED'
 }));
 
 registerIdentityRoutes(app, database, config, verificationDelivery);
@@ -73,6 +74,7 @@ registerDriverOperationsRoutes(app, database);
 registerFleetOperationsRoutes(app, database);
 registerMaintenanceReliabilityRoutes(app, database);
 registerDriverFairTreatmentRoutes(app, database);
+registerDriverDailyOperationsRoutes(app, database, config);
 
 app.addHook('onClose', async () => {
   await database.end();

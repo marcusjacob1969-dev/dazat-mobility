@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.11**.
+Current checkpoint: **Engineering Phase 0.12**.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 
@@ -27,6 +27,22 @@ Phase 0.10 adds maintenance, defect and vehicle-reliability truth:
 Phase 0.11 adds Driver performance and fair-treatment truth:
 
 `SEPARATE EVIDENCE DIMENSIONS → DRIVER RESPONSE → ASSESSMENT → FINDING → PROPORTIONATE ACTION → INDEPENDENT APPEAL`
+
+Phase 0.12 adds the complete Driver daily-operations truth:
+
+`SECURE SESSION → APPROVED VEHICLE → ELIGIBILITY → SCHEDULED WORK → ONLINE → INFORMED OFFER → PICKUP → RIDECHECK → JOURNEY → EARNINGS REFRESH → NEXT OFFER / BREAK / FINISHING SOON → OFFLINE`
+
+Important Driver daily-operations truth rules:
+
+- BREAK and FINISHING_SOON are normal, non-punitive work intent; OFFLINE stops ordinary Driver-app location collection.
+- Accepted scheduled commitments have protected windows and block conflicting Dispatch offers without blocking the committed Booking itself.
+- A Driver offer must disclose pickup distance, pickup ETA, service/Journey context and an independently calculated Driver-earning estimate before acceptance.
+- The Rider fare is never reused as the Driver earning. Missing route ETA or Finance-approved earning policy leaves acceptance disabled rather than creating a blind offer.
+- Weak-signal reconciliation replaces speculative client state with authoritative availability and Journey versions. Queued critical events require canonical idempotent submission and are never marked executed by reconciliation.
+- Arrival communication uses the chosen Booking pickup, not assumed passenger GPS, and protects direct contact details.
+- Current demand and forecast stay separate, capability-aware and evidence-backed; neither guarantees earnings.
+- Driver Support uses typed cases. High-risk active cases require human escalation, while this source foundation contacts no external provider or emergency service automatically.
+- Voice readout, CarPlay and Android Auto remain explicit unconfigured roadmaps; voice input never bypasses backend validation.
 
 Important Driver fair-treatment truth rules:
 
@@ -109,4 +125,4 @@ The earlier Journey integrity and Safety rules remain enforced:
 - Completion closes Journey, Booking, leg and assignment and returns the Driver to `AVAILABLE` atomically.
 - Completion does not initiate or imply payment.
 
-See `BUILD_STATUS.md`, `docs/architecture/ADR-0011-driver-fair-treatment-truth.md`, and `docs/engineering/phase-0-11-checklist.md` for evidence and limitations.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0012-driver-daily-operations-supply-support-truth.md`, and `docs/engineering/phase-0-12-checklist.md` for evidence and limitations.

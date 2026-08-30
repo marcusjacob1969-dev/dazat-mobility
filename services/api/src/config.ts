@@ -30,6 +30,7 @@ export interface ApiConfig {
   readonly journeyArrivingRadiusMetres: number;
   readonly journeyCompletionRadiusMetres: number;
   readonly paymentProviderMode: 'disabled';
+  readonly driverConnectivityFreshnessSeconds: number;
 }
 
 function parseInteger(env: NodeJS.ProcessEnv, name: string, fallback: number, min: number, max: number): number {
@@ -114,6 +115,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     activeJourneyMaximumPlausibleSpeedMetresPerSecond: parseInteger(env, 'ACTIVE_JOURNEY_MAXIMUM_PLAUSIBLE_SPEED_MPS', 75, 10, 150),
     journeyArrivingRadiusMetres: parseInteger(env, 'JOURNEY_ARRIVING_RADIUS_METRES', 1_000, 100, 5_000),
     journeyCompletionRadiusMetres: parseInteger(env, 'JOURNEY_COMPLETION_RADIUS_METRES', 250, 25, 2_000),
-    paymentProviderMode: 'disabled'
+    paymentProviderMode: 'disabled',
+    driverConnectivityFreshnessSeconds: parseInteger(env, 'DRIVER_CONNECTIVITY_FRESHNESS_SECONDS', 60, 10, 600)
   };
 }
