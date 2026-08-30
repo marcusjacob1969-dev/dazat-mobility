@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.14**.
+Current checkpoint: **Engineering Phase 0.15**.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 
@@ -51,6 +51,26 @@ Important telephone and voice truth rules:
 - Dropped calls preserve confirmed pending state and idempotency; reconnect or callback cannot duplicate a Booking, cancellation or payment.
 - Recordings, transcripts, corrections and interpreter sessions remain separate governed records. Transcripts are not operational authority, and voice biometrics are not enabled.
 - Telephony, Voice Assistant, call-control, recording, transcription, interpreter and secure-payment execution providers remain disabled.
+
+Phase 0.15 adds omnichannel policy, Contact Centre and communications-observability truth:
+
+`AUTHORITATIVE EVENT → VERSIONED ROLE/CHANNEL POLICY → CURRENT-STATE REVALIDATION → DELIVERY / ACKNOWLEDGEMENT → FALLBACK → OWNED FAILURE CASE`
+
+Important omnichannel operations truth rules:
+
+- Every event-to-recipient/channel decision uses a versioned Notification Policy; Communications never invents Booking, Journey, Safety, Finance, Driver or Fleet state.
+- Booker, passenger, payer, guardian, Driver and organisation messages are independently role-scoped from the same authoritative event.
+- Stale assignments, Journey updates and payment messages are suppressed immediately before release.
+- Silent Assistance do-not-call, payment `STATUS_UNKNOWN`, breakdown continuity, school safeguarding wording and marketing consent survive every fallback.
+- Provider acceptance, SENT, DELIVERED, READ and ACKNOWLEDGED remain distinct evidence.
+- A critical unreachable recipient opens an owned Communication Failure Case instead of repeated channel hammering.
+- Contact Cases preserve owner, next action, attention time, temporary contactability, identity/permission state and cross-channel history without replacing canonical cases.
+- P0/P1 cases cannot remain unowned, and personal email/SMS tools are prohibited as operator workarounds.
+- Provider health and failover remain provider/region/purpose scoped; only approved alternates may preserve the original privacy, consent, template and audit rules.
+- RECOVERING revalidates queued work against current state and discards stale items before release.
+- Communications SLO evidence excludes sensitive message content and unrestricted case surveillance.
+- Acceptance scenarios use approved fixtures, cover critical success/failure/fallback/stale/duplicate/order cases and never contact real users.
+- External providers, Contact Centre staff mutations and scenario execution remain disabled.
 
 Important Communications Core truth rules:
 
@@ -158,4 +178,4 @@ The earlier Journey integrity and Safety rules remain enforced:
 - Completion closes Journey, Booking, leg and assignment and returns the Driver to `AVAILABLE` atomically.
 - Completion does not initiate or imply payment.
 
-See `BUILD_STATUS.md`, `docs/architecture/ADR-0014-telephone-voice-human-handoff-truth.md`, and `docs/engineering/phase-0-14-checklist.md` for evidence and limitations.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0015-omnichannel-contact-centre-observability-truth.md`, and `docs/engineering/phase-0-15-checklist.md` for evidence and limitations.

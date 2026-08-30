@@ -14,7 +14,7 @@
 | Safety | SafetyEvent, SafeguardingCase |
 | Operations | OperationalCase, ControlRoomTask |
 | Finance | PaymentIntent, Payment, Refund, FinancialAccount, LedgerTransaction, DriverEarning, Payout, Invoice |
-| Communications | Communication, CommunicationTemplateVersion, CommunicationPreferenceVersion, CommunicationDeliveryPlan, MessageDelivery, CommunicationAcknowledgement, ProtectedConversation, MaskedCallSession, ChannelHealthObservation, CallSession, CallerIdentityAssessment, ContactPlanVersion, VoiceDialogueSession, VoiceFieldCapture, TelephoneBookingSession, CallTransfer, CallbackRequest, SecurePaymentHandoff, CallRecording, CallTranscript, InterpreterSession |
+| Communications | Communication, CommunicationTemplateVersion, CommunicationPreferenceVersion, CommunicationDeliveryPlan, MessageDelivery, CommunicationAcknowledgement, ProtectedConversation, MaskedCallSession, ChannelHealthObservation, CallSession, CallerIdentityAssessment, ContactPlanVersion, VoiceDialogueSession, VoiceFieldCapture, TelephoneBookingSession, CallTransfer, CallbackRequest, SecurePaymentHandoff, CallRecording, CallTranscript, InterpreterSession, NotificationPolicyVersion, DeliveryPolicyVersion, CommunicationRequest, ContactCase, CommunicationFailureCase, CriticalAcknowledgementRequirement, CommunicationSLO, ChannelProviderProfile/Health, ProviderOutageResponsePlan, CommunicationsScenario |
 | Organisation | Organisation, OrganisationAgreement |
 | School | SchoolPassengerProfile, SchoolTransportSeries |
 | Rescue | BreakdownEvent, ContinuityCase, RescueCase |

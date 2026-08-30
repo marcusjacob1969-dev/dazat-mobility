@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.14 — Telephone, Voice Assistant, Caller Identity and Warm Human-Handoff Truth**
+**Engineering Phase 0.15 — Omnichannel Policy, Contact Centre Casework and Communications Observability Truth**
 
 Status: **SOURCE IMPLEMENTED / STATIC AND PURE-DOMAIN GUARDS VERIFIED / PROVIDER, STAFF AND CHARGING MUTATIONS DISABLED / DATABASE, CONCURRENCY AND APP RUNTIME NOT YET VERIFIED**
 
@@ -112,11 +112,26 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Dropped-call pending interaction and idempotency truth that prevents duplicate Booking/payment commands on reconnect or callback.
 - Voice biometrics future-only and prohibited as sole high-risk authority.
 - Public provider-disabled capability read plus authenticated Contact Plan and recipient-owned interaction-history APIs and Rider/Driver/Control Room truth surfaces.
+- Versioned Notification Policy catalogue mapping authoritative event, purpose, class and eligible roles to controlled content, primary/fallback channels, acknowledgement, retry and escalation rules.
+- CommunicationRequest truth that preserves domain-event/aggregate versions, recipient scope, urgency, sensitivity, language/accessibility and deadline without inventing business state.
+- Current-state revalidation and stale suppression before communication creation or outage-recovery release.
+- Hard policy guards for Silent Assistance, PAYMENT_STATUS_UNKNOWN, breakdown continuity, school/safeguarding wording and marketing consent separation.
+- Versioned Delivery Policy and CriticalAcknowledgementRequirement truth with SENT/DELIVERED/READ/ACKNOWLEDGED separation.
+- Owned CommunicationFailureCase escalation for critical unreachable recipients, with repeated same-channel hammering prohibited.
+- Shared ContactCase across telephone/chat/email/in-app that links to but never replaces canonical domain cases.
+- P0/P1 case ownership plus mandatory next action, attention time and receiving owner across transfer.
+- Immutable cross-channel interactions/transfers preserving identity, permission and timeline while prohibiting personal-tool/contact-copy workarounds.
+- Temporary contextual contactability constrained against long-term person/Driver rating use.
+- Channel/provider/region health with explicit PARTIAL_OUTAGE, OUTAGE and RECOVERING states and no provider-acceptance-as-delivery claim.
+- Approved failover plan truth preserving privacy, consent, templates, audit and Silent Assistance; recovery prohibits stale/duplicate replay.
+- Communication SLO observations by channel/region/purpose with sensitive content and unrestricted case surveillance excluded.
+- Provider-disabled scenario catalogue/run/results covering critical primary/fallback/failure/stale/duplicate/out-of-order and accessibility/template cases without real-user contact.
+- Public disabled capability read plus authenticated recipient-owned Contact Cases and assurance status APIs and Rider/Driver/Control Room truth surfaces.
 
 ### Verified in this checkpoint
 
-- All structural verifiers pass from the foundation through Phase 0.14.
-- All 94 executable Phase 0.5–0.14 source-domain tests pass.
+- All structural verifiers pass from the foundation through Phase 0.15.
+- All 112 executable Phase 0.5–0.15 source-domain tests pass.
 - Phase 0.9 supplier, terms, capability, insurance, deposit and assignment-boundary verifier: **PASSED**.
 - Pure-domain tests cover Fleet state, Marketplace publication, ownership-transfer terms, explicit capability, deposit deduction and assignment hard checks.
 - Blueprint §54.2 Fleet Marketplace/agreement/assignment traceability: **recorded**.
@@ -135,10 +150,13 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Phase 0.14 telephone, Voice Assistant, caller-identity, confirmed-dialogue, canonical Booking and warm-handoff boundary verifier: **PASSED**.
 - Pure-domain tests cover caller-ID non-authority, independent step-up, voice-state transitions, critical-field readback, canonical Booking gates, human handoff, secure payment, dropped-call idempotency and governed transcript use.
 - Blueprint §55.2 and OPS-TEL-001 traceability: **recorded**.
+- Phase 0.15 omnichannel policy, delivery assurance, Contact Case, provider health, SLO and scenario boundary verifier: **PASSED**.
+- Pure-domain tests cover authoritative events, role scope, stale suppression, consent, do-not-call, STATUS_UNKNOWN wording, continuity/safeguarding wording, delivery-state separation, failure cases, ownership, failover, recovery, privacy-safe observability and isolated critical scenarios.
+- Blueprint §55.3 Communications Part 3 traceability: **recorded**.
 
 ### Not yet verified / deliberately not claimed
 
-- PostgreSQL/PostGIS migrations 0001–0014 and transaction/concurrency cases have not been executed in this workspace.
+- PostgreSQL/PostGIS migrations 0001–0015 and transaction/concurrency cases have not been executed in this workspace.
 - Fastify, Expo and Vite workspaces have not been compiled with installed workspace dependencies here.
 - Authorised school/hospital/specialist handover recording is not exposed until staff and operating-authority rules are implemented.
 - Production payment provider selection, adapter/webhook/reconciliation execution, refunds and payouts are not implemented.
@@ -158,6 +176,8 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - No communication template approval authority, translation assurance, quiet-hours timezone policy, fallback/retention policy, provider callback verifier or acknowledgement escalation staffing is configured.
 - No telephony, Voice Assistant, contact-centre, recording, transcription, interpreter or PCI IVR provider is selected, integrated or contacted; no call-control or operator mutation is exposed.
 - Operator roles, scripts, queues, staffing, callback service levels, regional recording/transcription rules, emergency guidance, interpreter coverage and critical translations await accountable approval.
+- No production Notification/Delivery Policy catalogue, regional/legal variant, SLO target, Contact Centre permission/staffing model, provider failover plan or isolated scenario runner is approved or configured.
+- Contact Centre mutation, operator follow-up sends, provider retry/failover execution, channel-outage detection and scenario execution remain disabled.
 - No production Driver, vehicle, passenger, location, Safety, pricing, provider credentials or data are present.
 - Source creation is not production readiness, safeguarding approval, licensing approval, insurance cover, payment certification or security certification.
 
@@ -178,3 +198,5 @@ Approving real Driver earning estimates, route-time providers, scheduled-work pr
 Selecting or enabling any push, SMS, email, telephony, masked-call, protected-chat or portal provider and approving production templates, translations, consent/quiet-hours/fallback/retention policies and acknowledgement escalation staffing remains a founder/legal/privacy/security/Operations/Safety/procurement gate. Phase 0.13 plans and audits communication without contacting any provider.
 
 Selecting or enabling telephony, Voice Assistant, contact-centre, recording, transcription, interpreter, voice-biometric or PCI IVR capability—and approving caller-verification policy, scripts, operator permissions, regional recording notices, retention, emergency procedures, accessibility/language assurance and staffing—remains a founder/legal/privacy/security/Operations/Safety/accessibility/procurement gate. Phase 0.14 exposes only provider-disabled capability and recipient-owned read surfaces.
+
+Approving production Notification/Delivery Policies, templates, regional/legal/retention variants, Communications SLOs, Contact Centre roles/queues/staffing, primary/secondary providers, failover authority, bulk-export controls and operational drills remains a founder/legal/privacy/security/Operations/Safety/accessibility/procurement gate. Phase 0.15 exposes only disabled capabilities and recipient-scoped reads; it sends nothing and grants no staff mutation authority.

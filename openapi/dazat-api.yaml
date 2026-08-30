@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.14
-  description: Engineering Phase 0.14 API. Communication intent is separate from delivery and UNKNOWN is not delivery. Telephone and Voice Assistant are provider-disabled input channels into the same canonical Booking, Journey, Safety, Finance, Driver and Communications owners. Caller ID is not authentication, confirmed structured fields outrank transcripts, high-risk or low-confidence work requires human handoff, and no external telephony or Voice Assistant execution is enabled.
+  version: 0.0.15
+  description: Engineering Phase 0.15 API. Communication intent is separate from delivery and UNKNOWN is not delivery. Telephone remains provider-disabled; Caller ID is not authentication, confirmed structured fields outrank transcripts, and no external telephony or Voice Assistant execution is enabled. Every event-to-role/channel decision uses a versioned policy and current authoritative state; critical delivery failure becomes owned operational work. Contact Cases preserve channel history without replacing canonical domain cases, provider acceptance is not delivery, recovery suppresses stale replay, aggregate metrics exclude sensitive content, and all provider execution and Contact Centre staff mutation remain disabled.
 servers:
   - url: http://localhost:3001
 paths:
@@ -897,6 +897,40 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/TelephonyInteractionListProjection' }
         '401': { description: Missing, expired or revoked session. }
+  /v1/communications/operations/capabilities:
+    get:
+      summary: Read the provider-disabled omnichannel operations capability boundary.
+      description: Notification/Delivery Policy, Contact Case continuity, provider health, SLO evidence and isolated scenario truth are modelled, but no provider, staff mutation or real-user scenario execution is enabled.
+      responses:
+        '200':
+          description: Explicit source capabilities and disabled execution boundaries.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommunicationsOperationsCapabilitiesProjection' }
+  /v1/contact-centre/cases:
+    get:
+      summary: Read the authenticated person's Contact Centre cases.
+      description: Cases preserve priority, owner presence, next action, attention time, contactability and canonical links. They never replace Booking, Journey, Safety, Finance or Fleet truth, and personal communication tools are prohibited.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Recipient-owned cross-channel case summaries; no staff mutation is exposed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContactCaseListProjection' }
+        '401': { description: Missing, expired or revoked session. }
+  /v1/communications/operations/status:
+    get:
+      summary: Read recipient-scoped delivery-assurance and aggregate channel-health truth.
+      description: SENT is not delivery, provider acceptance is not delivery, contactability is temporary context, metrics exclude sensitive content, and RECOVERING revalidates current state before queued release.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Aggregate channel health plus this recipient's open critical failures and acknowledgement obligations.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CommunicationsOperationsStatusProjection' }
+        '401': { description: Missing, expired or revoked session. }
 components:
   securitySchemes:
     bearerAuth:
@@ -1639,3 +1673,72 @@ components:
         telephonyProviderConfigured: { type: boolean, const: false }
         voiceAssistantConfigured: { type: boolean, const: false }
         degradedModeExplicit: { type: boolean, const: true }
+    CommunicationsOperationsCapabilitiesProjection:
+      type: object
+      additionalProperties: false
+      required: [notificationPolicyCatalogueModelled, deliveryAssuranceModelled, contactCaseContinuityModelled, providerHealthModelled, serviceLevelObservationModelled, scenarioSimulationModelled, externalProviderExecutionEnabled, contactCentreStaffMutationEnabled, personalToolWorkaroundAllowed, sensitiveContentInAggregateMetrics, queues]
+      properties:
+        notificationPolicyCatalogueModelled: { type: boolean, const: true }
+        deliveryAssuranceModelled: { type: boolean, const: true }
+        contactCaseContinuityModelled: { type: boolean, const: true }
+        providerHealthModelled: { type: boolean, const: true }
+        serviceLevelObservationModelled: { type: boolean, const: true }
+        scenarioSimulationModelled: { type: boolean, const: true }
+        externalProviderExecutionEnabled: { type: boolean, const: false }
+        contactCentreStaffMutationEnabled: { type: boolean, const: false }
+        personalToolWorkaroundAllowed: { type: boolean, const: false }
+        sensitiveContentInAggregateMetrics: { type: boolean, const: false }
+        queues:
+          type: array
+          items: { type: string, enum: [SAFETY, SCHOOL_SAFEGUARDING, ACTIVE_JOURNEY, BREAKDOWN, ACCOUNT_SECURITY, DRIVER, ACCESSIBILITY_ASSISTED, PAYMENT, COMPLIANCE_FLEET, ROUTINE_SUPPORT] }
+    ContactCaseSummaryProjection:
+      type: object
+      additionalProperties: false
+      required: [contactCaseId, status, queue, priority, purpose, currentContactStatus, ownerAssigned, nextAction, attentionAt, channelHistoryPreserved, replacesCanonicalDomainCase, updatedAt]
+      properties:
+        contactCaseId: { type: string, format: uuid }
+        status: { type: string, enum: [OPEN, WAITING_CUSTOMER, WAITING_INTERNAL, TRANSFER_PENDING, RESOLVED, CLOSED] }
+        queue: { type: string, enum: [SAFETY, SCHOOL_SAFEGUARDING, ACTIVE_JOURNEY, BREAKDOWN, ACCOUNT_SECURITY, DRIVER, ACCESSIBILITY_ASSISTED, PAYMENT, COMPLIANCE_FLEET, ROUTINE_SUPPORT] }
+        priority: { type: string, enum: [P0, P1, P2, P3, P4] }
+        purpose: { type: string }
+        currentContactStatus: { type: string, enum: [REACHABLE, DEGRADED, UNREACHABLE, UNKNOWN] }
+        ownerAssigned: { type: boolean }
+        nextAction: { type: string }
+        attentionAt: { type: string, format: date-time }
+        linkedBookingId: { type: string, format: uuid }
+        linkedJourneyId: { type: string, format: uuid }
+        linkedCanonicalCaseType: { type: string }
+        linkedCanonicalCaseId: { type: string, format: uuid }
+        channelHistoryPreserved: { type: boolean, const: true }
+        replacesCanonicalDomainCase: { type: boolean, const: false }
+        updatedAt: { type: string, format: date-time }
+    ContactCaseListProjection:
+      type: object
+      additionalProperties: false
+      required: [cases, contactCentreStaffMutationEnabled, personalToolWorkaroundAllowed]
+      properties:
+        cases: { type: array, items: { $ref: '#/components/schemas/ContactCaseSummaryProjection' } }
+        contactCentreStaffMutationEnabled: { type: boolean, const: false }
+        personalToolWorkaroundAllowed: { type: boolean, const: false }
+    ChannelProviderHealthProjection:
+      type: object
+      additionalProperties: false
+      required: [channel, regionCode, state, providerConfigured, providerAcceptanceTreatedAsDelivery]
+      properties:
+        channel: { type: string, enum: [IN_APP, PUSH, SMS, EMAIL, PROTECTED_CHAT, MASKED_CALL, AUTOMATED_VOICE, OPERATOR_CALL, PORTAL, LANDLINE, TEXT_RELAY, CARER_OR_RECEPTION] }
+        regionCode: { type: string }
+        state: { type: string, enum: [HEALTHY, DEGRADED, PARTIAL_OUTAGE, OUTAGE, RECOVERING, UNKNOWN] }
+        observedAt: { type: string, format: date-time }
+        providerConfigured: { type: boolean, const: false }
+        providerAcceptanceTreatedAsDelivery: { type: boolean, const: false }
+    CommunicationsOperationsStatusProjection:
+      type: object
+      additionalProperties: false
+      required: [channelHealth, openCriticalFailureCaseCount, pendingCriticalAcknowledgementCount, aggregateMetricsExcludeSensitiveContent, recoveryRevalidatesCurrentState, externalProviderExecutionEnabled]
+      properties:
+        channelHealth: { type: array, items: { $ref: '#/components/schemas/ChannelProviderHealthProjection' } }
+        openCriticalFailureCaseCount: { type: integer, minimum: 0 }
+        pendingCriticalAcknowledgementCount: { type: integer, minimum: 0 }
+        aggregateMetricsExcludeSensitiveContent: { type: boolean, const: true }
+        recoveryRevalidatesCurrentState: { type: boolean, const: true }
+        externalProviderExecutionEnabled: { type: boolean, const: false }

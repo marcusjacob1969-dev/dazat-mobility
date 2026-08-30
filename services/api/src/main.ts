@@ -20,6 +20,7 @@ import { registerDriverFairTreatmentRoutes } from './modules/driver-fair-treatme
 import { registerDriverDailyOperationsRoutes } from './modules/driver-daily-operations/routes.js';
 import { registerCommunicationRoutes } from './modules/communications/routes.js';
 import { registerTelephonyVoiceRoutes } from './modules/telephony-voice/routes.js';
+import { registerCommunicationsOperationsRoutes } from './modules/communications-operations/routes.js';
 
 const config = loadConfig();
 const app = Fastify({ logger: { level: config.logLevel } });
@@ -46,13 +47,15 @@ app.get('/health/ready', async (_request, reply) => {
       status: 'READY',
       dependencies: {
         database: 'READY',
-        redis: 'NOT_REQUIRED_FOR_PHASE_0_14_TELEPHONE_VOICE_FOUNDATION',
+        redis: 'NOT_REQUIRED_FOR_PHASE_0_15_COMMUNICATIONS_OPERATIONS_FOUNDATION',
         verificationDelivery: config.verificationDeliveryMode.toUpperCase(),
         pricing: config.pricingMode.toUpperCase(),
         paymentProvider: config.paymentProviderMode.toUpperCase(),
         communicationProvider: config.communicationProviderMode.toUpperCase(),
         telephonyProvider: config.telephonyProviderMode.toUpperCase(),
-        voiceAssistant: config.voiceAssistantMode.toUpperCase()
+        voiceAssistant: config.voiceAssistantMode.toUpperCase(),
+        contactCentreMutation: config.contactCentreMutationMode.toUpperCase(),
+        communicationsScenarioExecution: config.communicationsScenarioMode.toUpperCase()
       }
     });
   } catch {
@@ -65,8 +68,8 @@ app.get('/health/ready', async (_request, reply) => {
 
 app.get('/v1/build-info', async () => ({
   product: 'DAZAT Mobility',
-  checkpoint: 'engineering-phase-0.14',
-  implementationStatus: 'TELEPHONE_CALLER_IDENTITY_VOICE_CONFIRMATION_CANONICAL_BOOKING_HUMAN_HANDOFF_FOUNDATION_SOURCE_CREATED_PROVIDERS_DISABLED_NOT_PRODUCTION_VERIFIED'
+  checkpoint: 'engineering-phase-0.15',
+  implementationStatus: 'OMNICHANNEL_POLICY_DELIVERY_ASSURANCE_CONTACT_CASE_PROVIDER_HEALTH_SLO_SCENARIO_FOUNDATION_SOURCE_CREATED_PROVIDERS_AND_STAFF_MUTATIONS_DISABLED_NOT_PRODUCTION_VERIFIED'
 }));
 
 registerIdentityRoutes(app, database, config, verificationDelivery);
@@ -82,6 +85,7 @@ registerDriverFairTreatmentRoutes(app, database);
 registerDriverDailyOperationsRoutes(app, database, config);
 registerCommunicationRoutes(app, database);
 registerTelephonyVoiceRoutes(app, database);
+registerCommunicationsOperationsRoutes(app, database);
 
 app.addHook('onClose', async () => {
   await database.end();

@@ -109,9 +109,7 @@ if (/app\.(?:post|put|patch|delete)\(/.test(routes)) errors.push('Telephone/voic
 
 const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
 for (const value of [
-  'registerTelephonyVoiceRoutes', 'engineering-phase-0.14',
-  'NOT_REQUIRED_FOR_PHASE_0_14_TELEPHONE_VOICE_FOUNDATION',
-  'telephonyProvider', 'voiceAssistant'
+  'registerTelephonyVoiceRoutes', 'telephonyProvider', 'voiceAssistant'
 ]) if (!main.includes(value)) errors.push(`API bootstrap missing Phase 0.14 value: ${value}`);
 const config = readFileSync(join(root, 'services/api/src/config.ts'), 'utf8');
 for (const value of [
@@ -133,10 +131,12 @@ for (const rel of ['apps/rider/src/telephony-voice-api.ts', 'apps/driver/src/tel
 for (const rel of ['apps/rider/App.tsx', 'apps/driver/App.tsx']) {
   const app = readFileSync(join(root, rel), 'utf8');
   for (const truth of [
-    'ENGINEERING PHASE 0.14', 'Caller ID never proves identity',
+    'Caller ID never proves identity',
     'Refresh telephone and Contact Plan truth',
     'TELEPHONY · VOICE ASSISTANT · RECORDING · TRANSCRIPTION PROVIDERS DISABLED'
   ]) if (!app.includes(truth)) errors.push(`${rel} missing telephone/voice truth surface: ${truth}`);
+  const phase = app.match(/ENGINEERING PHASE 0\.(\d+)/)?.[1];
+  if (!phase || Number(phase) < 14) errors.push(`${rel} checkpoint predates Phase 0.14`);
 }
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
 for (const truth of [
@@ -154,12 +154,14 @@ for (const statement of [
   'no external telephony or Voice Assistant execution is enabled',
   'personal numbers are never exposed'
 ]) if (!api.includes(statement)) errors.push(`OpenAPI telephone/voice truth statement missing: ${statement}`);
-if (!api.includes('version: 0.0.14')) errors.push('OpenAPI is not versioned at 0.0.14');
+const apiVersion = api.match(/\n\s*version:\s*0\.0\.(\d+)/)?.[1];
+if (!apiVersion || Number(apiVersion) < 14) errors.push('OpenAPI version predates Phase 0.14');
 
 let currentVersion = null;
 for (const rel of ['package.json', 'packages/domain/package.json', 'packages/contracts/package.json', 'services/api/package.json', 'apps/driver/package.json', 'apps/rider/package.json', 'apps/control-room/package.json']) {
   const parsed = JSON.parse(readFileSync(join(root, rel), 'utf8'));
-  if (parsed.version !== '0.0.14') errors.push(`${rel} is not versioned at 0.0.14`);
+  const patch = Number(String(parsed.version).split('.')[2]);
+  if (!Number.isInteger(patch) || patch < 14) errors.push(`${rel} version predates Phase 0.14`);
   currentVersion ??= parsed.version;
   if (parsed.version !== currentVersion) errors.push(`${rel} is not aligned to the current checkpoint version`);
 }

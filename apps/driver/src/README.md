@@ -19,3 +19,5 @@ Phase 0.12 adds the complete daily-operations projection, normal BREAK/FINISHING
 Phase 0.13 adds the same authenticated communication inbox/read/acknowledgement client as Rider. Safety, Driver operations, payments, support and marketing stay purpose-separated; critical acknowledgement failure remains an explicit human-escalation condition. External delivery providers are disabled, so queued intent is never shown as delivered.
 
 Phase 0.14 adds provider-disabled telephone capability, Contact Plan and Driver-owned interaction-history clients. Telephone routing cannot bypass Driver/Journey/Safety/Finance authority, caller ID is not identity, active context can follow a warm handoff, dropped calls remain idempotent and raw card details never enter operator/general-voice flows.
+
+Phase 0.15 adds Driver-owned Contact Centre case and communications-assurance reads. Driver, Fleet, compliance, payout and Support facts remain role-scoped to their canonical owners; critical failure becomes owned casework; channel history survives handoff; contactability never becomes a Driver rating; and no provider or staff mutation is enabled.

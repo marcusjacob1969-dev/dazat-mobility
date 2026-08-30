@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, CommunicationInboxProjection, ContactPlanProjection, PaymentStatusProjection, RegistrationContactType, StartRideCheckResult, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection } from '@dazat/contracts';
+import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, CommunicationInboxProjection, CommunicationsOperationsCapabilitiesProjection, CommunicationsOperationsStatusProjection, ContactCaseListProjection, ContactPlanProjection, PaymentStatusProjection, RegistrationContactType, StartRideCheckResult, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection } from '@dazat/contracts';
 import {
   confirmRiderContactVerification,
   startRiderContactVerification,
@@ -14,6 +14,7 @@ import { getBookingJourney, requestJourneyStop, sendRiderSafetySignal, startPass
 import { prepareProviderDisabledPaymentIntent, readPaymentStatus } from './src/finance-api';
 import { readCommunicationInbox } from './src/communications-api';
 import { readContactPlan, readTelephonyCapabilities, readTelephonyInteractions } from './src/telephony-voice-api';
+import { readCommunicationsOperationsCapabilities, readCommunicationsOperationsStatus, readContactCases } from './src/communications-operations-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'BOOK' | 'QUOTE' | 'READY';
 
@@ -70,6 +71,9 @@ export default function RiderApp() {
   const [telephonyCapabilities, setTelephonyCapabilities] = useState<TelephonyServiceCapabilitiesProjection | null>(null);
   const [contactPlan, setContactPlan] = useState<ContactPlanProjection | null>(null);
   const [telephonyInteractions, setTelephonyInteractions] = useState<TelephonyInteractionListProjection | null>(null);
+  const [communicationsOperationsCapabilities, setCommunicationsOperationsCapabilities] = useState<CommunicationsOperationsCapabilitiesProjection | null>(null);
+  const [contactCases, setContactCases] = useState<ContactCaseListProjection | null>(null);
+  const [communicationsOperationsStatus, setCommunicationsOperationsStatus] = useState<CommunicationsOperationsStatusProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -221,11 +225,23 @@ export default function RiderApp() {
     });
   }
 
+  function refreshCommunicationsOperationsTruth() {
+    void run(async () => {
+      const [capabilities, cases, status] = await Promise.all([
+        readCommunicationsOperationsCapabilities(), readContactCases(sessionToken),
+        readCommunicationsOperationsStatus(sessionToken)
+      ]);
+      setCommunicationsOperationsCapabilities(capabilities);
+      setContactCases(cases);
+      setCommunicationsOperationsStatus(status);
+    });
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.14</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.15</Text>
         <Text style={styles.title}>DAZAT Rider journey</Text>
         <Text style={styles.body}>Verified Booking through protected pickup, active Journey visibility, governed changes and persistent Safety controls.</Text>
 
@@ -388,6 +404,19 @@ export default function RiderApp() {
             {telephonyCapabilities ? <Text style={styles.body}>Canonical engines: YES · caller ID authenticates: NO · Voice Assistant configured: NO</Text> : null}
             {contactPlan ? <Text style={styles.body}>Contact Plan: {contactPlan.status} · diagnosis stored: NO · personal contacts exposed: NO</Text> : null}
             {telephonyInteractions ? <Text style={styles.body}>Authoritative telephone interactions: {telephonyInteractions.interactions.length}</Text> : null}
+          </View>
+        ) : null}
+
+        {sessionToken ? (
+          <View style={styles.notice} accessibilityRole="summary">
+            <Text style={styles.noticeTitle}>Critical communication failure becomes owned operational work</Text>
+            <Text style={styles.body}>Every event-to-role/channel decision comes from a versioned policy and current canonical state. Sent is not delivered, delivered is not read, and read is not acknowledged.</Text>
+            <Text style={styles.body}>A Contact Centre case preserves the channel timeline but never replaces Booking, Journey, Safety, Finance or Fleet truth. Provider recovery revalidates queued work so stale updates are not replayed.</Text>
+            <SecondaryButton label="Refresh communications operations truth" onPress={refreshCommunicationsOperationsTruth} />
+            <Text style={styles.devNotice}>PROVIDERS · CONTACT CENTRE MUTATIONS · REAL-USER SCENARIOS DISABLED</Text>
+            {communicationsOperationsCapabilities ? <Text style={styles.body}>Versioned policies: YES · provider execution: NO · staff mutation: NO</Text> : null}
+            {contactCases ? <Text style={styles.body}>Recipient-owned Contact Centre cases: {contactCases.cases.length}</Text> : null}
+            {communicationsOperationsStatus ? <Text style={styles.body}>Critical failures: {communicationsOperationsStatus.openCriticalFailureCaseCount} · pending acknowledgements: {communicationsOperationsStatus.pendingCriticalAcknowledgementCount}</Text> : null}
           </View>
         ) : null}
 

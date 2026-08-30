@@ -34,6 +34,8 @@ export interface ApiConfig {
   readonly communicationProviderMode: 'disabled';
   readonly telephonyProviderMode: 'disabled';
   readonly voiceAssistantMode: 'disabled';
+  readonly contactCentreMutationMode: 'disabled';
+  readonly communicationsScenarioMode: 'disabled';
 }
 
 function parseInteger(env: NodeJS.ProcessEnv, name: string, fallback: number, min: number, max: number): number {
@@ -77,6 +79,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   }
   if (env.VOICE_ASSISTANT_MODE && env.VOICE_ASSISTANT_MODE !== 'disabled') {
     throw new Error('VOICE_ASSISTANT_MODE must remain disabled until voice safety, accessibility and operational controls are approved');
+  }
+  if (env.CONTACT_CENTRE_MUTATION_MODE && env.CONTACT_CENTRE_MUTATION_MODE !== 'disabled') {
+    throw new Error('CONTACT_CENTRE_MUTATION_MODE must remain disabled until staff authority and operational controls are approved');
+  }
+  if (env.COMMUNICATIONS_SCENARIO_MODE && env.COMMUNICATIONS_SCENARIO_MODE !== 'disabled') {
+    throw new Error('COMMUNICATIONS_SCENARIO_MODE must remain disabled until isolated fixtures and acceptance controls are approved');
   }
   let developmentQuoteAmountMinor: number | undefined;
   if (pricingMode === 'development_fixture') {
@@ -131,6 +139,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     driverConnectivityFreshnessSeconds: parseInteger(env, 'DRIVER_CONNECTIVITY_FRESHNESS_SECONDS', 60, 10, 600),
     communicationProviderMode: 'disabled',
     telephonyProviderMode: 'disabled',
-    voiceAssistantMode: 'disabled'
+    voiceAssistantMode: 'disabled',
+    contactCentreMutationMode: 'disabled',
+    communicationsScenarioMode: 'disabled'
   };
 }

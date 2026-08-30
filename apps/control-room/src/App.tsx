@@ -3,7 +3,7 @@ import { dazatTokens } from '@dazat/design-system';
 export function App() {
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.14</p>
+      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.15</p>
       <h1>DAZAT Control Room</h1>
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.
@@ -110,6 +110,18 @@ export function App() {
         </p>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
           Operators and general voice never receive full card details. STATUS_UNKNOWN requires reconciliation, a dropped call cannot duplicate a Booking or payment, transcripts are not operational authority and voice biometrics are not enabled. Telephony, Voice Assistant, recording, transcription and interpreter providers remain disabled.
+        </p>
+      </section>
+      <section aria-label="Omnichannel operations authority boundary" style={{ maxWidth: 720, marginTop: 16, padding: 24, border: `1px solid ${dazatTokens.color.border}`, borderRadius: dazatTokens.radius.card }}>
+        <h2 style={{ marginTop: 0 }}>Critical delivery failure is owned operational work</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Every event-to-role/channel decision uses a versioned Notification Policy and an authoritative domain event. Booker, passenger, payer, guardian, Driver and organisation content stays scoped; Communications cannot invent Booking, Journey, Safety, Finance, Driver or Fleet state.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Contact Cases preserve owner, priority, next action, attention time, contactability and the cross-channel timeline while linking back to canonical cases. P0/P1 work cannot remain unowned, and personal email or SMS tools are never an acceptable workaround.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Provider acceptance is not delivery. SLO metrics exclude sensitive content, contactability is temporary context rather than a personal rating, and outage recovery revalidates current state before releasing queued work. Providers, staff mutations and real-user scenario execution remain disabled.
         </p>
       </section>
     </main>

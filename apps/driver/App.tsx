@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, ArrivalCommunicationPlanProjection, CommunicationInboxProjection, ContactPlanProjection, ConnectivityReconciliationProjection, DriverAppealSubjectType, DriverApplicationProjection, DriverDailyOperationsProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverFairTreatmentProjection, DriverIncentiveProjection, DriverOfferSummary, DriverOperatingEligibilityProjection, DriverSupplyProjection, DriverSupportCaseProjection, DriverSupportCategory, FleetAgreementProjection, FleetMarketplaceOfferProjection, PreShiftCheckProjection, RegistrationContactType, RiderConductCaseProjection, SubmitDriverAppealProjection, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection, VehicleAssignmentValidationProjection, VehicleMaintenanceProjection, VerifiedDriverPerkProjection, VerifyRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, ArrivalCommunicationPlanProjection, CommunicationInboxProjection, CommunicationsOperationsCapabilitiesProjection, CommunicationsOperationsStatusProjection, ContactCaseListProjection, ContactPlanProjection, ConnectivityReconciliationProjection, DriverAppealSubjectType, DriverApplicationProjection, DriverDailyOperationsProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverFairTreatmentProjection, DriverIncentiveProjection, DriverOfferSummary, DriverOperatingEligibilityProjection, DriverSupplyProjection, DriverSupportCaseProjection, DriverSupportCategory, FleetAgreementProjection, FleetMarketplaceOfferProjection, PreShiftCheckProjection, RegistrationContactType, RiderConductCaseProjection, SubmitDriverAppealProjection, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection, VehicleAssignmentValidationProjection, VehicleMaintenanceProjection, VerifiedDriverPerkProjection, VerifyRideCheckResult } from '@dazat/contracts';
 import {
   confirmDriverContactVerification,
   startDriverContactVerification,
@@ -35,6 +35,7 @@ import { listDriverIncentives, readDriverFairTreatment, submitAppeal, submitRide
 import { listSupportCases, openSupportCase, readArrivalPlan, readDriverDailyOperations, readSupplyDemand, reconcileConnectivity } from './src/driver-daily-operations-api';
 import { readCommunicationInbox } from './src/communications-api';
 import { readContactPlan, readTelephonyCapabilities, readTelephonyInteractions } from './src/telephony-voice-api';
+import { readCommunicationsOperationsCapabilities, readCommunicationsOperationsStatus, readContactCases } from './src/communications-operations-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'DRIVER_HOME';
 
@@ -116,6 +117,9 @@ export default function DriverApp() {
   const [telephonyCapabilities, setTelephonyCapabilities] = useState<TelephonyServiceCapabilitiesProjection | null>(null);
   const [contactPlan, setContactPlan] = useState<ContactPlanProjection | null>(null);
   const [telephonyInteractions, setTelephonyInteractions] = useState<TelephonyInteractionListProjection | null>(null);
+  const [communicationsOperationsCapabilities, setCommunicationsOperationsCapabilities] = useState<CommunicationsOperationsCapabilitiesProjection | null>(null);
+  const [contactCases, setContactCases] = useState<ContactCaseListProjection | null>(null);
+  const [communicationsOperationsStatus, setCommunicationsOperationsStatus] = useState<CommunicationsOperationsStatusProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -465,11 +469,23 @@ export default function DriverApp() {
     });
   }
 
+  function refreshCommunicationsOperationsTruth() {
+    void run(async () => {
+      const [capabilities, cases, status] = await Promise.all([
+        readCommunicationsOperationsCapabilities(), readContactCases(sessionToken),
+        readCommunicationsOperationsStatus(sessionToken)
+      ]);
+      setCommunicationsOperationsCapabilities(capabilities);
+      setContactCases(cases);
+      setCommunicationsOperationsStatus(status);
+    });
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.14</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.15</Text>
         <Text style={styles.title}>DAZAT Driver journey</Text>
         <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. The complete Driver day keeps secure session, approved vehicle, eligibility, scheduled work, informed offers, pickup, RideCheck, Journey, earnings, break, finishing-soon and end-shift truth separate. Weak-signal recovery replaces speculative state and never pretends queued Safety commands were already processed.</Text>
 
@@ -775,6 +791,19 @@ export default function DriverApp() {
             {telephonyCapabilities ? <Text style={styles.body}>Canonical engines: YES · caller ID authenticates: NO · Voice Assistant configured: NO</Text> : null}
             {contactPlan ? <Text style={styles.body}>Contact Plan: {contactPlan.status} · diagnosis stored: NO · personal contacts exposed: NO</Text> : null}
             {telephonyInteractions ? <Text style={styles.body}>Authoritative telephone interactions: {telephonyInteractions.interactions.length}</Text> : null}
+          </View>
+        ) : null}
+
+        {sessionToken ? (
+          <View style={styles.notice} accessibilityRole="summary">
+            <Text style={styles.noticeTitle}>Omnichannel casework preserves Driver and service truth</Text>
+            <Text style={styles.body}>Versioned policy governs which Driver, Fleet, compliance, payout and Support facts may be communicated. Communications never calculates earnings, invents restrictions or turns contactability into a long-term Driver rating.</Text>
+            <Text style={styles.body}>Critical delivery failure becomes an owned Contact Centre case. Channel switching preserves identity, permission and interaction history; recovery revalidates canonical state before queued messages can proceed.</Text>
+            <SecondaryButton label="Refresh communications operations truth" onPress={refreshCommunicationsOperationsTruth} />
+            <Text style={styles.devNotice}>PROVIDERS · CONTACT CENTRE MUTATIONS · REAL-USER SCENARIOS DISABLED</Text>
+            {communicationsOperationsCapabilities ? <Text style={styles.body}>Versioned policies: YES · provider execution: NO · staff mutation: NO</Text> : null}
+            {contactCases ? <Text style={styles.body}>Driver-owned Contact Centre cases: {contactCases.cases.length}</Text> : null}
+            {communicationsOperationsStatus ? <Text style={styles.body}>Critical failures: {communicationsOperationsStatus.openCriticalFailureCaseCount} · pending acknowledgements: {communicationsOperationsStatus.pendingCriticalAcknowledgementCount}</Text> : null}
           </View>
         ) : null}
 
