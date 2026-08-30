@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, CommunicationInboxProjection, PaymentStatusProjection, RegistrationContactType, StartRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, CommunicationInboxProjection, ContactPlanProjection, PaymentStatusProjection, RegistrationContactType, StartRideCheckResult, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection } from '@dazat/contracts';
 import {
   confirmRiderContactVerification,
   startRiderContactVerification,
@@ -13,6 +13,7 @@ import { getBookingDispatch, startBookingDispatch } from './src/dispatch-api';
 import { getBookingJourney, requestJourneyStop, sendRiderSafetySignal, startPassengerRideCheck } from './src/journey-api';
 import { prepareProviderDisabledPaymentIntent, readPaymentStatus } from './src/finance-api';
 import { readCommunicationInbox } from './src/communications-api';
+import { readContactPlan, readTelephonyCapabilities, readTelephonyInteractions } from './src/telephony-voice-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'BOOK' | 'QUOTE' | 'READY';
 
@@ -66,6 +67,9 @@ export default function RiderApp() {
   const [journeyNotice, setJourneyNotice] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusProjection | null>(null);
   const [communicationInbox, setCommunicationInbox] = useState<CommunicationInboxProjection | null>(null);
+  const [telephonyCapabilities, setTelephonyCapabilities] = useState<TelephonyServiceCapabilitiesProjection | null>(null);
+  const [contactPlan, setContactPlan] = useState<ContactPlanProjection | null>(null);
+  const [telephonyInteractions, setTelephonyInteractions] = useState<TelephonyInteractionListProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -206,11 +210,22 @@ export default function RiderApp() {
     void run(async () => setCommunicationInbox(await readCommunicationInbox(sessionToken)));
   }
 
+  function refreshTelephoneAccessTruth() {
+    void run(async () => {
+      const [capabilities, plan, interactions] = await Promise.all([
+        readTelephonyCapabilities(), readContactPlan(sessionToken), readTelephonyInteractions(sessionToken)
+      ]);
+      setTelephonyCapabilities(capabilities);
+      setContactPlan(plan);
+      setTelephonyInteractions(interactions);
+    });
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.13</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.14</Text>
         <Text style={styles.title}>DAZAT Rider journey</Text>
         <Text style={styles.body}>Verified Booking through protected pickup, active Journey visibility, governed changes and persistent Safety controls.</Text>
 
@@ -360,6 +375,19 @@ export default function RiderApp() {
                 {communication.priority} {communication.purpose}: {communication.status} · acknowledgement {communication.acknowledgementRequired ? 'required' : 'not required'}
               </Text>
             ))}
+          </View>
+        ) : null}
+
+        {sessionToken ? (
+          <View style={styles.notice} accessibilityRole="summary">
+            <Text style={styles.noticeTitle}>Telephone access uses the same canonical service</Text>
+            <Text style={styles.body}>Caller ID never proves identity. Voice recognition cannot invent pickup, destination, passenger, time, accessibility or fare terms; critical fields require readback and confirmation before the canonical Booking command.</Text>
+            <Text style={styles.body}>Low confidence, Safety, safeguarding, caller distress and high-risk security changes require warm human handoff. Operators and general voice never receive full card details, and STATUS_UNKNOWN never triggers repeat collection.</Text>
+            <SecondaryButton label="Refresh telephone and Contact Plan truth" onPress={refreshTelephoneAccessTruth} />
+            <Text style={styles.devNotice}>TELEPHONY · VOICE ASSISTANT · RECORDING · TRANSCRIPTION PROVIDERS DISABLED</Text>
+            {telephonyCapabilities ? <Text style={styles.body}>Canonical engines: YES · caller ID authenticates: NO · Voice Assistant configured: NO</Text> : null}
+            {contactPlan ? <Text style={styles.body}>Contact Plan: {contactPlan.status} · diagnosis stored: NO · personal contacts exposed: NO</Text> : null}
+            {telephonyInteractions ? <Text style={styles.body}>Authoritative telephone interactions: {telephonyInteractions.interactions.length}</Text> : null}
           </View>
         ) : null}
 

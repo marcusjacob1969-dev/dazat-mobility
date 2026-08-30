@@ -32,6 +32,8 @@ export interface ApiConfig {
   readonly paymentProviderMode: 'disabled';
   readonly driverConnectivityFreshnessSeconds: number;
   readonly communicationProviderMode: 'disabled';
+  readonly telephonyProviderMode: 'disabled';
+  readonly voiceAssistantMode: 'disabled';
 }
 
 function parseInteger(env: NodeJS.ProcessEnv, name: string, fallback: number, min: number, max: number): number {
@@ -69,6 +71,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   }
   if (env.COMMUNICATION_PROVIDER_MODE && env.COMMUNICATION_PROVIDER_MODE !== 'disabled') {
     throw new Error('COMMUNICATION_PROVIDER_MODE must remain disabled until providers and production controls are approved');
+  }
+  if (env.TELEPHONY_PROVIDER_MODE && env.TELEPHONY_PROVIDER_MODE !== 'disabled') {
+    throw new Error('TELEPHONY_PROVIDER_MODE must remain disabled until telephony and operational controls are approved');
+  }
+  if (env.VOICE_ASSISTANT_MODE && env.VOICE_ASSISTANT_MODE !== 'disabled') {
+    throw new Error('VOICE_ASSISTANT_MODE must remain disabled until voice safety, accessibility and operational controls are approved');
   }
   let developmentQuoteAmountMinor: number | undefined;
   if (pricingMode === 'development_fixture') {
@@ -121,6 +129,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     journeyCompletionRadiusMetres: parseInteger(env, 'JOURNEY_COMPLETION_RADIUS_METRES', 250, 25, 2_000),
     paymentProviderMode: 'disabled',
     driverConnectivityFreshnessSeconds: parseInteger(env, 'DRIVER_CONNECTIVITY_FRESHNESS_SECONDS', 60, 10, 600),
-    communicationProviderMode: 'disabled'
+    communicationProviderMode: 'disabled',
+    telephonyProviderMode: 'disabled',
+    voiceAssistantMode: 'disabled'
   };
 }

@@ -15,3 +15,4 @@ export * from './maintenance-reliability.js';
 export * from './driver-fair-treatment.js';
 export * from './driver-daily-operations.js';
 export * from './communications.js';
+export * from './telephony-voice.js';

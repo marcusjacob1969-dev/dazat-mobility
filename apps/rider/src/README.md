@@ -7,3 +7,5 @@ Current source slice continues through active Journey reconciliation, persistent
 Phase 0.7 adds a post-completion, provider-disabled PaymentIntent preparation surface. It explicitly labels that no charge was attempted; captured Payment, refunds and receipts remain unavailable until separately established by Finance truth.
 
 Phase 0.13 adds a shared authenticated communication inbox/read/acknowledgement client. Communication purpose, priority, recipient scope, source version and delivery truth remain authoritative server facts. Marketing consent is separate, stale notifications are suppressed, and no provider is represented as having sent or delivered a message.
+
+Phase 0.14 adds provider-disabled telephone capability, Contact Plan and recipient-owned interaction-history clients. Telephone/voice is modelled as an input route into the same canonical engines, caller ID never authenticates, critical booking fields need confirmed readback, high-risk/low-confidence work needs warm human handoff, and no app surface claims a call or voice assistant is available.

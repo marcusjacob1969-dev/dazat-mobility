@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.13 — Unified Communications, Delivery, Acknowledgement and Protected Contact Truth**
+**Engineering Phase 0.14 — Telephone, Voice Assistant, Caller Identity and Warm Human-Handoff Truth**
 
 Status: **SOURCE IMPLEMENTED / STATIC AND PURE-DOMAIN GUARDS VERIFIED / PROVIDER, STAFF AND CHARGING MUTATIONS DISABLED / DATABASE, CONCURRENCY AND APP RUNTIME NOT YET VERIFIED**
 
@@ -98,11 +98,25 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Explicit channel-health projection and degraded/unknown provider truth.
 - External push, SMS, email, telephony and chat execution hard-disabled; no queued intent is presented as delivery.
 - Authenticated recipient inbox, detail and acknowledgement APIs plus Rider, Driver and Control Room boundary surfaces.
+- First-class CallSession truth with direction, purpose, queue, language, quality and links to canonical Booking/Journey/case context without exposing raw personal numbers.
+- CallerIdentityAssessment separates claimed role, requested action, verification methods, confidence, step-up and scoped restrictions; caller ID alone never authenticates.
+- High-risk account recovery, payout, stored-payment and sensitive-profile actions fail closed without independent step-up and may remain prohibited over voice.
+- Versioned Contact Plan truth for no-smartphone/basic-mobile/landline, safe channels, intermediary scope, language and operational accessibility-communication needs without diagnoses.
+- Guarded Voice Dialogue state from intent through required fields, readback, confirmation, canonical backend command and result, with no backend-rule bypass.
+- Immutable field-level source/confidence/readback/confirmation evidence for critical telephone Booking facts.
+- Telephone Booking orchestration constrained to the canonical Booking Engine, complete role separation, explicit pickup, quote terms, capacity and all critical-field confirmations.
+- Warm, purpose/risk-routed human handoff carrying caller claim, verification, confirmed fields, authoritative context and unresolved question.
+- Provider-disabled secure payment handoff that excludes raw card data, forbids blind repeat collection after STATUS_UNKNOWN and grants no identity authority.
+- Safety telephone signal truth that requires human assessment and proves neither danger nor misconduct; no emergency-service replacement claim.
+- Separate governed recording, transcript, correction and interpreter records; transcripts do not replace structured facts and unrelated model training is disabled.
+- Dropped-call pending interaction and idempotency truth that prevents duplicate Booking/payment commands on reconnect or callback.
+- Voice biometrics future-only and prohibited as sole high-risk authority.
+- Public provider-disabled capability read plus authenticated Contact Plan and recipient-owned interaction-history APIs and Rider/Driver/Control Room truth surfaces.
 
 ### Verified in this checkpoint
 
-- All structural verifiers pass from the foundation through Phase 0.13.
-- All 79 executable Phase 0.5–0.13 source-domain tests pass.
+- All structural verifiers pass from the foundation through Phase 0.14.
+- All 94 executable Phase 0.5–0.14 source-domain tests pass.
 - Phase 0.9 supplier, terms, capability, insurance, deposit and assignment-boundary verifier: **PASSED**.
 - Pure-domain tests cover Fleet state, Marketplace publication, ownership-transfer terms, explicit capability, deposit deduction and assignment hard checks.
 - Blueprint §54.2 Fleet Marketplace/agreement/assignment traceability: **recorded**.
@@ -118,10 +132,13 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Phase 0.13 unified communications, delivery, acknowledgement, stale-suppression and protected-contact boundary verifier: **PASSED**.
 - Pure-domain tests cover marketing separation, verified routing, critical fallback, Silent Assistance, stale/expired suppression, acknowledgement escalation, protected contact and secure templates.
 - Blueprint §55.1 and Communications P1 traceability: **recorded**.
+- Phase 0.14 telephone, Voice Assistant, caller-identity, confirmed-dialogue, canonical Booking and warm-handoff boundary verifier: **PASSED**.
+- Pure-domain tests cover caller-ID non-authority, independent step-up, voice-state transitions, critical-field readback, canonical Booking gates, human handoff, secure payment, dropped-call idempotency and governed transcript use.
+- Blueprint §55.2 and OPS-TEL-001 traceability: **recorded**.
 
 ### Not yet verified / deliberately not claimed
 
-- PostgreSQL/PostGIS migrations 0001–0013 and transaction/concurrency cases have not been executed in this workspace.
+- PostgreSQL/PostGIS migrations 0001–0014 and transaction/concurrency cases have not been executed in this workspace.
 - Fastify, Expo and Vite workspaces have not been compiled with installed workspace dependencies here.
 - Authorised school/hospital/specialist handover recording is not exposed until staff and operating-authority rules are implemented.
 - Production payment provider selection, adapter/webhook/reconciliation execution, refunds and payouts are not implemented.
@@ -139,7 +156,8 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Route-time and Driver-earning estimate policy, scheduled-work protection windows, demand/forecast evidence producers, homeward matching and Driver Support staffing/service levels await accountable approval and production-like validation.
 - No voice, CarPlay, Android Auto, navigation, communications, support or emergency-service provider is selected, integrated or contacted.
 - No communication template approval authority, translation assurance, quiet-hours timezone policy, fallback/retention policy, provider callback verifier or acknowledgement escalation staffing is configured.
-- Telephone/Voice Assistant booking, caller identity assessment, call routing and human handoff remain the next §55.2 package.
+- No telephony, Voice Assistant, contact-centre, recording, transcription, interpreter or PCI IVR provider is selected, integrated or contacted; no call-control or operator mutation is exposed.
+- Operator roles, scripts, queues, staffing, callback service levels, regional recording/transcription rules, emergency guidance, interpreter coverage and critical translations await accountable approval.
 - No production Driver, vehicle, passenger, location, Safety, pricing, provider credentials or data are present.
 - Source creation is not production readiness, safeguarding approval, licensing approval, insurance cover, payment certification or security certification.
 
@@ -158,3 +176,5 @@ Approving real Driver performance policy, complaint evidence access, restriction
 Approving real Driver earning estimates, route-time providers, scheduled-work protection policy, supply/forecast publication, homeward matching, arrival communications, Driver Support staffing and any external Safety/support escalation remains a founder/legal/Finance/Operations/Safety/privacy/procurement gate. Phase 0.12 fails closed on incomplete offers, publishes no demand signal without evidence, and contacts no external service.
 
 Selecting or enabling any push, SMS, email, telephony, masked-call, protected-chat or portal provider and approving production templates, translations, consent/quiet-hours/fallback/retention policies and acknowledgement escalation staffing remains a founder/legal/privacy/security/Operations/Safety/procurement gate. Phase 0.13 plans and audits communication without contacting any provider.
+
+Selecting or enabling telephony, Voice Assistant, contact-centre, recording, transcription, interpreter, voice-biometric or PCI IVR capability—and approving caller-verification policy, scripts, operator permissions, regional recording notices, retention, emergency procedures, accessibility/language assurance and staffing—remains a founder/legal/privacy/security/Operations/Safety/accessibility/procurement gate. Phase 0.14 exposes only provider-disabled capability and recipient-owned read surfaces.

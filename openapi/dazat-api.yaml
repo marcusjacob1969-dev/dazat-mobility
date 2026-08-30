@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.13
-  description: Engineering Phase 0.13 API. Server/domain owners remain authoritative for identity, Booking, Dispatch, Journey, Safety, Finance, Driver/Fleet truth and the unified Communications Core. Communication intent is separate from delivery; stale source versions are suppressed, marketing stays consent-separated, UNKNOWN is not delivery and all external communication providers remain disabled.
+  version: 0.0.14
+  description: Engineering Phase 0.14 API. Communication intent is separate from delivery and UNKNOWN is not delivery. Telephone and Voice Assistant are provider-disabled input channels into the same canonical Booking, Journey, Safety, Finance, Driver and Communications owners. Caller ID is not authentication, confirmed structured fields outrank transcripts, high-risk or low-confidence work requires human handoff, and no external telephony or Voice Assistant execution is enabled.
 servers:
   - url: http://localhost:3001
 paths:
@@ -863,6 +863,40 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/CommunicationAcknowledgementProjection' }
         '409': { description: Communication is not acknowledgeable or an idempotency identifier was reused. }
+  /v1/telephony/capabilities:
+    get:
+      summary: Read the provider-disabled telephone and Voice Assistant capability boundary.
+      description: Telephone uses the canonical service engines, but no telephony, Voice Assistant, call-control, recording, transcription, interpreter or secure-payment provider is configured.
+      responses:
+        '200':
+          description: Explicitly disabled provider capabilities and supported human-handoff queues.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TelephonyServiceCapabilitiesProjection' }
+  /v1/contact-plan:
+    get:
+      summary: Read the authenticated person's current Contact Plan.
+      description: Stores safe channels, permitted intermediary scope, language and operational accessibility communication needs without diagnoses or personal-contact exposure.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Current versioned Contact Plan or an explicit NOT_CONFIGURED projection.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContactPlanProjection' }
+        '401': { description: Missing, expired or revoked session. }
+  /v1/telephony/interactions:
+    get:
+      summary: Read the authenticated person's telephone interaction history.
+      description: Caller ID never authenticates, personal numbers are never exposed, and warm-handoff or dropped-call pending truth remains explicit.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Recipient-owned CallSession summaries; provider execution remains disabled.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TelephonyInteractionListProjection' }
+        '401': { description: Missing, expired or revoked session. }
 components:
   securitySchemes:
     bearerAuth:
@@ -1527,3 +1561,81 @@ components:
         status: { type: string, const: ACKNOWLEDGED }
         acknowledgedAt: { type: string, format: date-time }
         repeatedAcknowledgement: { type: boolean }
+    TelephonyServiceCapabilitiesProjection:
+      type: object
+      additionalProperties: false
+      required: [telephoneUsesCanonicalEngines, telephoneProviderConfigured, voiceAssistantConfigured, operatorConsoleMutationConfigured, securePaymentHandoffConfigured, recordingConfigured, transcriptionConfigured, interpreterRoutingConfigured, voiceBiometricsConfigured, callerIdAuthenticates, generalVoiceCapturesFullCardDetails, statusUnknownBlindRetryAllowed, humanHandoffQueues]
+      properties:
+        telephoneUsesCanonicalEngines: { type: boolean, const: true }
+        telephoneProviderConfigured: { type: boolean, const: false }
+        voiceAssistantConfigured: { type: boolean, const: false }
+        operatorConsoleMutationConfigured: { type: boolean, const: false }
+        securePaymentHandoffConfigured: { type: boolean, const: false }
+        recordingConfigured: { type: boolean, const: false }
+        transcriptionConfigured: { type: boolean, const: false }
+        interpreterRoutingConfigured: { type: boolean, const: false }
+        voiceBiometricsConfigured: { type: boolean, const: false }
+        callerIdAuthenticates: { type: boolean, const: false }
+        generalVoiceCapturesFullCardDetails: { type: boolean, const: false }
+        statusUnknownBlindRetryAllowed: { type: boolean, const: false }
+        humanHandoffQueues:
+          type: array
+          items: { type: string, enum: [SAFETY, SCHOOL_SAFEGUARDING, ACTIVE_JOURNEY, BREAKDOWN, TELEPHONE_BOOKING, ACCESSIBILITY_ASSISTED, DRIVER, PAYMENT, ACCOUNT_SECURITY, ROUTINE_SUPPORT] }
+    ContactPlanProjection:
+      type: object
+      additionalProperties: false
+      required: [status, safeChannels, permittedIntermediaryRoles, permittedActions, accessibilityCommunicationNeeds, diagnosisStored, personalContactDetailsExposed]
+      properties:
+        status: { type: string, enum: [CONFIGURED, NOT_CONFIGURED] }
+        version: { type: integer, minimum: 1 }
+        safeChannels: { type: array, items: { type: string } }
+        arrivalMethod: { type: string }
+        permittedIntermediaryRoles: { type: array, items: { type: string } }
+        permittedActions:
+          type: array
+          items: { type: string, enum: [CREATE_BOOKING, READ_BOOKING_STATUS, CHANGE_BOOKING, CANCEL_BOOKING, REQUEST_SUPPORT, REPORT_SAFETY, ACCOUNT_RECOVERY, CHANGE_PAYOUT, CHANGE_STORED_PAYMENT, READ_SENSITIVE_PROFILE] }
+        language: { type: string }
+        accessibilityCommunicationNeeds: { type: array, items: { type: string } }
+        diagnosisStored: { type: boolean, const: false }
+        personalContactDetailsExposed: { type: boolean, const: false }
+    CallerIdentityAssessmentProjection:
+      type: object
+      additionalProperties: false
+      required: [assessmentId, claimedRole, confidence, outcome, restrictions, callerIdTreatedAsIdentityProof, assessedAt]
+      properties:
+        assessmentId: { type: string, format: uuid }
+        claimedRole: { type: string, enum: [BOOKER, PASSENGER, PAYER, GUARDIAN, CARER, SCHOOL_CONTACT, BUSINESS_CONTACT, DRIVER, RESCUE_PROVIDER, UNKNOWN] }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        outcome: { type: string, enum: [VERIFIED_SCOPED, CLARIFICATION_REQUIRED, HUMAN_HANDOFF_REQUIRED, HIGH_RISK_VOICE_PROHIBITED] }
+        restrictions: { type: array, items: { type: string } }
+        callerIdTreatedAsIdentityProof: { type: boolean, const: false }
+        assessedAt: { type: string, format: date-time }
+    CallSessionSummaryProjection:
+      type: object
+      additionalProperties: false
+      required: [callSessionId, direction, status, purpose, callQuality, warmHandoffContextPresent, pendingInteractionPreserved, personalNumberExposed, startedAt]
+      properties:
+        callSessionId: { type: string, format: uuid }
+        direction: { type: string, enum: [INBOUND, OUTBOUND] }
+        status: { type: string, enum: [STARTED, IDENTITY_ASSESSMENT, VOICE_DIALOGUE, HUMAN_QUEUE, CONNECTED_TO_OPERATOR, ENDED, DROPPED, FAILED] }
+        purpose: { type: string }
+        queue: { type: string, enum: [SAFETY, SCHOOL_SAFEGUARDING, ACTIVE_JOURNEY, BREAKDOWN, TELEPHONE_BOOKING, ACCESSIBILITY_ASSISTED, DRIVER, PAYMENT, ACCOUNT_SECURITY, ROUTINE_SUPPORT] }
+        language: { type: string }
+        callQuality: { type: string, enum: [GOOD, DEGRADED, UNSTABLE, LOST, UNKNOWN] }
+        linkedBookingId: { type: string, format: uuid }
+        linkedCaseId: { type: string, format: uuid }
+        latestCallerAssessment: { $ref: '#/components/schemas/CallerIdentityAssessmentProjection' }
+        warmHandoffContextPresent: { type: boolean }
+        pendingInteractionPreserved: { type: boolean }
+        personalNumberExposed: { type: boolean, const: false }
+        startedAt: { type: string, format: date-time }
+        endedAt: { type: string, format: date-time }
+    TelephonyInteractionListProjection:
+      type: object
+      additionalProperties: false
+      required: [interactions, telephonyProviderConfigured, voiceAssistantConfigured, degradedModeExplicit]
+      properties:
+        interactions: { type: array, items: { $ref: '#/components/schemas/CallSessionSummaryProjection' } }
+        telephonyProviderConfigured: { type: boolean, const: false }
+        voiceAssistantConfigured: { type: boolean, const: false }
+        degradedModeExplicit: { type: boolean, const: true }

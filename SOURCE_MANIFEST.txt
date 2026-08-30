@@ -27,6 +27,7 @@
 ./apps/driver/src/identity-api.ts
 ./apps/driver/src/journey-api.ts
 ./apps/driver/src/maintenance-reliability-api.ts
+./apps/driver/src/telephony-voice-api.ts
 ./apps/driver/tsconfig.json
 ./apps/rider/App.tsx
 ./apps/rider/app.json
@@ -38,6 +39,7 @@
 ./apps/rider/src/finance-api.ts
 ./apps/rider/src/identity-api.ts
 ./apps/rider/src/journey-api.ts
+./apps/rider/src/telephony-voice-api.ts
 ./apps/rider/tsconfig.json
 ./compose.yaml
 ./database/README.md
@@ -54,6 +56,7 @@
 ./database/migrations/0011_driver_fair_treatment_foundation.sql
 ./database/migrations/0012_driver_daily_operations_supply_support_foundation.sql
 ./database/migrations/0013_unified_communications_core_foundation.sql
+./database/migrations/0014_telephone_voice_handoff_foundation.sql
 ./database/seeds/README.md
 ./docs/architecture/ADR-0001-production-foundation.md
 ./docs/architecture/ADR-0002-identity-account-foundation.md
@@ -68,11 +71,13 @@
 ./docs/architecture/ADR-0011-driver-fair-treatment-truth.md
 ./docs/architecture/ADR-0012-driver-daily-operations-supply-support-truth.md
 ./docs/architecture/ADR-0013-unified-communications-core-truth.md
+./docs/architecture/ADR-0014-telephone-voice-human-handoff-truth.md
 ./docs/architecture/domain-ownership.md
 ./docs/engineering/phase-0-10-checklist.md
 ./docs/engineering/phase-0-11-checklist.md
 ./docs/engineering/phase-0-12-checklist.md
 ./docs/engineering/phase-0-13-checklist.md
+./docs/engineering/phase-0-14-checklist.md
 ./docs/engineering/phase-0-2-checklist.md
 ./docs/engineering/phase-0-3-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
@@ -88,6 +93,7 @@
 ./docs/traceability/phase-0-11-requirements.md
 ./docs/traceability/phase-0-12-requirements.md
 ./docs/traceability/phase-0-13-requirements.md
+./docs/traceability/phase-0-14-requirements.md
 ./docs/traceability/phase-0-3-requirements.md
 ./docs/traceability/phase-0-4-requirements.md
 ./docs/traceability/phase-0-5-requirements.md
@@ -111,6 +117,7 @@
 ./packages/contracts/src/journey.ts
 ./packages/contracts/src/live-journey.ts
 ./packages/contracts/src/maintenance-reliability.ts
+./packages/contracts/src/telephony-voice.ts
 ./packages/contracts/tsconfig.json
 ./packages/design-system/package.json
 ./packages/design-system/src/index.ts
@@ -135,12 +142,14 @@
 ./packages/domain/src/maintenance-reliability.ts
 ./packages/domain/src/money.ts
 ./packages/domain/src/pricing.ts
+./packages/domain/src/telephony-voice.ts
 ./packages/domain/tsconfig.json
 ./scripts/verify-foundation.mjs
 ./scripts/verify-phase-0-10.mjs
 ./scripts/verify-phase-0-11.mjs
 ./scripts/verify-phase-0-12.mjs
 ./scripts/verify-phase-0-13.mjs
+./scripts/verify-phase-0-14.mjs
 ./scripts/verify-phase-0-2.mjs
 ./scripts/verify-phase-0-3.mjs
 ./scripts/verify-phase-0-4.mjs
@@ -183,6 +192,8 @@
 ./services/api/src/modules/maintenance-reliability/routes.ts
 ./services/api/src/modules/safety/routes.ts
 ./services/api/src/modules/safety/safety-service.ts
+./services/api/src/modules/telephony-voice/routes.ts
+./services/api/src/modules/telephony-voice/telephony-voice-service.ts
 ./services/api/src/security/secret-utils.ts
 ./services/api/tsconfig.json
 ./services/workers/package.json
@@ -203,4 +214,5 @@
 ./tests/domain/maintenance-reliability-source.test.mjs
 ./tests/domain/money.test.mjs
 ./tests/domain/pricing.test.mjs
+./tests/domain/telephony-voice-source.test.mjs
 ./tsconfig.base.json

@@ -1,6 +1,6 @@
 {
   "name": "dazat-mobility",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "private": true,
   "description": "DAZAT Mobility production engineering monorepo",
   "engines": {
@@ -15,7 +15,7 @@
     "verify:foundation": "node scripts/verify-foundation.mjs",
     "build:core": "tsc -p packages/domain/tsconfig.json && tsc -p packages/contracts/tsconfig.json && tsc -p packages/design-system/tsconfig.json",
     "test:domain": "npm run build:core && node --test tests/domain/*.test.mjs",
-    "check": "npm run verify:foundation && npm run verify:phase-0-2 && npm run verify:phase-0-3 && npm run verify:phase-0-4 && npm run verify:phase-0-5 && npm run verify:phase-0-6 && npm run verify:phase-0-7 && npm run verify:phase-0-8 && npm run verify:phase-0-9 && npm run verify:phase-0-10 && npm run verify:phase-0-11 && npm run verify:phase-0-12 && npm run verify:phase-0-13 && npm run test:phase-0-5-domain && npm run test:phase-0-6-domain && npm run test:phase-0-7-domain && npm run test:phase-0-8-domain && npm run test:phase-0-9-domain && npm run test:phase-0-10-domain && npm run test:phase-0-11-domain && npm run test:phase-0-12-domain && npm run test:phase-0-13-domain && npm run test:domain",
+    "check": "npm run verify:foundation && npm run verify:phase-0-2 && npm run verify:phase-0-3 && npm run verify:phase-0-4 && npm run verify:phase-0-5 && npm run verify:phase-0-6 && npm run verify:phase-0-7 && npm run verify:phase-0-8 && npm run verify:phase-0-9 && npm run verify:phase-0-10 && npm run verify:phase-0-11 && npm run verify:phase-0-12 && npm run verify:phase-0-13 && npm run verify:phase-0-14 && npm run test:phase-0-5-domain && npm run test:phase-0-6-domain && npm run test:phase-0-7-domain && npm run test:phase-0-8-domain && npm run test:phase-0-9-domain && npm run test:phase-0-10-domain && npm run test:phase-0-11-domain && npm run test:phase-0-12-domain && npm run test:phase-0-13-domain && npm run test:phase-0-14-domain && npm run test:domain",
     "verify:phase-0-2": "node scripts/verify-phase-0-2.mjs",
     "verify:phase-0-3": "node scripts/verify-phase-0-3.mjs",
     "verify:phase-0-4": "node scripts/verify-phase-0-4.mjs",
@@ -36,6 +36,8 @@
     "verify:phase-0-12": "node scripts/verify-phase-0-12.mjs",
     "test:phase-0-12-domain": "node --experimental-strip-types --test tests/domain/driver-daily-operations-source.test.mjs",
     "verify:phase-0-13": "node scripts/verify-phase-0-13.mjs",
-    "test:phase-0-13-domain": "node --experimental-strip-types --test tests/domain/communications-source.test.mjs"
+    "test:phase-0-13-domain": "node --experimental-strip-types --test tests/domain/communications-source.test.mjs",
+    "verify:phase-0-14": "node scripts/verify-phase-0-14.mjs",
+    "test:phase-0-14-domain": "node --experimental-strip-types --test tests/domain/telephony-voice-source.test.mjs"
   }
 }

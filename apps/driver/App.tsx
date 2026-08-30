@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, ArrivalCommunicationPlanProjection, CommunicationInboxProjection, ConnectivityReconciliationProjection, DriverAppealSubjectType, DriverApplicationProjection, DriverDailyOperationsProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverFairTreatmentProjection, DriverIncentiveProjection, DriverOfferSummary, DriverOperatingEligibilityProjection, DriverSupplyProjection, DriverSupportCaseProjection, DriverSupportCategory, FleetAgreementProjection, FleetMarketplaceOfferProjection, PreShiftCheckProjection, RegistrationContactType, RiderConductCaseProjection, SubmitDriverAppealProjection, VehicleAssignmentValidationProjection, VehicleMaintenanceProjection, VerifiedDriverPerkProjection, VerifyRideCheckResult } from '@dazat/contracts';
+import type { ActiveJourneyProjection, ArrivalCommunicationPlanProjection, CommunicationInboxProjection, ContactPlanProjection, ConnectivityReconciliationProjection, DriverAppealSubjectType, DriverApplicationProjection, DriverDailyOperationsProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverFairTreatmentProjection, DriverIncentiveProjection, DriverOfferSummary, DriverOperatingEligibilityProjection, DriverSupplyProjection, DriverSupportCaseProjection, DriverSupportCategory, FleetAgreementProjection, FleetMarketplaceOfferProjection, PreShiftCheckProjection, RegistrationContactType, RiderConductCaseProjection, SubmitDriverAppealProjection, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection, VehicleAssignmentValidationProjection, VehicleMaintenanceProjection, VerifiedDriverPerkProjection, VerifyRideCheckResult } from '@dazat/contracts';
 import {
   confirmDriverContactVerification,
   startDriverContactVerification,
@@ -34,6 +34,7 @@ import { listVerifiedDriverPerks, readVehicleMaintenance, submitPreShiftCheck } 
 import { listDriverIncentives, readDriverFairTreatment, submitAppeal, submitRiderConductCase, terminateUnsafeJourney } from './src/driver-fair-treatment-api';
 import { listSupportCases, openSupportCase, readArrivalPlan, readDriverDailyOperations, readSupplyDemand, reconcileConnectivity } from './src/driver-daily-operations-api';
 import { readCommunicationInbox } from './src/communications-api';
+import { readContactPlan, readTelephonyCapabilities, readTelephonyInteractions } from './src/telephony-voice-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'DRIVER_HOME';
 
@@ -112,6 +113,9 @@ export default function DriverApp() {
   const [supportSummary, setSupportSummary] = useState('');
   const [arrivalPlan, setArrivalPlan] = useState<ArrivalCommunicationPlanProjection | null>(null);
   const [communicationInbox, setCommunicationInbox] = useState<CommunicationInboxProjection | null>(null);
+  const [telephonyCapabilities, setTelephonyCapabilities] = useState<TelephonyServiceCapabilitiesProjection | null>(null);
+  const [contactPlan, setContactPlan] = useState<ContactPlanProjection | null>(null);
+  const [telephonyInteractions, setTelephonyInteractions] = useState<TelephonyInteractionListProjection | null>(null);
 
   async function run(action: () => Promise<void>) {
     setBusy(true);
@@ -450,11 +454,22 @@ export default function DriverApp() {
     void run(async () => setCommunicationInbox(await readCommunicationInbox(sessionToken)));
   }
 
+  function refreshTelephoneAccessTruth() {
+    void run(async () => {
+      const [capabilities, plan, interactions] = await Promise.all([
+        readTelephonyCapabilities(), readContactPlan(sessionToken), readTelephonyInteractions(sessionToken)
+      ]);
+      setTelephonyCapabilities(capabilities);
+      setContactPlan(plan);
+      setTelephonyInteractions(interactions);
+    });
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.13</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.14</Text>
         <Text style={styles.title}>DAZAT Driver journey</Text>
         <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. The complete Driver day keeps secure session, approved vehicle, eligibility, scheduled work, informed offers, pickup, RideCheck, Journey, earnings, break, finishing-soon and end-shift truth separate. Weak-signal recovery replaces speculative state and never pretends queued Safety commands were already processed.</Text>
 
@@ -747,6 +762,19 @@ export default function DriverApp() {
                 {communication.priority} {communication.purpose}: {communication.status} · acknowledgement {communication.acknowledgementRequired ? 'required' : 'not required'}
               </Text>
             ))}
+          </View>
+        ) : null}
+
+        {sessionToken ? (
+          <View style={styles.notice} accessibilityRole="summary">
+            <Text style={styles.noticeTitle}>Telephone and voice never bypass Driver authority</Text>
+            <Text style={styles.body}>Caller ID never proves identity. Voice and operators use the same Driver, Journey, Safety, payment and Support commands; active-Journey context can follow a warm handoff, but no caller can bypass scoped authority.</Text>
+            <Text style={styles.body}>Low confidence, Safety, safeguarding, distress and high-risk security/payment changes require a person. General voice never captures full card details, and a dropped call cannot duplicate a Booking or payment.</Text>
+            <SecondaryButton label="Refresh telephone and Contact Plan truth" onPress={refreshTelephoneAccessTruth} />
+            <Text style={styles.devNotice}>TELEPHONY · VOICE ASSISTANT · RECORDING · TRANSCRIPTION PROVIDERS DISABLED</Text>
+            {telephonyCapabilities ? <Text style={styles.body}>Canonical engines: YES · caller ID authenticates: NO · Voice Assistant configured: NO</Text> : null}
+            {contactPlan ? <Text style={styles.body}>Contact Plan: {contactPlan.status} · diagnosis stored: NO · personal contacts exposed: NO</Text> : null}
+            {telephonyInteractions ? <Text style={styles.body}>Authoritative telephone interactions: {telephonyInteractions.interactions.length}</Text> : null}
           </View>
         ) : null}
 

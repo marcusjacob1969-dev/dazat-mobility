@@ -95,7 +95,7 @@ for (const gate of ["'VIEW_PROFILE'", 'IDEMPOTENCY_KEY_REQUIRED', 'row.recipient
 }
 
 const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
-for (const value of ['registerCommunicationRoutes', 'engineering-phase-0.13', 'NOT_REQUIRED_FOR_PHASE_0_13_COMMUNICATIONS_CORE_FOUNDATION', 'communicationProvider']) {
+for (const value of ['registerCommunicationRoutes', 'communicationProvider']) {
   if (!main.includes(value)) errors.push(`API bootstrap missing Phase 0.13 value: ${value}`);
 }
 const config = readFileSync(join(root, 'services/api/src/config.ts'), 'utf8');
@@ -116,9 +116,11 @@ for (const rel of ['apps/rider/src/communications-api.ts', 'apps/driver/src/comm
 for (const rel of ['apps/rider/App.tsx', 'apps/driver/App.tsx']) {
   const app = readFileSync(join(root, rel), 'utf8');
   for (const truth of [
-    'ENGINEERING PHASE 0.13', 'Communication inbox — intent is not delivery',
+    'Communication inbox — intent is not delivery',
     'UNKNOWN never means delivered', 'EXTERNAL PUSH · SMS · EMAIL · TELEPHONY · CHAT PROVIDERS DISABLED'
   ]) if (!app.includes(truth)) errors.push(`${rel} missing Communications truth surface: ${truth}`);
+  const phase = app.match(/ENGINEERING PHASE 0\.(\d+)/)?.[1];
+  if (!phase || Number(phase) < 13) errors.push(`${rel} checkpoint predates Phase 0.13`);
 }
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
 for (const truth of [
@@ -135,21 +137,26 @@ for (const statement of [
   'Communication intent is separate from delivery', 'UNKNOWN is not delivery',
   'Personal contact details are never exposed', 'no external provider execution is enabled'
 ]) if (!api.includes(statement)) errors.push(`OpenAPI Communications truth statement missing: ${statement}`);
-if (!api.includes('version: 0.0.13')) errors.push('OpenAPI is not versioned at 0.0.13');
+const apiVersion = api.match(/\n\s*version:\s*0\.0\.(\d+)/)?.[1];
+if (!apiVersion || Number(apiVersion) < 13) errors.push('OpenAPI version predates Phase 0.13');
 
+let currentVersion = null;
 for (const rel of ['package.json', 'packages/domain/package.json', 'packages/contracts/package.json', 'services/api/package.json', 'apps/driver/package.json', 'apps/rider/package.json', 'apps/control-room/package.json']) {
   const parsed = JSON.parse(readFileSync(join(root, rel), 'utf8'));
-  if (parsed.version !== '0.0.13') errors.push(`${rel} is not versioned at 0.0.13`);
+  const patch = Number(String(parsed.version).split('.')[2]);
+  if (!Number.isInteger(patch) || patch < 13) errors.push(`${rel} version predates Phase 0.13`);
+  currentVersion ??= parsed.version;
+  if (parsed.version !== currentVersion) errors.push(`${rel} is not aligned to the current checkpoint version`);
 }
 const contractsPackage = JSON.parse(readFileSync(join(root, 'packages/contracts/package.json'), 'utf8'));
-if (contractsPackage.dependencies['@dazat/domain'] !== '0.0.13') errors.push('Contracts domain dependency is not aligned to Phase 0.13');
+if (contractsPackage.dependencies['@dazat/domain'] !== currentVersion) errors.push('Contracts domain dependency is not aligned to the current checkpoint');
 const apiPackage = JSON.parse(readFileSync(join(root, 'services/api/package.json'), 'utf8'));
-if (apiPackage.dependencies['@dazat/domain'] !== '0.0.13' || apiPackage.dependencies['@dazat/contracts'] !== '0.0.13') {
-  errors.push('API internal dependencies are not aligned to Phase 0.13');
+if (apiPackage.dependencies['@dazat/domain'] !== currentVersion || apiPackage.dependencies['@dazat/contracts'] !== currentVersion) {
+  errors.push('API internal dependencies are not aligned to the current checkpoint');
 }
 for (const rel of ['apps/driver/package.json', 'apps/rider/package.json']) {
   const parsed = JSON.parse(readFileSync(join(root, rel), 'utf8'));
-  if (parsed.dependencies['@dazat/contracts'] !== '0.0.13') errors.push(`${rel} contract dependency is not aligned to Phase 0.13`);
+  if (parsed.dependencies['@dazat/contracts'] !== currentVersion) errors.push(`${rel} contract dependency is not aligned to the current checkpoint`);
 }
 
 if (errors.length) {

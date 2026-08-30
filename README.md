@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.13**.
+Current checkpoint: **Engineering Phase 0.14**.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 
@@ -35,6 +35,22 @@ Phase 0.12 adds the complete Driver daily-operations truth:
 Phase 0.13 adds the unified Communications Core truth:
 
 `PURPOSED COMMUNICATION → SCOPED RECIPIENT → VERSIONED TEMPLATE → SAFE ROUTE PLAN → SOURCE REVALIDATION → DELIVERY OBSERVATION → ACKNOWLEDGEMENT / HUMAN ESCALATION`
+
+Phase 0.14 adds provider-disabled telephone, Voice Assistant and warm-handoff truth:
+
+`CALL SESSION → SCOPED CALLER ASSESSMENT → STRUCTURED FIELD CAPTURE → READBACK → CONFIRMATION → CANONICAL BACKEND COMMAND / WARM HUMAN HANDOFF`
+
+Important telephone and voice truth rules:
+
+- Telephone is a channel into the same Booking, Pricing, Dispatch, Journey, Finance, Safety and Support owners, not a second reduced-function transport system.
+- Caller ID and voice characteristics are routing/evidence hints, never identity authority. High-risk account, payout, payment-method and profile actions require independent step-up or remain prohibited over voice.
+- Contact Plans preserve safe no-smartphone, basic-mobile, landline, intermediary, language and accessibility-communication needs without diagnoses or unrestricted third-party access.
+- Pickup, destination, date/time, passenger, accessibility requirements and final price require structured confidence, explicit readback and confirmation before any canonical Booking command.
+- Low confidence, repeated recognition failure, Safety, safeguarding, suspected takeover, caller distress and specialist needs require a warm, purpose-routed human handoff with confirmed context preserved.
+- Operators and general voice never receive full card details. Payment `STATUS_UNKNOWN` requires reconciliation and never blind repeat collection.
+- Dropped calls preserve confirmed pending state and idempotency; reconnect or callback cannot duplicate a Booking, cancellation or payment.
+- Recordings, transcripts, corrections and interpreter sessions remain separate governed records. Transcripts are not operational authority, and voice biometrics are not enabled.
+- Telephony, Voice Assistant, call-control, recording, transcription, interpreter and secure-payment execution providers remain disabled.
 
 Important Communications Core truth rules:
 
@@ -142,4 +158,4 @@ The earlier Journey integrity and Safety rules remain enforced:
 - Completion closes Journey, Booking, leg and assignment and returns the Driver to `AVAILABLE` atomically.
 - Completion does not initiate or imply payment.
 
-See `BUILD_STATUS.md`, `docs/architecture/ADR-0013-unified-communications-core-truth.md`, and `docs/engineering/phase-0-13-checklist.md` for evidence and limitations.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0014-telephone-voice-human-handoff-truth.md`, and `docs/engineering/phase-0-14-checklist.md` for evidence and limitations.
