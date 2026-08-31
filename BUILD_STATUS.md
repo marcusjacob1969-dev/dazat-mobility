@@ -239,6 +239,7 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Phase 0.21 guarded PostgreSQL migration-chain runner, disposable-target controls and source verifier: **PASSED**.
 - The runner is ready for CI/local execution with a freshly provisioned `dazat_migration_verify_*` PostgreSQL/PostGIS database; it is not runtime evidence until executed there.
 - Phase 0.22 pull-request and `master` CI workflow provisions disposable PostGIS and invokes the guarded migration chain: **CONFIGURED / NOT_EXECUTED**.
+- The workspace dependency graph is now locked; CI also runs the full compile/source-check command from that lockfile: **CONFIGURED / NOT_EXECUTED**.
 
 ### Not yet verified / deliberately not claimed
 

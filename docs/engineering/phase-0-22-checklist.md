@@ -7,6 +7,7 @@
 - [x] Install only the PostgreSQL client required by the runner; no application/provider dependencies are needed for this check.
 - [x] Run source guard tests before executing migrations.
 - [x] Execute the complete 0001–0020 chain in CI when the workflow runs.
+- [x] Lock the workspace dependency graph and compile/test it in a separate CI job.
 
 ## Deliberately not claimed
 

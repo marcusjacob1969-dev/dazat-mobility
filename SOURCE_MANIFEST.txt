@@ -141,6 +141,7 @@
 ./docs/traceability/phase-0-8-requirements.md
 ./docs/traceability/phase-0-9-requirements.md
 ./openapi/dazat-api.yaml
+./package-lock.json
 ./package.json
 ./packages/contracts/package.json
 ./packages/contracts/src/booking.ts
@@ -209,6 +210,7 @@
 ./scripts/verify-phase-0-2.mjs
 ./scripts/verify-phase-0-20.mjs
 ./scripts/verify-phase-0-21.mjs
+./scripts/verify-phase-0-22.mjs
 ./scripts/verify-phase-0-3.mjs
 ./scripts/verify-phase-0-4.mjs
 ./scripts/verify-phase-0-5.mjs
@@ -290,6 +292,7 @@
 ./tests/domain/money.test.mjs
 ./tests/domain/organisation-commercial-operations-source.test.mjs
 ./tests/domain/organisation-operations-source.test.mjs
+./tests/domain/postgres-migration-ci-source.test.mjs
 ./tests/domain/postgres-migration-runner-source.test.mjs
 ./tests/domain/pricing.test.mjs
 ./tests/domain/telephony-voice-source.test.mjs
