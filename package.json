@@ -55,6 +55,7 @@
     "verify:phase-0-22": "node scripts/verify-phase-0-22.mjs",
     "test:phase-0-21-domain": "node --test tests/domain/postgres-migration-runner-source.test.mjs",
     "test:phase-0-22-domain": "node --test tests/domain/postgres-migration-ci-source.test.mjs",
-    "verify:migrations:postgres": "node scripts/verify-postgres-migrations.mjs"
+    "verify:migrations:postgres": "node scripts/verify-postgres-migrations.mjs",
+    "audit:security": "npm audit --audit-level=high"
   }
 }

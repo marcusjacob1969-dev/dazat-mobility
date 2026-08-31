@@ -111,6 +111,7 @@
 ./docs/engineering/phase-0-21-checklist.md
 ./docs/engineering/phase-0-22-checklist.md
 ./docs/engineering/phase-0-23-checklist.md
+./docs/engineering/phase-0-24-dependency-security.md
 ./docs/engineering/phase-0-3-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
 ./docs/engineering/phase-0-5-checklist.md

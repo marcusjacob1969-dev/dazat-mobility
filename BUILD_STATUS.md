@@ -241,6 +241,7 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Phase 0.22 pull-request and `master` CI workflow provisions disposable PostGIS and invokes the guarded migration chain: **CONFIGURED / NOT_EXECUTED**.
 - The workspace dependency graph is now locked; CI also runs the full compile/source-check command from that lockfile: **CONFIGURED / NOT_EXECUTED**.
 - Phase 0.23 installed the locked dependency graph, fixed eleven strict API compilation defects, compiled every workspace and passed all 297 domain tests locally: **PASSED**.
+- Phase 0.24 dependency audit found zero high/critical and ten moderate Expo/native build-tool findings. CI now blocks high/critical findings; the unsafe suggested Expo 46 major downgrade was not applied: **REVIEWED / CONTROLLED**.
 
 ### Not yet verified / deliberately not claimed
 

@@ -21,6 +21,7 @@ test('CI validates runner source before executing all migrations', () => {
 test('CI installs locked dependencies before compiling the workspace', () => {
   assert.match(workflow, /workspace-check:/);
   assert.match(workflow, /npm ci --ignore-scripts/);
+  assert.match(workflow, /npm run audit:security/);
   assert.match(workflow, /npm run build --workspaces --if-present/);
   assert.match(workflow, /npm run check/);
 });
