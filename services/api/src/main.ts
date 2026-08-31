@@ -23,6 +23,7 @@ import { registerTelephonyVoiceRoutes } from './modules/telephony-voice/routes.j
 import { registerCommunicationsOperationsRoutes } from './modules/communications-operations/routes.js';
 import { registerCommunicationsClosureRoutes } from './modules/communications-closure/routes.js';
 import { registerOrganisationOperationsRoutes } from './modules/organisation-operations/routes.js';
+import { registerInstitutionalTransportRoutes } from './modules/institutional-transport/routes.js';
 
 const config = loadConfig();
 const app = Fastify({ logger: { level: config.logLevel } });
@@ -49,7 +50,7 @@ app.get('/health/ready', async (_request, reply) => {
       status: 'READY',
       dependencies: {
         database: 'READY',
-        redis: 'NOT_REQUIRED_FOR_PHASE_0_17_ORGANISATION_OPERATIONS_FOUNDATION',
+        redis: 'NOT_REQUIRED_FOR_PHASE_0_18_INSTITUTIONAL_TRANSPORT_FOUNDATION',
         verificationDelivery: config.verificationDeliveryMode.toUpperCase(),
         pricing: config.pricingMode.toUpperCase(),
         paymentProvider: config.paymentProviderMode.toUpperCase(),
@@ -60,7 +61,8 @@ app.get('/health/ready', async (_request, reply) => {
         communicationsScenarioExecution: config.communicationsScenarioMode.toUpperCase(),
         communicationsClosureExecution: config.communicationsClosureMode.toUpperCase(),
         organisationMutation: config.organisationMutationMode.toUpperCase(),
-        organisationIntegration: config.organisationIntegrationMode.toUpperCase()
+        organisationIntegration: config.organisationIntegrationMode.toUpperCase(),
+        institutionalTransportMutation: config.institutionalTransportMutationMode.toUpperCase()
       }
     });
   } catch {
@@ -73,8 +75,8 @@ app.get('/health/ready', async (_request, reply) => {
 
 app.get('/v1/build-info', async () => ({
   product: 'DAZAT Mobility',
-  checkpoint: 'engineering-phase-0.17',
-  implementationStatus: 'ORGANISATION_IDENTITY_TENANCY_ROLES_BOOKING_AUTHORITY_APPROVALS_INTEGRATIONS_EXPORTS_OFFBOARDING_SOURCE_CREATED_READ_ONLY_PROJECTIONS_ONLY_MUTATIONS_AND_INTEGRATIONS_DISABLED_NOT_PRODUCTION_VERIFIED'
+  checkpoint: 'engineering-phase-0.18',
+  implementationStatus: 'INSTITUTIONAL_PASSENGER_ROSTER_FUNDING_AUTHORITY_RECURRING_CANONICAL_BOOKINGS_SCHEDULING_BULK_READINESS_EXCEPTION_SOURCE_CREATED_READ_ONLY_PROJECTIONS_ONLY_MUTATIONS_DISABLED_NOT_PRODUCTION_VERIFIED'
 }));
 
 registerIdentityRoutes(app, database, config, verificationDelivery);
@@ -93,6 +95,7 @@ registerTelephonyVoiceRoutes(app, database);
 registerCommunicationsOperationsRoutes(app, database);
 registerCommunicationsClosureRoutes(app, database);
 registerOrganisationOperationsRoutes(app, database);
+registerInstitutionalTransportRoutes(app, database);
 
 app.addHook('onClose', async () => {
   await database.end();

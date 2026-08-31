@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.17**.
+Current checkpoint: **Engineering Phase 0.18**.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 
@@ -110,6 +110,27 @@ Important Organisation Operations Part 1 truth rules:
 - Exports are role/purpose/time scoped and minimised. Offboarding revokes authority without deleting lawful passenger identity or history.
 - Organisation staff mutations, portal database editing, exports and external integrations remain disabled.
 
+Phase 0.18 adds institutional passenger, recurring transport, readiness and bulk truth:
+
+`ROSTER RELATIONSHIP → BOOKING + FUNDING AUTHORITY → VERSIONED TEMPLATE/SERIES → INDEPENDENT CANONICAL BOOKING OCCURRENCES → SCHEDULE/DISPATCH/JOURNEY`
+
+Important Organisation Operations Part 2 truth rules:
+
+- Passenger identity remains independent of every organisation roster. Tenant-local pupil, employee, patient or case references never expose another organisation relationship.
+- Booking authority and funding authority are evaluated independently. Missing organisation funding opens an exception and never silently becomes passenger personal liability.
+- Service eligibility uses structured transport requirements rather than diagnoses and rechecks at Booking creation, Dispatch and reassignment.
+- Accessibility, school safeguarding, handover and Communications requirements survive recurrence, amendments, reassignment and breakdown.
+- A BookingTemplate or BookingSeries is not a Booking, does not reserve a Driver and creates no Finance liability.
+- Every generated occurrence has its own canonical Booking plus template, agreement, policy and funding provenance.
+- Recurrence uses structured rules, versioned school/term calendars and a controlled generation horizon.
+- One-occurrence, this-and-future and whole-series changes are explicit; completed Bookings and active Journeys cannot be edited underneath.
+- Familiar Driver continuity is only a ranking preference after current Driver, vehicle, licence, training, accessibility and safeguarding checks.
+- Capability-aware capacity and full schedule conflict checks prevent institutional double-booking.
+- Hospital/care PASSENGER_NOT_READY is not automatically no-show, and pickup windows do not claim guaranteed instant collection.
+- Bulk passenger/Booking batches require dry run, row outcomes, tenant-safe duplicate detection and idempotent commit.
+- Active-Journey passenger relabelling is prohibited; cancellation charges remain Finance policy.
+- Institutional transport commands, bulk execution and external integrations remain disabled.
+
 Important Communications Core truth rules:
 
 - Booking, Journey, Safety, school safeguarding, payment, account-security, Driver, Support, business and marketing communications use one governed purpose-aware core.
@@ -216,4 +237,4 @@ The earlier Journey integrity and Safety rules remain enforced:
 - Completion closes Journey, Booking, leg and assignment and returns the Driver to `AVAILABLE` atomically.
 - Completion does not initiate or imply payment.
 
-See `BUILD_STATUS.md`, `docs/architecture/ADR-0017-organisation-identity-tenancy-authority.md`, and `docs/engineering/phase-0-17-checklist.md` for evidence and limitations.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0018-institutional-passenger-recurring-transport.md`, and `docs/engineering/phase-0-18-checklist.md` for evidence and limitations.

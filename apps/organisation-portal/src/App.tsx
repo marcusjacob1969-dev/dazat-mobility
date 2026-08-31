@@ -12,7 +12,7 @@ const panel = {
 export function App() {
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.17 · READ-ONLY FOUNDATION</p>
+      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.18 · READ-ONLY FOUNDATION</p>
       <h1>DAZAT Organisation Portal</h1>
       <p style={{ maxWidth: 760, lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
         This shell presents only organisations where the authenticated person has a current active membership. The backend enforces organisation, site, cost-centre, purpose and permission scope; a client-supplied organisation identifier never grants access.
@@ -45,6 +45,26 @@ export function App() {
         </p>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
           Finance remains the ledger owner. A cost centre is allocation and reporting context, not a balance, invoice, payment or refund record. Offboarding revokes organisation authority while preserving lawful passenger identity, Booking, Journey, Safety and finance history.
+        </p>
+      </section>
+
+      <section aria-label="Institutional transport boundary" style={panel}>
+        <h2 style={{ marginTop: 0 }}>Every recurring occurrence is its own canonical Booking</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Passenger rosters, funding authorisations, service eligibility, templates, series, calendars and bulk files only prepare or constrain transport. A template does not reserve a Driver, create Finance liability or become an active Journey. Every generated occurrence keeps its own Booking state, template/agreement/policy provenance and audit history.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          The same passenger may have separate, invisible relationships with several organisations. Local pupil, employee, hospital or authority references never become a cross-tenant identity key. Roster removal revokes future authority without deleting the passenger or unrelated organisation relationships.
+        </p>
+      </section>
+
+      <section aria-label="Scheduling and bulk safety" style={panel}>
+        <h2 style={{ marginTop: 0 }}>Readiness, recurrence and bulk work stay explicit</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          School calendars preserve closure, eligibility, accessibility and handover rules. Familiar Driver continuity is only a preference after current Driver, vehicle and safeguarding checks. Hospital or care PASSENGER_NOT_READY is not automatically a no-show, and pickup windows never claim guaranteed instant collection.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Bulk imports require a dry run, row-level outcomes, tenant-safe duplicate detection and idempotent commit. Passenger substitution, cancellation and active-Journey changes return to canonical Booking/Journey rules. Institutional mutations and external execution remain disabled.
         </p>
       </section>
     </main>

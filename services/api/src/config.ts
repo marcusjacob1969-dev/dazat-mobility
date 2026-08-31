@@ -39,6 +39,7 @@ export interface ApiConfig {
   readonly communicationsClosureMode: 'disabled';
   readonly organisationMutationMode: 'disabled';
   readonly organisationIntegrationMode: 'disabled';
+  readonly institutionalTransportMutationMode: 'disabled';
 }
 
 function parseInteger(env: NodeJS.ProcessEnv, name: string, fallback: number, min: number, max: number): number {
@@ -98,6 +99,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   if (env.ORGANISATION_INTEGRATION_MODE && env.ORGANISATION_INTEGRATION_MODE !== 'disabled') {
     throw new Error('ORGANISATION_INTEGRATION_MODE must remain disabled until tenant-scoped credentials, signing and operational controls are approved');
   }
+  if (env.INSTITUTIONAL_TRANSPORT_MUTATION_MODE && env.INSTITUTIONAL_TRANSPORT_MUTATION_MODE !== 'disabled') {
+    throw new Error('INSTITUTIONAL_TRANSPORT_MUTATION_MODE must remain disabled until passenger, recurring, bulk and exception operational controls are approved');
+  }
   let developmentQuoteAmountMinor: number | undefined;
   if (pricingMode === 'development_fixture') {
     const raw = env.DEVELOPMENT_QUOTE_AMOUNT_MINOR;
@@ -156,6 +160,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     communicationsScenarioMode: 'disabled',
     communicationsClosureMode: 'disabled',
     organisationMutationMode: 'disabled',
-    organisationIntegrationMode: 'disabled'
+    organisationIntegrationMode: 'disabled',
+    institutionalTransportMutationMode: 'disabled'
   };
 }

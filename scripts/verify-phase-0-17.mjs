@@ -147,19 +147,21 @@ for (const value of ['ORGANISATION_MUTATION_MODE=disabled', 'ORGANISATION_INTEGR
   if (!environment.includes(value)) errors.push(`Environment missing disabled Phase 0.17 truth: ${value}`);
 }
 const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
-for (const value of [
-  'registerOrganisationOperationsRoutes', 'engineering-phase-0.17',
-  'NOT_REQUIRED_FOR_PHASE_0_17_ORGANISATION_OPERATIONS_FOUNDATION',
-  'organisationMutation', 'organisationIntegration'
-]) if (!main.includes(value)) errors.push(`API bootstrap missing Phase 0.17 value: ${value}`);
+for (const value of ['registerOrganisationOperationsRoutes', 'organisationMutation', 'organisationIntegration']) {
+  if (!main.includes(value)) errors.push(`API bootstrap missing Phase 0.17 value: ${value}`);
+}
+const mainPhase = main.match(/checkpoint:\s*'engineering-phase-0\.(\d+)'/)?.[1];
+if (!mainPhase || Number(mainPhase) < 17) errors.push('API bootstrap checkpoint predates Phase 0.17');
 
 const portal = readFileSync(join(root, 'apps/organisation-portal/src/App.tsx'), 'utf8');
 for (const truth of [
-  'ENGINEERING PHASE 0.17', 'backend enforces organisation, site, cost-centre, purpose and permission scope',
+  'backend enforces organisation, site, cost-centre, purpose and permission scope',
   'does not own the passenger', 'There is no universal organisation admin',
   'Portal editing and integrations are disabled', 'never a direct database editor',
   'Offboarding revokes organisation authority'
 ]) if (!portal.includes(truth)) errors.push(`Organisation Portal boundary missing: ${truth}`);
+const portalPhase = portal.match(/ENGINEERING PHASE 0\.(\d+)/)?.[1];
+if (!portalPhase || Number(portalPhase) < 17) errors.push('Organisation Portal checkpoint predates Phase 0.17');
 const portalClient = readFileSync(join(root, 'apps/organisation-portal/src/organisation-api.ts'), 'utf8');
 for (const truth of ['readOrganisationCapabilities', 'readActorOrganisations', 'readActorOrganisationContext', 'Authorization: `Bearer']) {
   if (!portalClient.includes(truth)) errors.push(`Organisation Portal client truth missing: ${truth}`);
@@ -183,7 +185,8 @@ for (const statement of [
   'organisationStaffMutationsEnabled', 'externalIntegrationExecutionEnabled',
   'ORG-TEN-001', 'OrganisationCreated.v1'
 ]) if (!api.includes(statement)) errors.push(`OpenAPI Organisation truth statement missing: ${statement}`);
-if (!api.includes('version: 0.0.17')) errors.push('OpenAPI is not versioned at 0.0.17');
+const apiVersion = api.match(/\n\s*version:\s*0\.0\.(\d+)/)?.[1];
+if (!apiVersion || Number(apiVersion) < 17) errors.push('OpenAPI version predates Phase 0.17');
 
 let currentVersion = null;
 for (const rel of [
@@ -191,7 +194,8 @@ for (const rel of [
   'apps/driver/package.json', 'apps/rider/package.json', 'apps/control-room/package.json', 'apps/organisation-portal/package.json'
 ]) {
   const parsed = JSON.parse(readFileSync(join(root, rel), 'utf8'));
-  if (parsed.version !== '0.0.17') errors.push(`${rel} is not versioned at 0.0.17`);
+  const patch = Number(String(parsed.version).split('.')[2]);
+  if (!Number.isInteger(patch) || patch < 17) errors.push(`${rel} version predates Phase 0.17`);
   currentVersion ??= parsed.version;
   if (parsed.version !== currentVersion) errors.push(`${rel} is not aligned to the current checkpoint version`);
 }

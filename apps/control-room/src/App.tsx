@@ -3,7 +3,7 @@ import { dazatTokens } from '@dazat/design-system';
 export function App() {
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.17</p>
+      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.18</p>
       <h1>DAZAT Control Room</h1>
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.
@@ -149,6 +149,18 @@ export function App() {
         </p>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
           Organisation mutations, external API execution, webhook delivery, export execution and direct database editing remain disabled. Offboarding revokes organisation authority without deleting lawful passenger, Booking, Journey, Safety or Finance history.
+        </p>
+      </section>
+      <section aria-label="Institutional transport boundary" style={{ maxWidth: 720, marginTop: 16, padding: 24, border: `1px solid ${dazatTokens.color.border}`, borderRadius: dazatTokens.radius.card }}>
+        <h2 style={{ marginTop: 0 }}>Institutional preparation never replaces Booking or Journey truth</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Rosters, funding authority, recurring templates, calendars, readiness and bulk batches constrain canonical transport. Every occurrence is a separate Booking; templates reserve no Driver and create no Finance liability. Active Journeys cannot be changed by editing a series or relabelling its passenger.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Control Room cannot use familiarity to bypass school Driver/vehicle eligibility, downgrade WAV or safeguarding requirements, treat PASSENGER_NOT_READY as an automatic no-show, or let a malformed bulk row create an ambiguous partial result. Breakdown continuity preserves the original Booking/Journey and passenger requirements.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Institutional exceptions remain owned work with priority, next action and outcome. Routine organisation support never absorbs Safety or School command authority, and all institutional mutation execution remains disabled.
         </p>
       </section>
     </main>

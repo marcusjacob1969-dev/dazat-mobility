@@ -19,3 +19,4 @@ export * from './telephony-voice.js';
 export * from './communications-operations.js';
 export * from './communications-closure.js';
 export * from './organisation-operations.js';
+export * from './institutional-transport.js';

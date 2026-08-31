@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.17
-  description: Engineering Phase 0.17 API. Communication intent is separate from delivery and UNKNOWN is not delivery. Telephone remains provider-disabled; Caller ID is not authentication, confirmed structured fields outrank transcripts, and no external telephony or Voice Assistant execution is enabled. Communications transports authoritative domain truth and never invents it. Canonical requests require immutable versioned events, idempotency, role permission, approved payload variables, state revalidation and versioned policy. Priority grants no additional data access, provider acceptance is not delivery, stale and duplicate work is suppressed, and Shield degradation pauses risky changes without stranding essential journey or safety truth. The complete acceptance and launch-gate catalogues are modelled, but external providers, closure commands, staff mutations and real-user scenarios remain disabled. Organisation accounts are a governed booking, funding, administration and reporting layer, not a second Booking engine and not an owner of passenger identity. The backend enforces active membership plus organisation, site, cost-centre, role, purpose and permission scope. Booker, passenger and payer remain distinct; accessibility, Safety and safeguarding cannot be downgraded by organisation policy; cost centres are not Finance ledger truth. Only public capability and authenticated actor-owned organisation reads are exposed. Organisation staff mutations, portal database editing, export execution, API credential use and external webhook/integration execution remain disabled.
+  version: 0.0.18
+  description: Engineering Phase 0.18 API. Communication intent is separate from delivery and UNKNOWN is not delivery. Telephone remains provider-disabled; Caller ID is not authentication, confirmed structured fields outrank transcripts, and no external telephony or Voice Assistant execution is enabled. Communications transports authoritative domain truth and never invents it. Canonical requests require immutable versioned events, idempotency, role permission, approved payload variables, state revalidation and versioned policy. Priority grants no additional data access, provider acceptance is not delivery, stale and duplicate work is suppressed, and Shield degradation pauses risky changes without stranding essential journey or safety truth. The complete acceptance and launch-gate catalogues are modelled, but external providers, closure commands, staff mutations and real-user scenarios remain disabled. Organisation accounts are a governed booking, funding, administration and reporting layer, not a second Booking engine and not an owner of passenger identity. The backend enforces active membership plus organisation, site, cost-centre, role, purpose and permission scope. Booker, passenger and payer remain distinct; accessibility, Safety and safeguarding cannot be downgraded by organisation policy; cost centres are not Finance ledger truth. Institutional rosters, funding, templates, series, calendars, readiness and bulk batches only prepare or constrain transport. Every actual occurrence is its own canonical Booking with versioned provenance. Passenger identity remains independent across tenant relationships, PASSENGER_NOT_READY is not automatically no-show, and familiar Driver preference never overrides current eligibility. Only public capability and authenticated actor-owned reads are exposed. Organisation and institutional mutations, portal database editing, export execution, API credential use and external integration execution remain disabled.
 servers:
   - url: http://localhost:3001
 paths:
@@ -1010,6 +1010,32 @@ paths:
         '400': { description: Organisation identifier is not a valid UUID. }
         '401': { description: Missing, expired or revoked session. }
         '404': { description: No active actor-owned membership exists for this organisation. }
+  /v1/institutional-transport/capabilities:
+    get:
+      summary: Read the Organisation Operations Part 2 capability boundary.
+      description: Catalogues passenger relationships, independent booking/funding authority, recurring canonical Booking occurrences, scheduling, readiness, bulk processing and exception truth while all mutations remain disabled.
+      responses:
+        '200':
+          description: Institutional transport catalogues and explicit disabled-execution truth.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InstitutionalTransportCapabilitiesProjection' }
+  /v1/organisations/{organisationId}/institutional-transport:
+    get:
+      summary: Read one actor-owned institutional transport context.
+      description: Requires a current ACTIVE membership for the authenticated person and requested organisation. Returns tenant-scoped counts and at most fifty owned open exceptions; no passenger diagnosis, other-tenant relationship or mutation authority is exposed.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganisationId'
+      responses:
+        '200':
+          description: Read-only tenant-scoped institutional transport context.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InstitutionalTransportContextProjection' }
+        '400': { description: Organisation identifier is not a valid UUID. }
+        '401': { description: Missing, expired or revoked session. }
+        '404': { description: No active actor-owned membership exists for this organisation. }
 components:
   securitySchemes:
     bearerAuth:
@@ -2004,3 +2030,78 @@ components:
             clientSuppliedOrganisationIdGrantsAccess: { type: boolean, const: false }
             portalMutationEnabled: { type: boolean, const: false }
             integrationExecutionEnabled: { type: boolean, const: false }
+    InstitutionalTransportCapabilitiesProjection:
+      type: object
+      additionalProperties: false
+      required: [passengerMembershipStates, serviceTypes, seriesChangeScopes, bulkImportStates, cancellationReasons, exceptionTypes, conceptualApiPaths, conceptualCommands, events, p0Requirements, acceptanceScenarios, passengerIdentityIndependentFromOrganisation, bookingAndFundingAuthoritySeparated, canonicalBookingRequiredPerOccurrence, accessibilityAndSafeguardingPersistThroughRecurrence, crossTenantDuplicateDisclosureAllowed, templateIsCanonicalBooking, templateReservesDriver, templateCreatesFinanceLiability, portalMayRelabelActiveJourneyPassenger, institutionalEndpointWritesJourneyOrPayment, institutionalTransportMutationsEnabled]
+      properties:
+        passengerMembershipStates: { type: array, minItems: 5, maxItems: 5, items: { type: string, enum: [PENDING, ACTIVE, TEMPORARILY_INACTIVE, EXPIRED, REMOVED] } }
+        serviceTypes: { type: array, minItems: 8, maxItems: 8, items: { type: string, enum: [STANDARD, WAV, ASSISTED, SCHOOL_TRANSPORT, AIRPORT, BUSINESS, EXECUTIVE, OTHER_CONFIGURED_SERVICE] } }
+        seriesChangeScopes: { type: array, minItems: 3, maxItems: 3, items: { type: string, enum: [THIS_OCCURRENCE_ONLY, THIS_AND_FUTURE_OCCURRENCES, ENTIRE_SERIES] } }
+        bulkImportStates: { type: array, minItems: 7, maxItems: 7, items: { type: string, enum: [UPLOADED, VALIDATING, VALIDATED_WITH_WARNINGS, REJECTED, READY_TO_COMMIT, COMMITTED, PARTIALLY_COMMITTED] } }
+        cancellationReasons: { type: array, minItems: 7, maxItems: 7, items: { type: string, enum: [PASSENGER_UNAVAILABLE, ORGANISATION_CANCELLED, APPOINTMENT_CANCELLED, SCHOOL_CLOSED, SERVICE_NO_LONGER_REQUIRED, DUPLICATE_BOOKING, OTHER_STRUCTURED_REASON] } }
+        exceptionTypes: { type: array, minItems: 9, maxItems: 9, items: { type: string } }
+        conceptualApiPaths:
+          type: array
+          minItems: 10
+          maxItems: 10
+          items: { type: string, enum: ['/organisations/{id}/passengers', '/organisations/{id}/passenger-memberships', '/organisations/{id}/booking-authorities', '/organisations/{id}/funding-authorisations', '/organisations/{id}/service-eligibility', '/organisations/{id}/booking-templates', '/organisations/{id}/booking-series', '/organisations/{id}/booking-batches', '/organisations/{id}/transport-exceptions', '/organisations/{id}/calendars'] }
+        conceptualCommands:
+          type: array
+          minItems: 15
+          maxItems: 15
+          items: { type: string, enum: [AddPassengerToRoster, RemovePassengerFromRoster, UpdatePassengerRequirements, GrantBookingAuthority, RevokeBookingAuthority, CreateFundingAuthorisation, CreateBookingTemplate, GenerateBookingOccurrences, AmendBookingSeries, CreateInstitutionalBooking, ImportPassengerRoster, CreateBulkBookingBatch, ResolveTransportException, MarkPassengerReady, CancelInstitutionalBooking] }
+        events:
+          type: array
+          minItems: 18
+          maxItems: 18
+          items: { type: string, enum: [PassengerRosterMembershipCreated.v1, PassengerRosterMembershipEnded.v1, PassengerRequirementsChanged.v1, BookingAuthorityGranted.v1, BookingAuthorityRevoked.v1, FundingAuthorisationActivated.v1, FundingAuthorisationExpired.v1, BookingTemplateCreated.v1, BookingTemplateVersioned.v1, BookingOccurrenceGenerated.v1, BookingSeriesAmended.v1, BulkPassengerImportValidated.v1, BulkPassengerImportCommitted.v1, BulkBookingBatchCommitted.v1, InstitutionalBookingCreated.v1, PassengerMarkedReady.v1, OrganisationTransportExceptionOpened.v1, OrganisationTransportExceptionResolved.v1] }
+        p0Requirements:
+          type: array
+          minItems: 19
+          maxItems: 19
+          items: { type: string, enum: [ORG-PAX-001, ORG-PAX-002, ORG-AUTH-002, ORG-ACC-002, ORG-REC-001, ORG-REC-002, ORG-SCH-002, ORG-SCH-003, ORG-SCH-004, ORG-HLT-001, ORG-AUT-001, ORG-BULK-001, ORG-BULK-002, ORG-SCHD-001, ORG-SCHD-002, ORG-NSH-001, ORG-JRN-001, ORG-REP-001, ORG-AUD-002] }
+        acceptanceScenarios: { type: array, minItems: 18, maxItems: 18, items: { type: string } }
+        passengerIdentityIndependentFromOrganisation: { type: boolean, const: true }
+        bookingAndFundingAuthoritySeparated: { type: boolean, const: true }
+        canonicalBookingRequiredPerOccurrence: { type: boolean, const: true }
+        accessibilityAndSafeguardingPersistThroughRecurrence: { type: boolean, const: true }
+        crossTenantDuplicateDisclosureAllowed: { type: boolean, const: false }
+        templateIsCanonicalBooking: { type: boolean, const: false }
+        templateReservesDriver: { type: boolean, const: false }
+        templateCreatesFinanceLiability: { type: boolean, const: false }
+        portalMayRelabelActiveJourneyPassenger: { type: boolean, const: false }
+        institutionalEndpointWritesJourneyOrPayment: { type: boolean, const: false }
+        institutionalTransportMutationsEnabled: { type: boolean, const: false }
+    InstitutionalTransportExceptionSummaryProjection:
+      type: object
+      additionalProperties: false
+      required: [exceptionId, exceptionType, status, priority, nextAction, attentionAt, ownerPresent]
+      properties:
+        exceptionId: { type: string, format: uuid }
+        exceptionType: { type: string }
+        status: { type: string, enum: [OPEN, IN_PROGRESS, WAITING] }
+        priority: { type: string, enum: [P0, P1, P2, P3, P4] }
+        nextAction: { type: string }
+        attentionAt: { type: string, format: date-time }
+        ownerPresent: { type: boolean }
+    InstitutionalTransportContextProjection:
+      type: object
+      additionalProperties: false
+      required: [organisationId, managedPassengerCount, activePassengerMembershipCount, activeFundingAuthorisationCount, activeBookingTemplateCount, activeBookingSeriesCount, futureOccurrenceCount, passengerNotReadyCount, openExceptionCount, exceptions, tenantScopedByAuthenticatedMembership, minimumTransportDataOnly, canonicalBookingPerOccurrence, portalMutationEnabled, externalExecutionEnabled]
+      properties:
+        organisationId: { type: string, format: uuid }
+        managedPassengerCount: { type: integer, minimum: 0 }
+        activePassengerMembershipCount: { type: integer, minimum: 0 }
+        activeFundingAuthorisationCount: { type: integer, minimum: 0 }
+        activeBookingTemplateCount: { type: integer, minimum: 0 }
+        activeBookingSeriesCount: { type: integer, minimum: 0 }
+        futureOccurrenceCount: { type: integer, minimum: 0 }
+        passengerNotReadyCount: { type: integer, minimum: 0 }
+        openExceptionCount: { type: integer, minimum: 0 }
+        exceptions: { type: array, maxItems: 50, items: { $ref: '#/components/schemas/InstitutionalTransportExceptionSummaryProjection' } }
+        tenantScopedByAuthenticatedMembership: { type: boolean, const: true }
+        minimumTransportDataOnly: { type: boolean, const: true }
+        canonicalBookingPerOccurrence: { type: boolean, const: true }
+        portalMutationEnabled: { type: boolean, const: false }
+        externalExecutionEnabled: { type: boolean, const: false }
