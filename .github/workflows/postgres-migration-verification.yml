@@ -1,0 +1,42 @@
+name: PostgreSQL migration verification
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  migration-chain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: dazat_migration_verify_ci
+          POSTGRES_USER: dazat_ci
+          POSTGRES_PASSWORD: dazat_ci_local_only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U dazat_ci -d dazat_migration_verify_ci"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://dazat_ci:dazat_ci_local_only@localhost:5432/dazat_migration_verify_ci
+      DAZAT_MIGRATION_VALIDATION_TARGET: ephemeral
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install --yes postgresql-client
+      - name: Validate guarded runner source
+        run: node scripts/verify-phase-0-21.mjs && node --test tests/domain/postgres-migration-runner-source.test.mjs
+      - name: Execute migration chain on disposable PostGIS
+        run: node scripts/verify-postgres-migrations.mjs
