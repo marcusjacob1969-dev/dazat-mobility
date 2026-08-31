@@ -3,6 +3,8 @@ import type {
   ActorOrganisationSummaryProjection,
   InstitutionalTransportCapabilitiesProjection,
   InstitutionalTransportContextProjection,
+  InstitutionalLiveOperationsCapabilitiesProjection,
+  InstitutionalLiveOperationsContextProjection,
   OrganisationCommercialCapabilitiesProjection,
   OrganisationCommercialContextProjection,
   OrganisationOperationsCapabilitiesProjection
@@ -53,4 +55,15 @@ export function readOrganisationCommercialContext(
   organisationId: string
 ): Promise<OrganisationCommercialContextProjection> {
   return readJson(`/v1/organisations/${encodeURIComponent(organisationId)}/commercial-operations`, token);
+}
+
+export function readInstitutionalLiveOperationsCapabilities(): Promise<InstitutionalLiveOperationsCapabilitiesProjection> {
+  return readJson('/v1/institutional-live-operations/capabilities');
+}
+
+export function readInstitutionalLiveOperationsContext(
+  token: string,
+  organisationId: string
+): Promise<InstitutionalLiveOperationsContextProjection> {
+  return readJson(`/v1/organisations/${encodeURIComponent(organisationId)}/live-operations`, token);
 }

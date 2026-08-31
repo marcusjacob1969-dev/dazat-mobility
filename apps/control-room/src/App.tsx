@@ -3,7 +3,7 @@ import { dazatTokens } from '@dazat/design-system';
 export function App() {
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.19</p>
+      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.20</p>
       <h1>DAZAT Control Room</h1>
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.
@@ -173,6 +173,27 @@ export function App() {
         </p>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
           Contract simulation, API/webhook execution, migration commit, export execution, service-credit creation and organisation commercial mutations remain disabled at this checkpoint.
+        </p>
+      </section>
+      <section aria-label="Institutional live operations boundary" style={{ maxWidth: 720, marginTop: 16, padding: 24, border: `1px solid ${dazatTokens.color.border}`, borderRadius: dazatTokens.radius.card }}>
+        <h2 style={{ marginTop: 0 }}>Institutional operations stay canonical, owned and verifiable</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          This Control Room is a task-scoped lens, not a second trip system. P0–P3 attention needs an owner, next action and deadline. An institutional exception links to canonical Booking or series truth and remains separate from Safety, Finance, Rescue and Compliance; RESOLVED never silently means VERIFIED.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Readiness does not guarantee a Driver. Manual Dispatch and partner overflow still enforce current Driver, vehicle, accessibility and safeguarding eligibility. A failed school handover blocks completion, hospital PASSENGER_NOT_READY is not no-show, and a breakdown keeps one Booking and Journey while continuity and rescue run in parallel.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Outages never authorise spreadsheet or personal-message shadow dispatch. Tracking expires after operational need, service health cannot cancel a Booking, AI cannot invent authority or close safeguarding, and all institutional live mutations remain disabled.
+        </p>
+      </section>
+      <section aria-label="Institutional launch pilot and exit boundary" style={{ maxWidth: 720, marginTop: 16, padding: 24, border: `1px solid ${dazatTokens.color.border}`, borderRadius: dazatTokens.radius.card }}>
+        <h2 style={{ marginTop: 0 }}>A signed agreement alone never enables launch</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Agreement, funding, contacts, roster, schedules, specialist capacity, safeguarding, communications, support and contingency gates require evidence. Any required pilot remains bounded by geography, cohort, service, hours and volume, and a failed gate blocks expansion without accountable risk acceptance.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Exit inventories active and future work, stops new authority deliberately, times access revocation, governs exports and preserves lawful records and open cases. Contract closure can never abandon an active passenger.
         </p>
       </section>
     </main>

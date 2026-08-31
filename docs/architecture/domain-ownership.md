@@ -24,3 +24,7 @@
 ## Rule
 
 A logical reference to another domain's ID is not write authority. Read models may combine projections, but mutations return to the owning domain. Communications may transport and describe another domain's current versioned truth; it cannot calculate, decide or mutate that truth.
+
+## Phase 0.20 live-operations closure
+
+Organisation owns institutional attention, transport-exception workflow, occurrence-readiness assessments, operational contacts/sites, data-quality workflow, disruption declarations, service-health assessments, launch readiness, pilot scope and exit planning. These are operational coordination and evidence facts only. Booking owns the canonical customer transport record; Dispatch owns eligibility search and assignment; Journey owns execution and completion; Safety, Finance, Rescue and Compliance own their specialised cases and outcomes. An Organisation projection may link to and minimise those facts but cannot replace, relabel, suppress, close or directly mutate them.

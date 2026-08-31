@@ -12,7 +12,7 @@ const panel = {
 export function App() {
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.19 · READ-ONLY FOUNDATION</p>
+      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.20 · READ-ONLY FOUNDATION</p>
       <h1>DAZAT Organisation Portal</h1>
       <p style={{ maxWidth: 760, lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
         This shell presents only organisations where the authenticated person has a current active membership. The backend enforces organisation, site, cost-centre, purpose and permission scope; a client-supplied organisation identifier never grants access.
@@ -85,6 +85,26 @@ export function App() {
         </p>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
           Credit restriction, suspension, expiry and termination may govern new ordinary work but cannot strand an active passenger. Future Bookings receive an explicit disposition before pickup. Reinstatement revalidates agreement, credit, security, documents, contacts and API credentials; migration flags never bypass current eligibility.
+        </p>
+      </section>
+
+      <section aria-label="Institutional live operations" style={panel}>
+        <h2 style={{ marginTop: 0 }}>The Control Room is a scoped lens, never a shadow trip system</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Live attention, readiness and exception summaries retain canonical Booking, Dispatch and Journey truth. P0–P3 work needs an owner, next action and deadline. RESOLVED remains separate from VERIFIED, and specialist Safety, Finance, Rescue and Compliance cases stay authoritative.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Manual assignment still applies every Driver, vehicle, accessibility and safeguarding eligibility rule. Capacity shortages become explicit NO_ELIGIBLE_DRIVER or partner exceptions; portal outages do not authorise spreadsheet dispatch, personal-message workarounds or direct database editing.
+        </p>
+      </section>
+
+      <section aria-label="Institutional continuity and launch" style={panel}>
+        <h2 style={{ marginTop: 0 }}>Readiness, pilots and exit preserve the active passenger</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          School handover failures block ordinary completion and enter safeguarding. Hospital PASSENGER_NOT_READY remains distinct from no-show. Funding expiry governs future service only, site closures affect scoped occurrences, and a breakdown keeps one canonical Booking and Journey while passenger continuity and vehicle rescue proceed in parallel.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          A signed contract alone cannot launch service. Agreement, funding, contacts, schedules, specialist capacity, communications, support and contingency gates must pass, followed by any required pilot. Contract exit inventories future work, revokes access deliberately, preserves lawful records and open cases, and never abandons an active passenger.
         </p>
       </section>
     </main>

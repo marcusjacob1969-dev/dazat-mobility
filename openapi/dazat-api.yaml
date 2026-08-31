@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.19
-  description: Engineering Phase 0.19 API. Communication intent is separate from delivery and UNKNOWN is not delivery. Telephone remains provider-disabled; Caller ID is not authentication, confirmed structured fields outrank transcripts, and no external telephony or Voice Assistant execution is enabled. Communications transports authoritative domain truth and never invents it. Canonical requests require immutable versioned events, idempotency, role permission, approved payload variables, state revalidation and versioned policy. Priority grants no additional data access, provider acceptance is not delivery, stale and duplicate work is suppressed, and Shield degradation pauses risky changes without stranding essential journey or safety truth. The complete acceptance and launch-gate catalogues are modelled, but external providers, closure commands, staff mutations and real-user scenarios remain disabled. Organisation accounts are a governed booking, funding, administration and reporting layer, not a second Booking engine and not an owner of passenger identity. The backend enforces active membership plus organisation, site, cost-centre, role, purpose and permission scope. Booker, passenger and payer remain distinct; accessibility, Safety and safeguarding cannot be downgraded by organisation policy; cost centres are not Finance ledger truth. Institutional rosters, funding, templates, series, calendars, readiness and bulk batches only prepare or constrain transport. Every actual occurrence is its own canonical Booking with versioned provenance. Passenger identity remains independent across tenant relationships, PASSENGER_NOT_READY is not automatically no-show, and familiar Driver preference never overrides current eligibility. Agreements, service policies, pricing, approvals, billing, reporting and SLA rules remain separate effective-dated records. Approval never assigns a Driver; commercial status never strands an active passenger; organisation debt never charges a passenger payment method; SLA reporting cannot rewrite canonical classifications; migration flags cannot bypass current eligibility. Only public capability and authenticated actor-owned reads are exposed. Organisation, institutional and commercial mutations, portal database editing, export execution, API credential use and external integration execution remain disabled.
+  version: 0.0.20
+  description: Engineering Phase 0.20 API. Organisation live operations are a task-scoped lens over canonical Booking, Dispatch, Journey, Safety, Finance, Rescue and Compliance truth, never a shadow trip system. P0-P3 attention requires ownership, a next action and deadline; resolved exceptions remain distinct from verified outcomes. Manual assignment and partner overflow never bypass current Driver, vehicle, accessibility or safeguarding eligibility. School handover failure blocks ordinary completion, hospital PASSENGER_NOT_READY remains distinct from no-show, authority funding expiry affects future service without creating passenger liability, and live changes return to canonical reauthorisation. Degraded mode forbids spreadsheet or personal-message shadow dispatch. Service health is evidence-backed and never automatically cancels a Booking. A signed agreement alone cannot launch; readiness and pilot gates remain explicit. Exit preserves active passengers, lawful records and open cases. Only public capability and authenticated tenant-scoped minimized reads are exposed. Institutional live mutations, external execution, direct database editing, provider bypass, AI authority invention and contract-exit abandonment remain disabled. Communication intent is separate from delivery and UNKNOWN is not delivery. Personal contact details are never exposed and no external provider execution is enabled. Caller ID is not authentication, confirmed structured fields outrank transcripts, no external telephony or Voice Assistant execution is enabled, and personal numbers are never exposed. Notification/Delivery Policy decisions preserve scope; Cases preserve priority, provider acceptance is not delivery, RECOVERING revalidates current state, metrics exclude sensitive content, and no provider, staff mutation or real-user scenario execution is enabled. Communications transports authoritative domain truth and never invents it. Priority grants no additional data access, provider acceptance is not delivery, stale and duplicate work is suppressed, and thirteen gates and separate accountable approvals are required. An Organisation account is not a second Booking engine and not an owner of passenger identity; the backend enforces active membership and cost centres are not Finance ledger truth.
 servers:
   - url: http://localhost:3001
 paths:
@@ -1062,6 +1062,32 @@ paths:
         '400': { description: Organisation identifier is not a valid UUID. }
         '401': { description: Missing, expired or revoked session. }
         '404': { description: No active actor-owned membership exists for this organisation. }
+  /v1/institutional-live-operations/capabilities:
+    get:
+      summary: Read the Organisation Operations Part 4 and final closure capability boundary.
+      description: Catalogues live attention, readiness, exceptions, canonical outcomes, disruption, partner, service-health, launch, pilot and exit truth while all institutional live mutations remain disabled.
+      responses:
+        '200':
+          description: Institutional live-operations catalogues and explicit disabled-execution truth.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InstitutionalLiveOperationsCapabilitiesProjection' }
+  /v1/organisations/{organisationId}/live-operations:
+    get:
+      summary: Read one actor-owned institutional live-operations context.
+      description: Requires a current ACTIVE membership and current assigned institutional operator task for the authenticated person and requested organisation. Returns minimized attention, exception, readiness, data-quality, disruption, health, launch, pilot and exit summaries without passenger manifests or specialist Safety and Finance detail.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganisationId'
+      responses:
+        '200':
+          description: Read-only tenant-scoped institutional live-operations context.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InstitutionalLiveOperationsContextProjection' }
+        '400': { description: Organisation identifier is not a valid UUID. }
+        '401': { description: Missing, expired or revoked session. }
+        '404': { description: No active actor-owned membership and current institutional operator task exist for this organisation. }
 components:
   securitySchemes:
     bearerAuth:
@@ -2207,5 +2233,77 @@ components:
         tenantScopedByAuthenticatedMembership: { type: boolean, const: true }
         passengerAndSafeguardingDataExcluded: { type: boolean, const: true }
         canonicalFinanceAndBookingTruthPreserved: { type: boolean, const: true }
+        mutationEnabled: { type: boolean, const: false }
+        externalExecutionEnabled: { type: boolean, const: false }
+    InstitutionalLiveOperationsCapabilitiesProjection:
+      type: object
+      additionalProperties: false
+      required: [attentionPriorities, exceptionCategories, exceptionStates, readinessOutcomes, passengerReadyStates, outcomeClassifications, conceptualApiPaths, conceptualCommands, events, p0Requirements, acceptanceScenarios, canonicalBookingDispatchJourneyTruthPreserved, specialistSafetyFinanceRescueCasesRemainAuthoritative, resolvedAndVerifiedRemainDistinct, manualDispatchBypassesEligibility, serviceHealthAutomaticallyCancelsBooking, signedContractAloneEnablesLaunch, exitMayAbandonActivePassenger, institutionalLiveMutationsEnabled]
+      properties:
+        attentionPriorities: { type: array, minItems: 5, maxItems: 5, items: { type: string, enum: [P0, P1, P2, P3, P4] } }
+        exceptionCategories: { type: array, minItems: 11, maxItems: 11, items: { type: string, enum: [CAPACITY, DRIVER_ELIGIBILITY, VEHICLE_ELIGIBILITY, PASSENGER_REQUIREMENT_MISMATCH, APPROVAL_OR_FUNDING, CONTACT_FAILURE, PASSENGER_NOT_READY, SITE_ACCESS, SCHEDULE_CONFLICT, CONTRACT_POLICY, SYSTEM_OR_PROVIDER_FAILURE] } }
+        exceptionStates: { type: array, minItems: 14, maxItems: 14, items: { type: string, enum: [DETECTED, TRIAGED, OWNED, ACTION_IN_PROGRESS, WAITING_EXTERNAL, WAITING_CUSTOMER, WAITING_SYSTEM, RESOLVED, VERIFIED, CLOSED, ESCALATED, MERGED, REOPENED, SUPERSEDED] } }
+        readinessOutcomes: { type: array, minItems: 4, maxItems: 4, items: { type: string, enum: [READY, WATCH, AT_RISK, BLOCKED] } }
+        passengerReadyStates: { type: array, minItems: 6, maxItems: 6, items: { type: string, enum: [UNKNOWN, EXPECTED_READY, READY, DELAYED, NOT_READY, CANCELLED_BY_PROVIDER] } }
+        outcomeClassifications: { type: array, minItems: 10, maxItems: 10, items: { type: string, enum: [PASSENGER_CANCELLED, ORGANISATION_CANCELLED, DRIVER_CANCELLED, OPERATIONS_CANCELLED, PASSENGER_NOT_READY, RIDER_NO_SHOW, SCHOOL_ABSENCE, HANDOVER_FAILED, TECHNICAL_FAILURE, NO_ELIGIBLE_DRIVER] } }
+        conceptualApiPaths: { type: array, minItems: 11, maxItems: 11, items: { type: string } }
+        conceptualCommands: { type: array, minItems: 12, maxItems: 12, items: { type: string } }
+        events: { type: array, minItems: 17, maxItems: 17, items: { type: string } }
+        p0Requirements: { type: array, minItems: 21, maxItems: 21, items: { type: string, enum: [ORG-OPS-001, ORG-OPS-002, ORG-OPS-003, ORG-OPS-004, ORG-EXC-001, ORG-SCH-005, ORG-SCH-006, ORG-AUT-002, ORG-HLT-002, ORG-CORP-001, ORG-COM-001, ORG-BRK-001, ORG-SAF-001, ORG-EVD-001, ORG-DQ-001, ORG-PAR-001, ORG-RES-001, ORG-SEC-002, ORG-PRV-001, ORG-LCH-001, ORG-EXT-001] } }
+        acceptanceScenarios: { type: array, minItems: 30, maxItems: 30, items: { type: string } }
+        canonicalBookingDispatchJourneyTruthPreserved: { type: boolean, const: true }
+        specialistSafetyFinanceRescueCasesRemainAuthoritative: { type: boolean, const: true }
+        resolvedAndVerifiedRemainDistinct: { type: boolean, const: true }
+        manualDispatchBypassesEligibility: { type: boolean, const: false }
+        serviceHealthAutomaticallyCancelsBooking: { type: boolean, const: false }
+        signedContractAloneEnablesLaunch: { type: boolean, const: false }
+        exitMayAbandonActivePassenger: { type: boolean, const: false }
+        institutionalLiveMutationsEnabled: { type: boolean, const: false }
+    InstitutionalAttentionSummaryProjection:
+      type: object
+      additionalProperties: false
+      required: [attentionId, priority, status, sourceType, ownerAssigned, nextAction, attentionDeadline]
+      properties:
+        attentionId: { type: string, format: uuid }
+        priority: { type: string, enum: [P0, P1, P2, P3, P4] }
+        status: { type: string, enum: [OPEN, OWNED, IN_PROGRESS, WAITING, RESOLVED, CLOSED] }
+        sourceType: { type: string }
+        ownerAssigned: { type: boolean }
+        nextAction: { type: [string, 'null'] }
+        attentionDeadline: { type: [string, 'null'], format: date-time }
+    InstitutionTransportExceptionSummaryProjection:
+      type: object
+      additionalProperties: false
+      required: [exceptionId, category, severity, status, ownerAssigned, attentionDeadline, resolutionVerified]
+      properties:
+        exceptionId: { type: string, format: uuid }
+        category: { type: string }
+        severity: { type: string, enum: [P0, P1, P2, P3, P4] }
+        status: { type: string }
+        ownerAssigned: { type: boolean }
+        attentionDeadline: { type: [string, 'null'], format: date-time }
+        resolutionVerified: { type: boolean }
+    InstitutionalLiveOperationsContextProjection:
+      type: object
+      additionalProperties: false
+      required: [organisationId, openP0P1AttentionCount, openExceptionCount, atRiskOrBlockedReadinessCount, openDataQualityIssueCount, activeDisruptionCount, latestServiceHealthStatus, launchReadinessStatus, activePilotStatus, exitPlanStatus, attentionItems, transportExceptions, tenantScopedByAuthenticatedMembership, readScopedByCurrentOperatorTask, passengerManifestSafetyAndFinanceDetailExcluded, controlRoomMutationRequiresCurrentTaskScope, canonicalDomainTruthPreserved, mutationEnabled, externalExecutionEnabled]
+      properties:
+        organisationId: { type: string, format: uuid }
+        openP0P1AttentionCount: { type: integer, minimum: 0 }
+        openExceptionCount: { type: integer, minimum: 0 }
+        atRiskOrBlockedReadinessCount: { type: integer, minimum: 0 }
+        openDataQualityIssueCount: { type: integer, minimum: 0 }
+        activeDisruptionCount: { type: integer, minimum: 0 }
+        latestServiceHealthStatus: { type: [string, 'null'], enum: [HEALTHY, WATCH, AT_RISK, CRITICAL, UNKNOWN, null] }
+        launchReadinessStatus: { type: [string, 'null'], enum: [NOT_ASSESSED, IN_PROGRESS, FAILED, PASSED, RISK_ACCEPTED, EXPIRED, null] }
+        activePilotStatus: { type: [string, 'null'], enum: [PLANNED, ACTIVE, GATE_REVIEW, PAUSED, null] }
+        exitPlanStatus: { type: [string, 'null'], enum: [DRAFT, INVENTORY_IN_PROGRESS, REVIEW, APPROVED, EXECUTING, COMPLETED, CANCELLED, null] }
+        attentionItems: { type: array, maxItems: 50, items: { $ref: '#/components/schemas/InstitutionalAttentionSummaryProjection' } }
+        transportExceptions: { type: array, maxItems: 50, items: { $ref: '#/components/schemas/InstitutionTransportExceptionSummaryProjection' } }
+        tenantScopedByAuthenticatedMembership: { type: boolean, const: true }
+        readScopedByCurrentOperatorTask: { type: boolean, const: true }
+        passengerManifestSafetyAndFinanceDetailExcluded: { type: boolean, const: true }
+        controlRoomMutationRequiresCurrentTaskScope: { type: boolean, const: true }
+        canonicalDomainTruthPreserved: { type: boolean, const: true }
         mutationEnabled: { type: boolean, const: false }
         externalExecutionEnabled: { type: boolean, const: false }

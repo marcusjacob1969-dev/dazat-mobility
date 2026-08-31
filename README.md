@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.19**.
+Current checkpoint: **Engineering Phase 0.20**.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 
@@ -151,6 +151,26 @@ Important Organisation Operations Part 3 truth rules:
 - Reinstatement revalidates agreement, credit, security, documents, contacts and credentials. Legacy migration flags never bypass current eligibility.
 - Agreement, approval, billing, credit, SLA, integration, export, migration and lifecycle mutations remain disabled.
 
+Phase 0.20 completes institutional live operations and the Organisation Engine closure:
+
+`TASK-SCOPED ATTENTION → READINESS / EXCEPTION → CANONICAL DISPATCH / JOURNEY → VERIFIED OUTCOME → LAUNCH / PILOT / GOVERNED EXIT`
+
+Important Organisation Operations Part 4 truth rules:
+
+- The institutional Control Room is a scoped lens over canonical services, never a shadow Booking, Dispatch, Journey, Safety, Finance or Rescue system.
+- P0–P3 attention requires an owner, next action and deadline. Exception resolution remains separate from outcome verification and specialised cases remain authoritative.
+- Readiness preserves independent agreement, funding, passenger/service eligibility, contact, capacity, calendar and site dimensions; `READY` never guarantees a Driver.
+- Manual Dispatch and partner overflow apply every current Driver, vehicle, accessibility and safeguarding rule. Inability to assign becomes explicit `NO_ELIGIBLE_DRIVER` or owned exception work.
+- Historical Booking execution retains agreement, policy, billing, funding and approval versions.
+- Failed school handover blocks ordinary completion. Hospital `PASSENGER_NOT_READY` remains distinct from no-show. Authority funding expiry never creates passenger personal liability.
+- Canonical outcomes cannot be relabelled for charges or SLA results. Breakdown continuity and vehicle rescue proceed in parallel while one Booking and Journey remain authoritative.
+- Site disruption is structured and scope-limited; a geofence is not proof and one closure does not destroy a recurring series.
+- Outage recovery uses governed idempotent contingency records, never spreadsheet or personal-message shadow Dispatch.
+- Security containment preserves safe active journeys. Tracking expires after need, service health never automatically cancels, and AI cannot invent authority or close safeguarding.
+- A signed contract alone cannot launch. Readiness and any required bounded pilot must pass or have accountable risk acceptance.
+- Exit inventories future and active work, revokes access deliberately, preserves lawful records and open cases, and never abandons an active passenger.
+- Institutional live commands, provider/partner execution, launch execution and all mutations remain disabled.
+
 Important Communications Core truth rules:
 
 - Booking, Journey, Safety, school safeguarding, payment, account-security, Driver, Support, business and marketing communications use one governed purpose-aware core.
@@ -257,4 +277,4 @@ The earlier Journey integrity and Safety rules remain enforced:
 - Completion closes Journey, Booking, leg and assignment and returns the Driver to `AVAILABLE` atomically.
 - Completion does not initiate or imply payment.
 
-See `BUILD_STATUS.md`, `docs/architecture/ADR-0019-organisation-commercial-governance.md`, and `docs/engineering/phase-0-19-checklist.md` for evidence and limitations.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0020-institutional-live-operations-final-closure.md`, and `docs/engineering/phase-0-20-checklist.md` for evidence and limitations.

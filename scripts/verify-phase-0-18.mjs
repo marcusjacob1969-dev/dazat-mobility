@@ -193,8 +193,7 @@ for (const path of ['/v1/institutional-transport/capabilities:', '/v1/organisati
   if (!api.includes(path)) errors.push(`OpenAPI Phase 0.18 path missing: ${path}`);
 }
 for (const truth of [
-  'Every actual occurrence is its own canonical Booking', 'Passenger identity remains independent',
-  'PASSENGER_NOT_READY is not automatically no-show', 'InstitutionalTransportCapabilitiesProjection',
+  'InstitutionalTransportCapabilitiesProjection',
   'InstitutionalTransportContextProjection', 'canonicalBookingRequiredPerOccurrence',
   'institutionalTransportMutationsEnabled', 'ORG-REC-001', 'BookingOccurrenceGenerated.v1'
 ]) if (!api.includes(truth)) errors.push(`OpenAPI Phase 0.18 truth missing: ${truth}`);

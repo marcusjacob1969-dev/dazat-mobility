@@ -25,6 +25,7 @@ import { registerCommunicationsClosureRoutes } from './modules/communications-cl
 import { registerOrganisationOperationsRoutes } from './modules/organisation-operations/routes.js';
 import { registerInstitutionalTransportRoutes } from './modules/institutional-transport/routes.js';
 import { registerOrganisationCommercialOperationsRoutes } from './modules/organisation-commercial-operations/routes.js';
+import { registerInstitutionalLiveOperationsRoutes } from './modules/institutional-live-operations/routes.js';
 
 const config = loadConfig();
 const app = Fastify({ logger: { level: config.logLevel } });
@@ -51,7 +52,7 @@ app.get('/health/ready', async (_request, reply) => {
       status: 'READY',
       dependencies: {
         database: 'READY',
-        redis: 'NOT_REQUIRED_FOR_PHASE_0_19_ORGANISATION_COMMERCIAL_FOUNDATION',
+        redis: 'NOT_REQUIRED_FOR_PHASE_0_20_INSTITUTIONAL_LIVE_OPERATIONS_FOUNDATION',
         verificationDelivery: config.verificationDeliveryMode.toUpperCase(),
         pricing: config.pricingMode.toUpperCase(),
         paymentProvider: config.paymentProviderMode.toUpperCase(),
@@ -64,7 +65,8 @@ app.get('/health/ready', async (_request, reply) => {
         organisationMutation: config.organisationMutationMode.toUpperCase(),
         organisationIntegration: config.organisationIntegrationMode.toUpperCase(),
         institutionalTransportMutation: config.institutionalTransportMutationMode.toUpperCase(),
-        organisationCommercialMutation: config.organisationCommercialMutationMode.toUpperCase()
+        organisationCommercialMutation: config.organisationCommercialMutationMode.toUpperCase(),
+        institutionalLiveMutation: config.institutionalLiveMutationMode.toUpperCase()
       }
     });
   } catch {
@@ -77,8 +79,8 @@ app.get('/health/ready', async (_request, reply) => {
 
 app.get('/v1/build-info', async () => ({
   product: 'DAZAT Mobility',
-  checkpoint: 'engineering-phase-0.19',
-  implementationStatus: 'ORGANISATION_AGREEMENT_POLICY_APPROVAL_BILLING_CREDIT_SLA_INTEGRATION_EXPORT_LIFECYCLE_SOURCE_CREATED_READ_ONLY_PROJECTIONS_ONLY_MUTATIONS_DISABLED_NOT_PRODUCTION_VERIFIED'
+  checkpoint: 'engineering-phase-0.20',
+  implementationStatus: 'INSTITUTIONAL_LIVE_OPERATIONS_EXCEPTION_READINESS_SCHOOL_HOSPITAL_AUTHORITY_SITE_PARTNER_HEALTH_LAUNCH_PILOT_EXIT_SOURCE_CREATED_READ_ONLY_PROJECTIONS_ONLY_MUTATIONS_DISABLED_NOT_PRODUCTION_VERIFIED'
 }));
 
 registerIdentityRoutes(app, database, config, verificationDelivery);
@@ -99,6 +101,7 @@ registerCommunicationsClosureRoutes(app, database);
 registerOrganisationOperationsRoutes(app, database);
 registerInstitutionalTransportRoutes(app, database);
 registerOrganisationCommercialOperationsRoutes(app, database);
+registerInstitutionalLiveOperationsRoutes(app, database);
 
 app.addHook('onClose', async () => {
   await database.end();

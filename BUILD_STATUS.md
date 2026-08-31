@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.19 — Organisation Commercial Governance Foundation**
+**Engineering Phase 0.20 — Institutional Live Operations and Final Organisation Engine Closure**
 
 Status: **SOURCE IMPLEMENTED / STATIC AND PURE-DOMAIN GUARDS VERIFIED / PROVIDER, STAFF AND CHARGING MUTATIONS DISABLED / DATABASE, CONCURRENCY AND APP RUNTIME NOT YET VERIFIED**
 
@@ -181,11 +181,25 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Scoped exit and explicit reinstatement revalidation preserving active continuity and lawful Finance/Safety/safeguarding/audit history.
 - Dry-run, row-level OrganisationMigrationBatch/Row with sensitive-data minimisation and legacy eligibility bypass prohibited.
 - Public Part 3 capabilities plus authenticated actor-owned agreement/billing/credit/SLA/renewal aggregate reads; no mutation route.
+- Task-scoped institutional operator authority and P0–P4 attention with guarded owner, next-action, deadline and lifecycle evidence.
+- Canonically linked institutional transport exceptions with structured categories, separate specialist cases and distinct resolution verification.
+- Independent occurrence-readiness dimensions that never guarantee a Driver, plus manual assignment assessment that retains every hard eligibility check.
+- Immutable Booking execution context for agreement, policy, billing, funding and approval versions.
+- School handover, authority funding and hospital PassengerReadyState foundations preserving safeguarding, future-only funding effects, zero passenger-liability fallback and no-show classification truth.
+- Minimal employer/guest visibility, canonical live-change reauthorisation and protected outcome classification.
+- Parallel passenger continuity and vehicle rescue with one canonical Booking/Journey, independent Safety ownership and minimised compliance attestations.
+- Guarded data-quality issues, versioned site profiles and structured series-safe disruption impacts.
+- Partner overflow equivalence, privacy minimisation and canonical DAZAT event requirements.
+- Degraded-mode reconciliation without spreadsheet/personal-message shadow Dispatch and scoped Shield containment preserving safe active journeys.
+- Time-bounded tracking, constrained AI assistance and evidence-backed service health that cannot automatically cancel a Booking.
+- Structured shift handover, evidence-gated launch readiness, bounded pilot gates and governed exit that cannot abandon an active passenger.
+- Collision-resolved twenty-one Part 4 P0 identifiers plus acceptance scenarios 72–101.
+- Public Part 4 capabilities plus authenticated tenant-scoped, privacy-minimised attention/exception/readiness/health/launch/pilot/exit context; no mutation route.
 
 ### Verified in this checkpoint
 
-- All structural verifiers pass from the foundation through Phase 0.19.
-- All 233 executable Phase 0.5–0.19 source-domain tests pass.
+- All structural verifiers pass from the foundation through Phase 0.20.
+- All 271 executable Phase 0.5–0.20 source-domain tests pass.
 - Phase 0.9 supplier, terms, capability, insurance, deposit and assignment-boundary verifier: **PASSED**.
 - Pure-domain tests cover Fleet state, Marketplace publication, ownership-transfer terms, explicit capability, deposit deduction and assignment hard checks.
 - Blueprint §54.2 Fleet Marketplace/agreement/assignment traceability: **recorded**.
@@ -219,10 +233,13 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Phase 0.19 agreement, policy precedence, approval, billing, credit, SLA, integration, lifecycle and migration verifier: **PASSED**.
 - Pure-domain tests cover effective agreement versions, hard-policy precedence, independent approval, urgent continuity, billing/credit boundaries, reproducible SLA, allegation handling, contract simulation, API/webhook replay, exports, exit/reinstatement and migration bypass protection.
 - Blueprint §64.1–§64.30 Organisation Operations Part 3 traceability: **recorded**.
+- Phase 0.20 institutional live attention, exception, readiness, sector, disruption, partner, degraded-mode, health, launch, pilot and exit verifier: **PASSED**.
+- Pure-domain tests cover task scope, critical ownership, resolution verification, hard eligibility, school/hospital/authority classification, continuity, Safety separation, data quality, partner/degraded operation, privacy, service health, launch, pilot and exit preservation.
+- Blueprint §64.31–§64.74 and §70 collision-resolved Organisation Operations Part 4 traceability: **recorded**.
 
 ### Not yet verified / deliberately not claimed
 
-- PostgreSQL/PostGIS migrations 0001–0019 and transaction/concurrency cases have not been executed in this workspace.
+- PostgreSQL/PostGIS migrations 0001–0020 and transaction/concurrency cases have not been executed in this workspace.
 - Fastify, Expo and Vite workspaces have not been compiled with installed workspace dependencies here.
 - Authorised school/hospital/specialist handover recording is not exposed until staff and operating-authority rules are implemented.
 - Production payment provider selection, adapter/webhook/reconciliation execution, refunds and payouts are not implemented.
@@ -251,6 +268,8 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - No real school, hospital, care, authority, employee or visitor roster, calendar, waiting/no-show policy, capacity reservation or funding authorisation is approved or seeded.
 - Organisation agreement, policy, pricing, approval, billing, credit, SLA, service-credit, integration, export, renewal, termination, reinstatement and migration command execution remains disabled/unverified.
 - No real agreement, pricing schedule, billing account, credit limit, invoice cadence, SLA target/remedy, API credential, webhook, migration cutover or exit policy is approved or seeded.
+- Institutional live attention, exception, readiness, manual Dispatch, handover, funding, disruption, partner, degraded-mode, service-health, launch, pilot and exit command execution remains disabled/unverified.
+- No real Control Room task scope, school/hospital/authority workflow, site disruption, partner overflow agreement, launch gate, pilot risk acceptance or exit plan is approved or seeded.
 - No production Driver, vehicle, passenger, location, Safety, pricing, provider credentials or data are present.
 - Source creation is not production readiness, safeguarding approval, licensing approval, insurance cover, payment certification or security certification.
 
@@ -281,3 +300,5 @@ Enabling Organisation mutations, SSO, company-registry or credit checks, e-signa
 Enabling institutional passenger onboarding, recurring generation, capacity reservation, readiness, bulk commits, cancellation, substitution or exception commands requires approved passenger-authority, lawful-basis, safeguarding, accessibility, funding, no-show/waiting, Finance and operational policy. Phase 0.18 exposes read-only truth and executes none of those workflows.
 
 Enabling agreement activation, approval/funding decisions, billing or credit changes, SLA remedies, contract simulation activation, API/webhook execution, exports, suspension/termination/reinstatement or migration commits requires explicit legal, Finance, privacy, security, safeguarding, accessibility and Operations approval. Phase 0.19 exposes read-only aggregate truth and executes none of those workflows.
+
+Enabling institutional live commands, partner overflow, operational tracking, launch/pilot execution or contract exit requires approved task authority, safeguarding, accessibility, Finance/funding, data minimisation, degraded-mode, security, partner, operational staffing and active-passenger continuity controls. Phase 0.20 exposes only minimized read projections and executes none of those workflows.
