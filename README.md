@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.18**.
+Current checkpoint: **Engineering Phase 0.19**.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 
@@ -131,6 +131,26 @@ Important Organisation Operations Part 2 truth rules:
 - Active-Journey passenger relabelling is prohibited; cancellation charges remain Finance policy.
 - Institutional transport commands, bulk execution and external integrations remain disabled.
 
+Phase 0.19 adds agreement, policy, billing, SLA and account-lifecycle governance:
+
+`EFFECTIVE AGREEMENT → HARD-RULE PRECEDENCE → INDEPENDENT AUTHORITY/APPROVAL/FUNDING → CANONICAL BOOKING/FINANCE → VERSIONED SLA/REVIEW → RENEWAL/EXIT DISPOSITION`
+
+Important Organisation Operations Part 3 truth rules:
+
+- Contract status remains separate from operational Organisation status. Agreement documents, service policies, pricing schedules, approval, billing, reporting and SLA definitions are independent effective-dated versions.
+- Legal, Safety, safeguarding, accessibility and current platform eligibility outrank all commercial preference. A cheaper contract policy cannot downgrade WAV, assistance, school or safeguarding requirements.
+- Booking, approval and funding authority are evaluated independently. Approval is not Booking confirmation and never creates a Driver assignment.
+- Active-passenger Safety, breakdown continuity and school safeguarding can proceed under governed exception without falsifying commercial approval.
+- Billing accounts, cost centres, programmes, funding codes and purchase orders feed the canonical Finance Engine; none owns ledger truth or can rewrite a closed invoice.
+- Missing organisation funding and organisation debt never silently charge a passenger personal payment method.
+- Credit, suspension, expiry and termination govern new ordinary work prospectively while active passenger continuity and lawful Finance, Safety, safeguarding and audit records persist.
+- SLA metrics retain definition, population, window, target, evidence and cause. Stale GPS is not proof, Safety cannot be hidden and canonical classifications cannot be rewritten for performance or revenue.
+- Organisation allegations are evidence, not automatic Driver guilt. Corrective action retains owner, action, deadline, evidence and outcome.
+- Contract simulation classifies every affected future Booking without production writes, completed-Journey rewrite or active-Journey invalidation.
+- API credentials and webhooks remain tenant-scoped, revocable, idempotent, signed and privacy-minimised. Exports remain role/purpose scoped and audited.
+- Reinstatement revalidates agreement, credit, security, documents, contacts and credentials. Legacy migration flags never bypass current eligibility.
+- Agreement, approval, billing, credit, SLA, integration, export, migration and lifecycle mutations remain disabled.
+
 Important Communications Core truth rules:
 
 - Booking, Journey, Safety, school safeguarding, payment, account-security, Driver, Support, business and marketing communications use one governed purpose-aware core.
@@ -237,4 +257,4 @@ The earlier Journey integrity and Safety rules remain enforced:
 - Completion closes Journey, Booking, leg and assignment and returns the Driver to `AVAILABLE` atomically.
 - Completion does not initiate or imply payment.
 
-See `BUILD_STATUS.md`, `docs/architecture/ADR-0018-institutional-passenger-recurring-transport.md`, and `docs/engineering/phase-0-18-checklist.md` for evidence and limitations.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0019-organisation-commercial-governance.md`, and `docs/engineering/phase-0-19-checklist.md` for evidence and limitations.

@@ -70,6 +70,7 @@
 ./database/migrations/0016_communications_engine_final_closure_foundation.sql
 ./database/migrations/0017_organisation_identity_tenancy_authority_foundation.sql
 ./database/migrations/0018_institutional_passenger_recurring_bulk_foundation.sql
+./database/migrations/0019_organisation_agreement_policy_finance_governance_foundation.sql
 ./database/seeds/README.md
 ./docs/architecture/ADR-0001-production-foundation.md
 ./docs/architecture/ADR-0002-identity-account-foundation.md
@@ -89,6 +90,7 @@
 ./docs/architecture/ADR-0016-communications-engine-final-closure.md
 ./docs/architecture/ADR-0017-organisation-identity-tenancy-authority.md
 ./docs/architecture/ADR-0018-institutional-passenger-recurring-transport.md
+./docs/architecture/ADR-0019-organisation-commercial-governance.md
 ./docs/architecture/domain-ownership.md
 ./docs/engineering/phase-0-10-checklist.md
 ./docs/engineering/phase-0-11-checklist.md
@@ -99,6 +101,7 @@
 ./docs/engineering/phase-0-16-checklist.md
 ./docs/engineering/phase-0-17-checklist.md
 ./docs/engineering/phase-0-18-checklist.md
+./docs/engineering/phase-0-19-checklist.md
 ./docs/engineering/phase-0-2-checklist.md
 ./docs/engineering/phase-0-3-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
@@ -119,6 +122,7 @@
 ./docs/traceability/phase-0-16-requirements.md
 ./docs/traceability/phase-0-17-requirements.md
 ./docs/traceability/phase-0-18-requirements.md
+./docs/traceability/phase-0-19-requirements.md
 ./docs/traceability/phase-0-3-requirements.md
 ./docs/traceability/phase-0-4-requirements.md
 ./docs/traceability/phase-0-5-requirements.md
@@ -145,6 +149,7 @@
 ./packages/contracts/src/journey.ts
 ./packages/contracts/src/live-journey.ts
 ./packages/contracts/src/maintenance-reliability.ts
+./packages/contracts/src/organisation-commercial-operations.ts
 ./packages/contracts/src/organisation-operations.ts
 ./packages/contracts/src/telephony-voice.ts
 ./packages/contracts/tsconfig.json
@@ -173,6 +178,7 @@
 ./packages/domain/src/live-journey.ts
 ./packages/domain/src/maintenance-reliability.ts
 ./packages/domain/src/money.ts
+./packages/domain/src/organisation-commercial-operations.ts
 ./packages/domain/src/organisation-operations.ts
 ./packages/domain/src/pricing.ts
 ./packages/domain/src/telephony-voice.ts
@@ -187,6 +193,7 @@
 ./scripts/verify-phase-0-16.mjs
 ./scripts/verify-phase-0-17.mjs
 ./scripts/verify-phase-0-18.mjs
+./scripts/verify-phase-0-19.mjs
 ./scripts/verify-phase-0-2.mjs
 ./scripts/verify-phase-0-3.mjs
 ./scripts/verify-phase-0-4.mjs
@@ -233,6 +240,8 @@
 ./services/api/src/modules/journey/routes.ts
 ./services/api/src/modules/maintenance-reliability/maintenance-reliability-service.ts
 ./services/api/src/modules/maintenance-reliability/routes.ts
+./services/api/src/modules/organisation-commercial-operations/organisation-commercial-operations-service.ts
+./services/api/src/modules/organisation-commercial-operations/routes.ts
 ./services/api/src/modules/organisation-operations/organisation-operations-service.ts
 ./services/api/src/modules/organisation-operations/routes.ts
 ./services/api/src/modules/safety/routes.ts
@@ -261,6 +270,7 @@
 ./tests/domain/live-journey-source.test.mjs
 ./tests/domain/maintenance-reliability-source.test.mjs
 ./tests/domain/money.test.mjs
+./tests/domain/organisation-commercial-operations-source.test.mjs
 ./tests/domain/organisation-operations-source.test.mjs
 ./tests/domain/pricing.test.mjs
 ./tests/domain/telephony-voice-source.test.mjs

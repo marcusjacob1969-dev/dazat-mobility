@@ -3,6 +3,8 @@ import type {
   ActorOrganisationSummaryProjection,
   InstitutionalTransportCapabilitiesProjection,
   InstitutionalTransportContextProjection,
+  OrganisationCommercialCapabilitiesProjection,
+  OrganisationCommercialContextProjection,
   OrganisationOperationsCapabilitiesProjection
 } from '@dazat/contracts';
 
@@ -40,4 +42,15 @@ export function readInstitutionalTransportContext(
   organisationId: string
 ): Promise<InstitutionalTransportContextProjection> {
   return readJson(`/v1/organisations/${encodeURIComponent(organisationId)}/institutional-transport`, token);
+}
+
+export function readOrganisationCommercialCapabilities(): Promise<OrganisationCommercialCapabilitiesProjection> {
+  return readJson('/v1/organisation-commercial-operations/capabilities');
+}
+
+export function readOrganisationCommercialContext(
+  token: string,
+  organisationId: string
+): Promise<OrganisationCommercialContextProjection> {
+  return readJson(`/v1/organisations/${encodeURIComponent(organisationId)}/commercial-operations`, token);
 }

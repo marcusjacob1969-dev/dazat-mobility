@@ -3,7 +3,7 @@ import { dazatTokens } from '@dazat/design-system';
 export function App() {
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.18</p>
+      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.19</p>
       <h1>DAZAT Control Room</h1>
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.
@@ -161,6 +161,18 @@ export function App() {
         </p>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
           Institutional exceptions remain owned work with priority, next action and outcome. Routine organisation support never absorbs Safety or School command authority, and all institutional mutation execution remains disabled.
+        </p>
+      </section>
+      <section aria-label="Organisation commercial governance boundary" style={{ maxWidth: 720, marginTop: 16, padding: 24, border: `1px solid ${dazatTokens.color.border}`, borderRadius: dazatTokens.radius.card }}>
+        <h2 style={{ marginTop: 0 }}>Commercial state cannot override active service or canonical truth</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Agreement, policy, pricing, approval, billing, credit and SLA records are independently versioned context. Approval does not assign a Driver, cost centres and PO numbers do not edit the ledger, and an SLA target cannot rewrite canonical lateness, no-show, Safety or conduct classifications.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Active-journey Safety, breakdown continuity and school safeguarding outrank unresolved commercial approval. Account suspension, arrears, expiry or termination can restrict new ordinary work only after future Bookings receive explicit treatment; active passengers and lawful Finance, Safety, safeguarding and audit evidence remain protected.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Contract simulation, API/webhook execution, migration commit, export execution, service-credit creation and organisation commercial mutations remain disabled at this checkpoint.
         </p>
       </section>
     </main>

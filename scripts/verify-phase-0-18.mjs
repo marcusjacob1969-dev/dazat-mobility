@@ -162,19 +162,21 @@ for (const truth of [
 const environment = readFileSync(join(root, '.env.example'), 'utf8');
 if (!environment.includes('INSTITUTIONAL_TRANSPORT_MUTATION_MODE=disabled')) errors.push('Environment missing Phase 0.18 disabled truth');
 const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
-for (const truth of [
-  'registerInstitutionalTransportRoutes', 'engineering-phase-0.18',
-  'NOT_REQUIRED_FOR_PHASE_0_18_INSTITUTIONAL_TRANSPORT_FOUNDATION',
-  'institutionalTransportMutation'
-]) if (!main.includes(truth)) errors.push(`API bootstrap missing Phase 0.18 value: ${truth}`);
+for (const truth of ['registerInstitutionalTransportRoutes', 'institutionalTransportMutation']) {
+  if (!main.includes(truth)) errors.push(`API bootstrap missing Phase 0.18 value: ${truth}`);
+}
+const mainPhase = main.match(/checkpoint:\s*'engineering-phase-0\.(\d+)'/)?.[1];
+if (!mainPhase || Number(mainPhase) < 18) errors.push('API bootstrap checkpoint predates Phase 0.18');
 
 const portal = readFileSync(join(root, 'apps/organisation-portal/src/App.tsx'), 'utf8');
 for (const truth of [
-  'ENGINEERING PHASE 0.18', 'Every recurring occurrence is its own canonical Booking',
+  'Every recurring occurrence is its own canonical Booking',
   'template does not reserve a Driver, create Finance liability or become an active Journey',
   'Readiness, recurrence and bulk work stay explicit', 'PASSENGER_NOT_READY is not automatically a no-show',
   'Institutional mutations and external execution remain disabled'
 ]) if (!portal.includes(truth)) errors.push(`Organisation Portal Part 2 boundary missing: ${truth}`);
+const portalPhase = portal.match(/ENGINEERING PHASE 0\.(\d+)/)?.[1];
+if (!portalPhase || Number(portalPhase) < 18) errors.push('Organisation Portal checkpoint predates Phase 0.18');
 const client = readFileSync(join(root, 'apps/organisation-portal/src/organisation-api.ts'), 'utf8');
 for (const truth of ['readInstitutionalTransportCapabilities', 'readInstitutionalTransportContext', 'Authorization: `Bearer']) {
   if (!client.includes(truth)) errors.push(`Organisation Portal Part 2 client truth missing: ${truth}`);
@@ -196,7 +198,8 @@ for (const truth of [
   'InstitutionalTransportContextProjection', 'canonicalBookingRequiredPerOccurrence',
   'institutionalTransportMutationsEnabled', 'ORG-REC-001', 'BookingOccurrenceGenerated.v1'
 ]) if (!api.includes(truth)) errors.push(`OpenAPI Phase 0.18 truth missing: ${truth}`);
-if (!api.includes('version: 0.0.18')) errors.push('OpenAPI is not versioned at 0.0.18');
+const apiVersion = api.match(/\n\s*version:\s*0\.0\.(\d+)/)?.[1];
+if (!apiVersion || Number(apiVersion) < 18) errors.push('OpenAPI version predates Phase 0.18');
 
 let currentVersion = null;
 for (const rel of [
@@ -204,7 +207,8 @@ for (const rel of [
   'apps/driver/package.json', 'apps/rider/package.json', 'apps/control-room/package.json', 'apps/organisation-portal/package.json'
 ]) {
   const parsed = JSON.parse(readFileSync(join(root, rel), 'utf8'));
-  if (parsed.version !== '0.0.18') errors.push(`${rel} is not versioned at 0.0.18`);
+  const patch = Number(String(parsed.version).split('.')[2]);
+  if (!Number.isInteger(patch) || patch < 18) errors.push(`${rel} version predates Phase 0.18`);
   currentVersion ??= parsed.version;
   if (parsed.version !== currentVersion) errors.push(`${rel} is not aligned to the current checkpoint version`);
 }

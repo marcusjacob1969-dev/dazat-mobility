@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.18
-  description: Engineering Phase 0.18 API. Communication intent is separate from delivery and UNKNOWN is not delivery. Telephone remains provider-disabled; Caller ID is not authentication, confirmed structured fields outrank transcripts, and no external telephony or Voice Assistant execution is enabled. Communications transports authoritative domain truth and never invents it. Canonical requests require immutable versioned events, idempotency, role permission, approved payload variables, state revalidation and versioned policy. Priority grants no additional data access, provider acceptance is not delivery, stale and duplicate work is suppressed, and Shield degradation pauses risky changes without stranding essential journey or safety truth. The complete acceptance and launch-gate catalogues are modelled, but external providers, closure commands, staff mutations and real-user scenarios remain disabled. Organisation accounts are a governed booking, funding, administration and reporting layer, not a second Booking engine and not an owner of passenger identity. The backend enforces active membership plus organisation, site, cost-centre, role, purpose and permission scope. Booker, passenger and payer remain distinct; accessibility, Safety and safeguarding cannot be downgraded by organisation policy; cost centres are not Finance ledger truth. Institutional rosters, funding, templates, series, calendars, readiness and bulk batches only prepare or constrain transport. Every actual occurrence is its own canonical Booking with versioned provenance. Passenger identity remains independent across tenant relationships, PASSENGER_NOT_READY is not automatically no-show, and familiar Driver preference never overrides current eligibility. Only public capability and authenticated actor-owned reads are exposed. Organisation and institutional mutations, portal database editing, export execution, API credential use and external integration execution remain disabled.
+  version: 0.0.19
+  description: Engineering Phase 0.19 API. Communication intent is separate from delivery and UNKNOWN is not delivery. Telephone remains provider-disabled; Caller ID is not authentication, confirmed structured fields outrank transcripts, and no external telephony or Voice Assistant execution is enabled. Communications transports authoritative domain truth and never invents it. Canonical requests require immutable versioned events, idempotency, role permission, approved payload variables, state revalidation and versioned policy. Priority grants no additional data access, provider acceptance is not delivery, stale and duplicate work is suppressed, and Shield degradation pauses risky changes without stranding essential journey or safety truth. The complete acceptance and launch-gate catalogues are modelled, but external providers, closure commands, staff mutations and real-user scenarios remain disabled. Organisation accounts are a governed booking, funding, administration and reporting layer, not a second Booking engine and not an owner of passenger identity. The backend enforces active membership plus organisation, site, cost-centre, role, purpose and permission scope. Booker, passenger and payer remain distinct; accessibility, Safety and safeguarding cannot be downgraded by organisation policy; cost centres are not Finance ledger truth. Institutional rosters, funding, templates, series, calendars, readiness and bulk batches only prepare or constrain transport. Every actual occurrence is its own canonical Booking with versioned provenance. Passenger identity remains independent across tenant relationships, PASSENGER_NOT_READY is not automatically no-show, and familiar Driver preference never overrides current eligibility. Agreements, service policies, pricing, approvals, billing, reporting and SLA rules remain separate effective-dated records. Approval never assigns a Driver; commercial status never strands an active passenger; organisation debt never charges a passenger payment method; SLA reporting cannot rewrite canonical classifications; migration flags cannot bypass current eligibility. Only public capability and authenticated actor-owned reads are exposed. Organisation, institutional and commercial mutations, portal database editing, export execution, API credential use and external integration execution remain disabled.
 servers:
   - url: http://localhost:3001
 paths:
@@ -1033,6 +1033,32 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/InstitutionalTransportContextProjection' }
+        '400': { description: Organisation identifier is not a valid UUID. }
+        '401': { description: Missing, expired or revoked session. }
+        '404': { description: No active actor-owned membership exists for this organisation. }
+  /v1/organisation-commercial-operations/capabilities:
+    get:
+      summary: Read the Organisation Operations Part 3 capability boundary.
+      description: Catalogues effective-dated agreements, policy precedence, approval, billing, credit, SLA, integration, export, lifecycle and migration truth while all commercial mutations remain disabled.
+      responses:
+        '200':
+          description: Organisation commercial governance catalogues and explicit disabled-execution truth.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrganisationCommercialCapabilitiesProjection' }
+  /v1/organisations/{organisationId}/commercial-operations:
+    get:
+      summary: Read one actor-owned organisation commercial context.
+      description: Requires a current ACTIVE membership for the authenticated person and requested organisation. Returns aggregate agreement, billing, approval, credit, service-case, simulation and renewal-risk truth without passenger, safeguarding, ledger or mutation authority.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/OrganisationId'
+      responses:
+        '200':
+          description: Read-only tenant-scoped organisation commercial context.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrganisationCommercialContextProjection' }
         '400': { description: Organisation identifier is not a valid UUID. }
         '401': { description: Missing, expired or revoked session. }
         '404': { description: No active actor-owned membership exists for this organisation. }
@@ -2104,4 +2130,82 @@ components:
         minimumTransportDataOnly: { type: boolean, const: true }
         canonicalBookingPerOccurrence: { type: boolean, const: true }
         portalMutationEnabled: { type: boolean, const: false }
+        externalExecutionEnabled: { type: boolean, const: false }
+    OrganisationAgreementState:
+      type: string
+      enum: [PROSPECT, DUE_DILIGENCE, DRAFT, INTERNAL_REVIEW, CUSTOMER_REVIEW, APPROVED, ACTIVE, RENEWAL_DUE, RENEWED, VARIED, SUSPENDED, EXPIRED, TERMINATED]
+    OrganisationCreditState:
+      type: string
+      enum: [GOOD_STANDING, WATCH, CREDIT_LIMIT_REACHED, RESTRICTED_FOR_NEW_BOOKINGS, SUSPENDED_FOR_NEW_BOOKINGS]
+    OrganisationCommercialCapabilitiesProjection:
+      type: object
+      additionalProperties: false
+      required: [agreementStates, approvalDecisions, creditStates, restrictionScopes, eventClassifications, conceptualApiPaths, conceptualCommands, events, p0Requirements, acceptanceScenarios, contractAndOperationalStatusSeparated, agreementPolicyAndPricingVersionedSeparately, hardProtectionPrecedencePreserved, approvalCreatesDriverAssignment, billingConfigurationEditsLedger, organisationDebtChargesPassengerMethod, migrationLegacyBypassAllowed, organisationCommercialMutationsEnabled]
+      properties:
+        agreementStates: { type: array, minItems: 13, maxItems: 13, items: { $ref: '#/components/schemas/OrganisationAgreementState' } }
+        approvalDecisions: { type: array, minItems: 4, maxItems: 4, items: { type: string, enum: [AUTO_APPROVED, APPROVAL_REQUIRED, PRE_AUTHORISED, REVIEW_REQUIRED] } }
+        creditStates: { type: array, minItems: 5, maxItems: 5, items: { $ref: '#/components/schemas/OrganisationCreditState' } }
+        restrictionScopes: { type: array, minItems: 6, maxItems: 6, items: { type: string, enum: [NEW_BOOKINGS_ONLY, NEW_RECURRING_SERIES, API_WRITES, FINANCE_CREDIT, PORTAL_ADMIN_CHANGES, FULL_NEW_SERVICE] } }
+        eventClassifications: { type: array, minItems: 7, maxItems: 7, items: { type: string, enum: [DRIVER_CANCELLED, PASSENGER_CANCELLED, ORGANISATION_CANCELLED, PASSENGER_NOT_READY, NO_SHOW, SCHOOL_ABSENCE, TECHNICAL_FAILURE] } }
+        conceptualApiPaths:
+          type: array
+          minItems: 12
+          maxItems: 12
+          items: { type: string, enum: ['/organisations/{id}/agreements', '/organisations/{id}/policies', '/organisations/{id}/approvals', '/organisations/{id}/billing-accounts', '/organisations/{id}/cost-centres', '/organisations/{id}/service-levels', '/organisations/{id}/reports', '/organisations/{id}/exports', '/organisations/{id}/api-clients', '/organisations/{id}/webhooks', '/organisations/{id}/support-cases', '/organisations/{id}/restrictions'] }
+        conceptualCommands:
+          type: array
+          minItems: 10
+          maxItems: 10
+          items: { type: string, enum: [ActivateOrganisationAgreement, CreateAgreementVersion, ChangeOrganisationServicePolicy, SimulateOrganisationPolicy, RequestBookingApproval, ApproveBookingFunding, RejectBookingFunding, CreateOrganisationRestriction, LiftOrganisationRestriction, TerminateOrganisationAgreement] }
+        events:
+          type: array
+          minItems: 16
+          maxItems: 16
+          items: { type: string, enum: [OrganisationAgreementActivated.v1, OrganisationAgreementExpiring.v1, OrganisationAgreementExpired.v1, OrganisationPolicyChanged.v1, OrganisationPolicySimulationCompleted.v1, BookingApprovalRequested.v1, BookingApprovalGranted.v1, BookingApprovalRejected.v1, OrganisationCreditStatusChanged.v1, OrganisationRestrictionApplied.v1, OrganisationRestrictionLifted.v1, OrganisationServiceLevelMissed.v1, OrganisationCorrectiveActionOpened.v1, OrganisationAPIClientCreated.v1, OrganisationWebhookDeliveryFailed.v1, OrganisationAgreementTerminated.v1] }
+        p0Requirements:
+          type: array
+          minItems: 20
+          maxItems: 20
+          items: { type: string, enum: [ORG-AGR-001, ORG-AGR-002, ORG-POL-001, ORG-POL-002, ORG-APR-001, ORG-APR-002, ORG-BIL-001, ORG-BIL-002, ORG-CRD-001, ORG-PRT-001, ORG-SLA-001, ORG-SLA-002, ORG-API-001, ORG-API-002, ORG-EXP-001, ORG-SEC-001, ORG-CHG-001, ORG-TERM-001, ORG-REN-001, ORG-MIG-001] }
+        acceptanceScenarios: { type: array, minItems: 19, maxItems: 19, items: { type: string } }
+        contractAndOperationalStatusSeparated: { type: boolean, const: true }
+        agreementPolicyAndPricingVersionedSeparately: { type: boolean, const: true }
+        hardProtectionPrecedencePreserved: { type: boolean, const: true }
+        approvalCreatesDriverAssignment: { type: boolean, const: false }
+        billingConfigurationEditsLedger: { type: boolean, const: false }
+        organisationDebtChargesPassengerMethod: { type: boolean, const: false }
+        migrationLegacyBypassAllowed: { type: boolean, const: false }
+        organisationCommercialMutationsEnabled: { type: boolean, const: false }
+    OrganisationRenewalRiskSummaryProjection:
+      type: object
+      additionalProperties: false
+      required: [classificationId, bookingId, classification, classifiedBeforePickup, reasonCodes]
+      properties:
+        classificationId: { type: string, format: uuid }
+        bookingId: { type: string, format: uuid }
+        classification: { type: string, enum: [RENEWAL_DEPENDENT, REAPPROVAL_REQUIRED, INVALID, MANUAL_REVIEW] }
+        classifiedBeforePickup: { type: boolean, const: true }
+        reasonCodes: { type: array, minItems: 1, items: { type: string } }
+    OrganisationCommercialContextProjection:
+      type: object
+      additionalProperties: false
+      required: [organisationId, currentAgreementCount, activePricingScheduleCount, activeBillingAccountCount, pendingApprovalCount, currentCreditState, openServiceCaseCount, pendingSimulationCount, renewalRiskCount, renewalRisks, tenantScopedByAuthenticatedMembership, passengerAndSafeguardingDataExcluded, canonicalFinanceAndBookingTruthPreserved, mutationEnabled, externalExecutionEnabled]
+      properties:
+        organisationId: { type: string, format: uuid }
+        currentAgreementCount: { type: integer, minimum: 0 }
+        activePricingScheduleCount: { type: integer, minimum: 0 }
+        activeBillingAccountCount: { type: integer, minimum: 0 }
+        pendingApprovalCount: { type: integer, minimum: 0 }
+        currentCreditState:
+          anyOf:
+            - $ref: '#/components/schemas/OrganisationCreditState'
+            - type: 'null'
+        openServiceCaseCount: { type: integer, minimum: 0 }
+        pendingSimulationCount: { type: integer, minimum: 0 }
+        renewalRiskCount: { type: integer, minimum: 0 }
+        renewalRisks: { type: array, maxItems: 50, items: { $ref: '#/components/schemas/OrganisationRenewalRiskSummaryProjection' } }
+        tenantScopedByAuthenticatedMembership: { type: boolean, const: true }
+        passengerAndSafeguardingDataExcluded: { type: boolean, const: true }
+        canonicalFinanceAndBookingTruthPreserved: { type: boolean, const: true }
+        mutationEnabled: { type: boolean, const: false }
         externalExecutionEnabled: { type: boolean, const: false }

@@ -15,3 +15,4 @@ export * from './communications-operations.js';
 export * from './communications-closure.js';
 export * from './organisation-operations.js';
 export * from './institutional-transport.js';
+export * from './organisation-commercial-operations.js';

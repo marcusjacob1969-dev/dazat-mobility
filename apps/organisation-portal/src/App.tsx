@@ -12,7 +12,7 @@ const panel = {
 export function App() {
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.18 · READ-ONLY FOUNDATION</p>
+      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.19 · READ-ONLY FOUNDATION</p>
       <h1>DAZAT Organisation Portal</h1>
       <p style={{ maxWidth: 760, lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
         This shell presents only organisations where the authenticated person has a current active membership. The backend enforces organisation, site, cost-centre, purpose and permission scope; a client-supplied organisation identifier never grants access.
@@ -65,6 +65,26 @@ export function App() {
         </p>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
           Bulk imports require a dry run, row-level outcomes, tenant-safe duplicate detection and idempotent commit. Passenger substitution, cancellation and active-Journey changes return to canonical Booking/Journey rules. Institutional mutations and external execution remain disabled.
+        </p>
+      </section>
+
+      <section aria-label="Agreement and policy governance" style={panel}>
+        <h2 style={{ marginTop: 0 }}>A contract shapes service — it never weakens hard protection</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Agreement documents, service policies, pricing schedules, approval rules, billing rules, reporting rules and SLA definitions remain separate effective-dated versions. Commercial preference sits below legal, Safety, safeguarding, accessibility and current Driver/vehicle/service eligibility. Historical Bookings retain the versions under which they were created.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Approval is not Booking confirmation or a Driver assignment. Missing purchase-order or funding data opens an explicit exception and never silently charges a passenger's personal payment method. Billing configuration feeds the canonical Finance Engine; portal users cannot edit ledger or closed-invoice truth.
+        </p>
+      </section>
+
+      <section aria-label="Performance and lifecycle governance" style={panel}>
+        <h2 style={{ marginTop: 0 }}>Targets, credit and contract exit remain truthful</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          SLA metrics retain their definition, population, time window, evidence source and cause. Stale GPS is not proof of lateness or no-show, Safety incidents cannot be hidden for performance, and an organisation allegation is evidence rather than automatic Driver guilt.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Credit restriction, suspension, expiry and termination may govern new ordinary work but cannot strand an active passenger. Future Bookings receive an explicit disposition before pickup. Reinstatement revalidates agreement, credit, security, documents, contacts and API credentials; migration flags never bypass current eligibility.
         </p>
       </section>
     </main>
