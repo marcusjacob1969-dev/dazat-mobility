@@ -277,4 +277,4 @@ The earlier Journey integrity and Safety rules remain enforced:
 - Completion closes Journey, Booking, leg and assignment and returns the Driver to `AVAILABLE` atomically.
 - Completion does not initiate or imply payment.
 
-See `BUILD_STATUS.md`, `docs/architecture/ADR-0020-institutional-live-operations-final-closure.md`, and `docs/engineering/phase-0-20-checklist.md` for evidence and limitations.
+See `BUILD_STATUS.md`, `docs/architecture/ADR-0020-institutional-live-operations-final-closure.md`, `docs/architecture/ADR-0021-postgres-migration-validation.md`, and the engineering checklists for evidence and limitations.

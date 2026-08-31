@@ -1,6 +1,6 @@
 {
   "name": "@dazat/organisation-portal",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build"
   },
   "dependencies": {
-    "@dazat/contracts": "0.0.20",
+    "@dazat/contracts": "0.0.21",
     "@dazat/design-system": "0.0.1",
     "react": "19.2.3",
     "react-dom": "19.2.3"

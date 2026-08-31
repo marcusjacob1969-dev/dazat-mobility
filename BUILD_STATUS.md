@@ -236,10 +236,12 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Phase 0.20 institutional live attention, exception, readiness, sector, disruption, partner, degraded-mode, health, launch, pilot and exit verifier: **PASSED**.
 - Pure-domain tests cover task scope, critical ownership, resolution verification, hard eligibility, school/hospital/authority classification, continuity, Safety separation, data quality, partner/degraded operation, privacy, service health, launch, pilot and exit preservation.
 - Blueprint §64.31–§64.74 and §70 collision-resolved Organisation Operations Part 4 traceability: **recorded**.
+- Phase 0.21 guarded PostgreSQL migration-chain runner, disposable-target controls and source verifier: **PASSED**.
+- The runner is ready for CI/local execution with a freshly provisioned `dazat_migration_verify_*` PostgreSQL/PostGIS database; it is not runtime evidence until executed there.
 
 ### Not yet verified / deliberately not claimed
 
-- PostgreSQL/PostGIS migrations 0001–0020 and transaction/concurrency cases have not been executed in this workspace.
+- PostgreSQL/PostGIS migrations 0001–0020 and transaction/concurrency cases have not been executed in this workspace; Phase 0.21 supplies the guarded execution command for a disposable target.
 - Fastify, Expo and Vite workspaces have not been compiled with installed workspace dependencies here.
 - Authorised school/hospital/specialist handover recording is not exposed until staff and operating-authority rules are implemented.
 - Production payment provider selection, adapter/webhook/reconciliation execution, refunds and payouts are not implemented.

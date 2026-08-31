@@ -93,6 +93,7 @@
 ./docs/architecture/ADR-0018-institutional-passenger-recurring-transport.md
 ./docs/architecture/ADR-0019-organisation-commercial-governance.md
 ./docs/architecture/ADR-0020-institutional-live-operations-final-closure.md
+./docs/architecture/ADR-0021-postgres-migration-validation.md
 ./docs/architecture/domain-ownership.md
 ./docs/engineering/phase-0-10-checklist.md
 ./docs/engineering/phase-0-11-checklist.md
@@ -106,6 +107,7 @@
 ./docs/engineering/phase-0-19-checklist.md
 ./docs/engineering/phase-0-2-checklist.md
 ./docs/engineering/phase-0-20-checklist.md
+./docs/engineering/phase-0-21-checklist.md
 ./docs/engineering/phase-0-3-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
 ./docs/engineering/phase-0-5-checklist.md
@@ -127,6 +129,7 @@
 ./docs/traceability/phase-0-18-requirements.md
 ./docs/traceability/phase-0-19-requirements.md
 ./docs/traceability/phase-0-20-requirements.md
+./docs/traceability/phase-0-21-runtime-readiness.md
 ./docs/traceability/phase-0-3-requirements.md
 ./docs/traceability/phase-0-4-requirements.md
 ./docs/traceability/phase-0-5-requirements.md
@@ -202,6 +205,7 @@
 ./scripts/verify-phase-0-19.mjs
 ./scripts/verify-phase-0-2.mjs
 ./scripts/verify-phase-0-20.mjs
+./scripts/verify-phase-0-21.mjs
 ./scripts/verify-phase-0-3.mjs
 ./scripts/verify-phase-0-4.mjs
 ./scripts/verify-phase-0-5.mjs
@@ -209,6 +213,7 @@
 ./scripts/verify-phase-0-7.mjs
 ./scripts/verify-phase-0-8.mjs
 ./scripts/verify-phase-0-9.mjs
+./scripts/verify-postgres-migrations.mjs
 ./services/api/package.json
 ./services/api/src/config.ts
 ./services/api/src/db.ts
@@ -282,6 +287,7 @@
 ./tests/domain/money.test.mjs
 ./tests/domain/organisation-commercial-operations-source.test.mjs
 ./tests/domain/organisation-operations-source.test.mjs
+./tests/domain/postgres-migration-runner-source.test.mjs
 ./tests/domain/pricing.test.mjs
 ./tests/domain/telephony-voice-source.test.mjs
 ./tsconfig.base.json

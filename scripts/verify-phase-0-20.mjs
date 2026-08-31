@@ -175,9 +175,11 @@ for (const truth of ["readonly institutionalLiveMutationMode: 'disabled'", 'INST
 const environment = readFileSync(join(root, '.env.example'), 'utf8');
 if (!environment.includes('INSTITUTIONAL_LIVE_MUTATION_MODE=disabled')) errors.push('Environment missing Phase 0.20 disabled truth');
 const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
-for (const truth of ['registerInstitutionalLiveOperationsRoutes', 'engineering-phase-0.20', 'NOT_REQUIRED_FOR_PHASE_0_20_INSTITUTIONAL_LIVE_OPERATIONS_FOUNDATION', 'institutionalLiveMutation']) {
+for (const truth of ['registerInstitutionalLiveOperationsRoutes', 'NOT_REQUIRED_FOR_PHASE_0_20_INSTITUTIONAL_LIVE_OPERATIONS_FOUNDATION', 'institutionalLiveMutation']) {
   if (!main.includes(truth)) errors.push(`API bootstrap missing Phase 0.20 value: ${truth}`);
 }
+const mainPhase = main.match(/checkpoint:\s*'engineering-phase-0\.(\d+)'/)?.[1];
+if (!mainPhase || Number(mainPhase) < 20) errors.push('API bootstrap checkpoint predates Phase 0.20');
 
 const portal = readFileSync(join(root, 'apps/organisation-portal/src/App.tsx'), 'utf8');
 for (const truth of ['ENGINEERING PHASE 0.20', 'The Control Room is a scoped lens, never a shadow trip system', 'RESOLVED', 'A signed contract alone cannot launch service', 'never abandons an active passenger']) {
@@ -199,12 +201,13 @@ for (const path of ['/v1/institutional-live-operations/capabilities:', '/v1/orga
 for (const truth of ['task-scoped lens over canonical Booking', 'resolved exceptions remain distinct from verified outcomes', 'InstitutionalLiveOperationsCapabilitiesProjection', 'InstitutionalLiveOperationsContextProjection', 'manualDispatchBypassesEligibility', 'signedContractAloneEnablesLaunch', 'ORG-AUT-002', 'ORG-HLT-002', 'ORG-PAR-001', 'ORG-SCH-005', 'ORG-SCH-006']) {
   if (!api.includes(truth)) errors.push(`OpenAPI Phase 0.20 truth missing: ${truth}`);
 }
-if (!api.includes('version: 0.0.20')) errors.push('OpenAPI is not versioned at 0.0.20');
+const openApiVersion = api.match(/version:\s*(0\.0\.\d+)/)?.[1];
+if (!openApiVersion || Number(openApiVersion.split('.').at(-1)) < 20) errors.push('OpenAPI version predates Phase 0.20');
 
 let currentVersion = null;
 for (const rel of ['package.json', 'packages/domain/package.json', 'packages/contracts/package.json', 'services/api/package.json', 'apps/driver/package.json', 'apps/rider/package.json', 'apps/control-room/package.json', 'apps/organisation-portal/package.json']) {
   const parsed = JSON.parse(readFileSync(join(root, rel), 'utf8'));
-  if (parsed.version !== '0.0.20') errors.push(`${rel} is not versioned at 0.0.20`);
+  if (!/^0\.0\.\d+$/.test(parsed.version) || Number(parsed.version.split('.').at(-1)) < 20) errors.push(`${rel} version predates Phase 0.20`);
   currentVersion ??= parsed.version;
   if (parsed.version !== currentVersion) errors.push(`${rel} is not aligned to the current checkpoint version`);
 }

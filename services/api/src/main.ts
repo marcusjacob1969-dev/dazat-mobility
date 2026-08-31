@@ -79,7 +79,7 @@ app.get('/health/ready', async (_request, reply) => {
 
 app.get('/v1/build-info', async () => ({
   product: 'DAZAT Mobility',
-  checkpoint: 'engineering-phase-0.20',
+  checkpoint: 'engineering-phase-0.21',
   implementationStatus: 'INSTITUTIONAL_LIVE_OPERATIONS_EXCEPTION_READINESS_SCHOOL_HOSPITAL_AUTHORITY_SITE_PARTNER_HEALTH_LAUNCH_PILOT_EXIT_SOURCE_CREATED_READ_ONLY_PROJECTIONS_ONLY_MUTATIONS_DISABLED_NOT_PRODUCTION_VERIFIED'
 }));
 
