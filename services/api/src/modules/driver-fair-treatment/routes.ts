@@ -126,7 +126,13 @@ export function registerDriverFairTreatmentRoutes(app: FastifyInstance, pool: Da
     if (!body.success) return reply.code(400).send({ code: 'INVALID_DRIVER_APPEAL' });
     if (!key) return reply.code(400).send({ code: 'IDEMPOTENCY_KEY_REQUIRED' });
     try {
-      const validated: SubmitDriverAppealRequest = body.data;
+      const validated: SubmitDriverAppealRequest = {
+        subjectType: body.data.subjectType,
+        subjectId: body.data.subjectId,
+        reasonCategory: body.data.reasonCategory,
+        statementReference: body.data.statementReference,
+        ...(body.data.evidenceReferences === undefined ? {} : { evidenceReferences: body.data.evidenceReferences })
+      };
       return reply.code(201).send(await submitDriverAppeal(pool, principal, validated, key));
     } catch (error) {
       const known = sendFairTreatmentError(reply, error); if (known) return known;

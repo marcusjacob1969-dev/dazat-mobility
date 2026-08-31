@@ -15,6 +15,7 @@ import {
 } from './contact-verification-service.js';
 import type { ContactVerificationDeliveryPort } from './verification-delivery-port.js';
 import { authenticateBearerSession, revokeSession } from './session-service.js';
+import type { ConfirmContactVerificationRequest, DeviceContextInput } from '@dazat/contracts';
 
 const registrationSchema = z.object({
   profileKind: z.enum(['RIDER', 'DRIVER', 'BOTH']),
@@ -39,6 +40,14 @@ const confirmVerificationSchema = z.object({
     appInstallationId: z.string().trim().min(1).max(200).optional()
   }).strict().optional()
 }).strict();
+
+function toDeviceContext(device: NonNullable<z.infer<typeof confirmVerificationSchema>['device']>): DeviceContextInput {
+  return {
+    deviceInstanceId: device.deviceInstanceId,
+    ...(device.platform === undefined ? {} : { platform: device.platform }),
+    ...(device.appInstallationId === undefined ? {} : { appInstallationId: device.appInstallationId })
+  };
+}
 
 function hashIp(ip: string): string {
   // Operational abuse correlation only. Do not store raw IP in the registration command record.
@@ -145,7 +154,12 @@ export function registerIdentityRoutes(
       return reply.code(400).send({ code: 'INVALID_VERIFICATION_CONFIRMATION' });
     }
     try {
-      const result = await confirmContactVerification(pool, parsed.data, {
+      const input: ConfirmContactVerificationRequest = {
+        verificationId: parsed.data.verificationId,
+        code: parsed.data.code,
+        ...(parsed.data.device === undefined ? {} : { device: toDeviceContext(parsed.data.device) })
+      };
+      const result = await confirmContactVerification(pool, input, {
         pepper: config.contactVerificationPepper,
         ttlMinutes: config.contactVerificationTtlMinutes,
         resendSeconds: config.contactVerificationResendSeconds,

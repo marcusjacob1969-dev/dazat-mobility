@@ -110,6 +110,7 @@
 ./docs/engineering/phase-0-20-checklist.md
 ./docs/engineering/phase-0-21-checklist.md
 ./docs/engineering/phase-0-22-checklist.md
+./docs/engineering/phase-0-23-checklist.md
 ./docs/engineering/phase-0-3-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
 ./docs/engineering/phase-0-5-checklist.md
@@ -133,6 +134,7 @@
 ./docs/traceability/phase-0-20-requirements.md
 ./docs/traceability/phase-0-21-runtime-readiness.md
 ./docs/traceability/phase-0-22-ci-migration-verification.md
+./docs/traceability/phase-0-23-workspace-compilation.md
 ./docs/traceability/phase-0-3-requirements.md
 ./docs/traceability/phase-0-4-requirements.md
 ./docs/traceability/phase-0-5-requirements.md

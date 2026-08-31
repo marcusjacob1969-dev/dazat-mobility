@@ -247,7 +247,7 @@ export async function acknowledgeCommunication(
       acknowledgementId,
       status: 'ACKNOWLEDGED',
       acknowledgedAt: recordedAt.toISOString(),
-      repeatedAcknowledgement: existing.rowCount > 0
+      repeatedAcknowledgement: (existing.rowCount ?? 0) > 0
     };
     await client.query(
       `INSERT INTO communications.communication_command_deduplication

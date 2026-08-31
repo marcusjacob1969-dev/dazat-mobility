@@ -14,6 +14,7 @@ import {
 import { authenticateBearerSession } from '../identity/session-service.js';
 import type { PricingPort } from './development-pricing-adapter.js';
 import { PricingNotConfiguredError } from './development-pricing-adapter.js';
+import type { CreateRiderBookingRequest, LocationInput } from '@dazat/contracts';
 
 const locationSchema = z.object({
   latitude: z.number().finite().min(-90).max(90),
@@ -35,6 +36,16 @@ const createBookingSchema = z.object({
 }).strict();
 
 const confirmBookingSchema = z.object({ quoteId: z.string().uuid() }).strict();
+
+function toLocationInput(location: z.infer<typeof locationSchema>): LocationInput {
+  return {
+    latitude: location.latitude,
+    longitude: location.longitude,
+    displayLabel: location.displayLabel,
+    ...(location.structuredAddress === undefined ? {} : { structuredAddress: location.structuredAddress }),
+    ...(location.providerReference === undefined ? {} : { providerReference: location.providerReference })
+  };
+}
 
 function bearer(request: FastifyRequest): string | null {
   const header = request.headers.authorization;
@@ -83,7 +94,14 @@ export function registerBookingRoutes(app: FastifyInstance, pool: DatabasePool, 
     const parsed = createBookingSchema.safeParse(request.body);
     if (!parsed.success) return reply.code(400).send({ code: 'INVALID_BOOKING_REQUEST' });
     try {
-      const result = await createRiderBooking(pool, parsed.data, principal, key);
+      const input: CreateRiderBookingRequest = {
+        regionCode: parsed.data.regionCode,
+        pickup: toLocationInput(parsed.data.pickup),
+        dropoff: toLocationInput(parsed.data.dropoff),
+        ...(parsed.data.scheduledFor === undefined ? {} : { scheduledFor: parsed.data.scheduledFor }),
+        ...(parsed.data.requirements === undefined ? {} : { requirements: parsed.data.requirements })
+      };
+      const result = await createRiderBooking(pool, input, principal, key);
       return reply.code(201).send(result);
     } catch (error) {
       const known = sendBookingError(reply, error);

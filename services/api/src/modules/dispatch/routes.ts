@@ -16,6 +16,7 @@ import {
   setDriverAvailability,
   startBookingDispatch
 } from './dispatch-service.js';
+import type { SetDriverAvailabilityRequest } from '@dazat/contracts';
 
 const availabilitySchema = z.object({
   status: z.enum(['AVAILABLE', 'OFFLINE', 'BREAK', 'FINISHING_SOON']),
@@ -98,7 +99,13 @@ export function registerDispatchRoutes(app: FastifyInstance, pool: DatabasePool,
     const parsed = availabilitySchema.safeParse(request.body);
     if (!parsed.success) return reply.code(400).send({ code: 'INVALID_AVAILABILITY_REQUEST' });
     try {
-      return reply.code(200).send(await setDriverAvailability(pool, principal, parsed.data, key, config));
+      const input: SetDriverAvailabilityRequest = {
+        status: parsed.data.status,
+        ...(parsed.data.regionCode === undefined ? {} : { regionCode: parsed.data.regionCode }),
+        ...(parsed.data.vehicleId === undefined ? {} : { vehicleId: parsed.data.vehicleId }),
+        ...(parsed.data.location === undefined ? {} : { location: parsed.data.location })
+      };
+      return reply.code(200).send(await setDriverAvailability(pool, principal, input, key, config));
     } catch (error) {
       const known = sendDispatchError(reply, error);
       if (known) return known;

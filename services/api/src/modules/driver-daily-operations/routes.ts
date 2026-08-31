@@ -16,6 +16,7 @@ import {
   openDriverSupportCase,
   reconcileDriverConnectivity
 } from './driver-daily-operations-service.js';
+import type { ConnectivityReconciliationRequest, OpenDriverSupportCaseRequest } from '@dazat/contracts';
 
 const queuedCriticalEventSchema = z.object({
   clientEventId: z.string().uuid(),
@@ -97,7 +98,17 @@ export function registerDriverDailyOperationsRoutes(app: FastifyInstance, pool: 
     const body = connectivitySchema.safeParse(request.body);
     if (!body.success) return reply.code(400).send({ code: 'INVALID_CONNECTIVITY_RECONCILIATION' });
     try {
-      return reply.code(200).send(await reconcileDriverConnectivity(pool, principal, body.data, key, config));
+      const input: ConnectivityReconciliationRequest = {
+        clientObservationId: body.data.clientObservationId,
+        networkReachable: body.data.networkReachable,
+        observedAt: body.data.observedAt,
+        queuedCriticalEvents: body.data.queuedCriticalEvents,
+        ...(body.data.lastServerSyncAt === undefined ? {} : { lastServerSyncAt: body.data.lastServerSyncAt }),
+        ...(body.data.knownAvailabilityVersion === undefined ? {} : { knownAvailabilityVersion: body.data.knownAvailabilityVersion }),
+        ...(body.data.knownActiveJourneyId === undefined ? {} : { knownActiveJourneyId: body.data.knownActiveJourneyId }),
+        ...(body.data.knownActiveJourneyVersion === undefined ? {} : { knownActiveJourneyVersion: body.data.knownActiveJourneyVersion })
+      };
+      return reply.code(200).send(await reconcileDriverConnectivity(pool, principal, input, key, config));
     } catch (error) {
       const known = sendError(reply, error); if (known) return known;
       request.log.error({ err: error }, 'Driver connectivity reconciliation failed');
@@ -113,7 +124,16 @@ export function registerDriverDailyOperationsRoutes(app: FastifyInstance, pool: 
     const body = supportCaseSchema.safeParse(request.body);
     if (!body.success) return reply.code(400).send({ code: 'INVALID_DRIVER_SUPPORT_CASE' });
     try {
-      return reply.code(201).send(await openDriverSupportCase(pool, principal, body.data, key));
+      const input: OpenDriverSupportCaseRequest = {
+        category: body.data.category,
+        summaryReference: body.data.summaryReference,
+        immediateDanger: body.data.immediateDanger,
+        serviceContinuityAtRisk: body.data.serviceContinuityAtRisk,
+        ...(body.data.journeyId === undefined ? {} : { journeyId: body.data.journeyId }),
+        ...(body.data.bookingId === undefined ? {} : { bookingId: body.data.bookingId }),
+        ...(body.data.vehicleId === undefined ? {} : { vehicleId: body.data.vehicleId })
+      };
+      return reply.code(201).send(await openDriverSupportCase(pool, principal, input, key));
     } catch (error) {
       const known = sendError(reply, error); if (known) return known;
       request.log.error({ err: error }, 'Driver support case creation failed');

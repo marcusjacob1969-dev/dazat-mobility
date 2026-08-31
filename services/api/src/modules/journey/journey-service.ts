@@ -540,7 +540,7 @@ export async function markDriverArrived(
     const location = await latestLocation(client, journeyId);
     if (!location) throw new JourneyEvidenceError(['LOCATION_MISSING']);
     const decision = evaluatePickupLocation(location, locked, new Date(), config);
-    const blockers = [...decision.blockers];
+    const blockers: string[] = [...decision.blockers];
     if (!decision.withinArrivalRadius) blockers.push('OUTSIDE_ARRIVAL_RADIUS');
     if (!decision.accepted) throw new JourneyEvidenceError(blockers);
     const evidence = await client.query<{ id: string }>(

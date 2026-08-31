@@ -22,7 +22,8 @@ for (const truth of [
   'pull_request:', 'branches: [master]', 'postgis/postgis:16-3.4',
   'POSTGRES_DB: dazat_migration_verify_ci', 'DAZAT_MIGRATION_VALIDATION_TARGET: ephemeral',
   'actions/checkout@v4', 'actions/setup-node@v4', 'node-version: 24',
-  'workspace-check:', 'cache: npm', 'npm ci --ignore-scripts', 'npm run check',
+  'workspace-check:', 'cache: npm', 'npm ci --ignore-scripts',
+  'npm run build --workspaces --if-present && npm run check',
   'postgresql-client', 'node scripts/verify-phase-0-21.mjs',
   'node --test tests/domain/postgres-migration-runner-source.test.mjs',
   'node scripts/verify-postgres-migrations.mjs'

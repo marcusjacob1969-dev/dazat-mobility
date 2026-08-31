@@ -2,9 +2,9 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.20 — Institutional Live Operations and Final Organisation Engine Closure**
+**Engineering Phase 0.23 — Dependency-backed Full Workspace Compilation Closure**
 
-Status: **SOURCE IMPLEMENTED / STATIC AND PURE-DOMAIN GUARDS VERIFIED / PROVIDER, STAFF AND CHARGING MUTATIONS DISABLED / DATABASE, CONCURRENCY AND APP RUNTIME NOT YET VERIFIED**
+Status: **SOURCE IMPLEMENTED / ALL WORKSPACES COMPILE / 297 DOMAIN TESTS PASS / PROVIDER, STAFF AND CHARGING MUTATIONS DISABLED / DATABASE AND CONCURRENCY RUNTIME NOT YET VERIFIED**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
@@ -240,11 +240,12 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - The runner is ready for CI/local execution with a freshly provisioned `dazat_migration_verify_*` PostgreSQL/PostGIS database; it is not runtime evidence until executed there.
 - Phase 0.22 pull-request and `master` CI workflow provisions disposable PostGIS and invokes the guarded migration chain: **CONFIGURED / NOT_EXECUTED**.
 - The workspace dependency graph is now locked; CI also runs the full compile/source-check command from that lockfile: **CONFIGURED / NOT_EXECUTED**.
+- Phase 0.23 installed the locked dependency graph, fixed eleven strict API compilation defects, compiled every workspace and passed all 297 domain tests locally: **PASSED**.
 
 ### Not yet verified / deliberately not claimed
 
 - PostgreSQL/PostGIS migrations 0001–0020 and transaction/concurrency cases have not been executed in this workspace; Phase 0.21 supplies the guarded execution command for a disposable target.
-- Fastify, Expo and Vite workspaces have not been compiled with installed workspace dependencies here.
+- Fastify API, workers, contracts, domain, design-system and Vite web workspaces compile with locked dependencies. Expo device bundling and device E2E remain unverified.
 - Authorised school/hospital/specialist handover recording is not exposed until staff and operating-authority rules are implemented.
 - Production payment provider selection, adapter/webhook/reconciliation execution, refunds and payouts are not implemented.
 - Production identity/document verification provider selection, callbacks and reconciliation are not implemented.

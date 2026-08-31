@@ -86,7 +86,6 @@ export async function getDriverVehicleMaintenanceProjection(
     allServicesRestrictionActive: row.all_services_restricted,
     unresolvedSafetyCriticalRecall: row.unresolved_safety_critical_recall,
     restrictedServiceCodes: row.restricted_service_codes,
-    unresolvedSafetyCriticalRecall: row.unresolved_safety_critical_recall,
     requestedServiceCodes
   });
   return {
@@ -97,6 +96,7 @@ export async function getDriverVehicleMaintenanceProjection(
     operatingPermitted: decision.operatingPermitted,
     blockers: decision.blockers,
     restrictedServiceCodes: row.restricted_service_codes,
+    unresolvedSafetyCriticalRecall: row.unresolved_safety_critical_recall,
     openDefectCount: Number(row.open_defect_count),
     requirements: requirements.rows.map((requirement) => ({
       requirementId: requirement.requirement_id,

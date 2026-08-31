@@ -23,6 +23,7 @@ import {
   recordActiveJourneyLocation,
   requestRouteChange
 } from './live-journey-service.js';
+import type { LocationInput, RouteChangeRequest } from '@dazat/contracts';
 
 const journeyParams = z.object({ journeyId: z.string().uuid() });
 const bookingParams = z.object({ bookingId: z.string().uuid() });
@@ -53,6 +54,20 @@ const routeChangeSchema = z.object({
   reasonCode: z.enum(['PASSENGER_REQUEST', 'ACCESSIBILITY_NEED', 'OPERATIONAL_NEED', 'OTHER'])
 }).strict();
 const stopRequestSchema = routeChangeSchema.omit({ requestType: true });
+
+function toRouteChangeLocation(location: z.infer<typeof routeChangeLocationSchema>): LocationInput {
+  return {
+    latitude: location.latitude,
+    longitude: location.longitude,
+    displayLabel: location.displayLabel,
+    ...(location.structuredAddress === undefined ? {} : { structuredAddress: location.structuredAddress }),
+    ...(location.providerReference === undefined ? {} : { providerReference: location.providerReference })
+  };
+}
+
+function toRouteChangeRequest(input: z.infer<typeof routeChangeSchema>): RouteChangeRequest {
+  return { ...input, location: toRouteChangeLocation(input.location) };
+}
 
 function bearer(request: FastifyRequest): string | null {
   const header = request.headers.authorization;
@@ -233,7 +248,7 @@ export function registerJourneyRoutes(app: FastifyInstance, pool: DatabasePool, 
     if (!key) return reply.code(400).send({ code: 'IDEMPOTENCY_KEY_REQUIRED' });
     try {
       return reply.code(202).send(await requestRouteChange(pool, params.data.journeyId, {
-        ...body.data,
+        ...toRouteChangeRequest({ ...body.data, requestType: 'ADD_STOP' }),
         requestType: 'ADD_STOP'
       }, principal, key));
     } catch (error) {
@@ -253,7 +268,7 @@ export function registerJourneyRoutes(app: FastifyInstance, pool: DatabasePool, 
     if (!params.success || !body.success) return reply.code(400).send({ code: 'INVALID_ROUTE_CHANGE_REQUEST' });
     if (!key) return reply.code(400).send({ code: 'IDEMPOTENCY_KEY_REQUIRED' });
     try {
-      return reply.code(202).send(await requestRouteChange(pool, params.data.journeyId, body.data, principal, key));
+      return reply.code(202).send(await requestRouteChange(pool, params.data.journeyId, toRouteChangeRequest(body.data), principal, key));
     } catch (error) {
       const known = sendJourneyError(reply, error);
       if (known) return known;
