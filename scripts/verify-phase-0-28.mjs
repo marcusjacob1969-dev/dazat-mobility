@@ -11,9 +11,11 @@ const required = [
 const errors = [];
 for (const path of required) if (!existsSync(join(root, path))) errors.push(`Missing Phase 0.28 file: ${path}`);
 const app = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
-for (const truth of ['requestIdHeader: false', "reply.header('x-request-id', request.id)", 'ROUTE_NOT_FOUND', 'REQUEST_BODY_TOO_LARGE', 'INTERNAL_SERVER_ERROR', "checkpoint: 'engineering-phase-0.28'"]) {
+for (const truth of ['requestIdHeader: false', "reply.header('x-request-id', request.id)", 'ROUTE_NOT_FOUND', 'REQUEST_BODY_TOO_LARGE', 'INTERNAL_SERVER_ERROR']) {
   if (!app.includes(truth)) errors.push(`Error security source missing: ${truth}`);
 }
+const checkpoint = app.match(/checkpoint: 'engineering-phase-0\.(\d+)'/);
+if (!checkpoint || Number(checkpoint[1]) < 28) errors.push('API factory checkpoint predates Phase 0.28');
 if (errors.length) {
   console.error('DAZAT Engineering Phase 0.28 verification FAILED');
   for (const error of errors) console.error(`- ${error}`);

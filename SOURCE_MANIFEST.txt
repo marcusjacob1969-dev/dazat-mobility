@@ -116,6 +116,7 @@
 ./docs/engineering/phase-0-26-checklist.md
 ./docs/engineering/phase-0-27-checklist.md
 ./docs/engineering/phase-0-28-checklist.md
+./docs/engineering/phase-0-29-checklist.md
 ./docs/engineering/phase-0-3-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
 ./docs/engineering/phase-0-5-checklist.md
@@ -144,6 +145,7 @@
 ./docs/traceability/phase-0-26-configuration-security.md
 ./docs/traceability/phase-0-27-http-security.md
 ./docs/traceability/phase-0-28-error-security.md
+./docs/traceability/phase-0-29-error-boundary-runtime.md
 ./docs/traceability/phase-0-3-requirements.md
 ./docs/traceability/phase-0-4-requirements.md
 ./docs/traceability/phase-0-5-requirements.md
@@ -226,6 +228,7 @@
 ./scripts/verify-phase-0-26.mjs
 ./scripts/verify-phase-0-27.mjs
 ./scripts/verify-phase-0-28.mjs
+./scripts/verify-phase-0-29.mjs
 ./scripts/verify-phase-0-3.mjs
 ./scripts/verify-phase-0-4.mjs
 ./scripts/verify-phase-0-5.mjs

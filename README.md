@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.28**.
+Current checkpoint: **Engineering Phase 0.29**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -11,6 +11,8 @@ Phase 0.26 makes configuration security executable: verification delivery now de
 Phase 0.27 adds executable HTTP safety defaults: bounded request bodies, no-store responses, restrictive browser capabilities, anti-framing and MIME-sniffing controls, HSTS and canonical `main`-branch hosted CI.
 
 Phase 0.28 adds server-owned request correlation and privacy-safe API error contracts for unknown routes, oversized bodies and unexpected client/server failures.
+
+Phase 0.29 closes the executable API error boundary with runtime contracts for malformed JSON, unexpected server failures, secret non-disclosure and unique server-owned correlation IDs.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 

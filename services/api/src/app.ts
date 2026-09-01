@@ -129,8 +129,8 @@ export function buildApi(config: ApiConfig, dependencies: ApiDependencies): Fast
 
   app.get('/v1/build-info', async () => ({
     product: 'DAZAT Mobility',
-    checkpoint: 'engineering-phase-0.28',
-    implementationStatus: 'API_RUNTIME_CONFIGURATION_HTTP_AND_ERROR_SECURITY_CONTRACTS_VERIFIED_PROVIDER_AND_OPERATIONAL_MUTATIONS_DISABLED'
+    checkpoint: 'engineering-phase-0.29',
+    implementationStatus: 'API_RUNTIME_CONFIGURATION_HTTP_AND_COMPLETE_ERROR_BOUNDARY_CONTRACTS_VERIFIED_PROVIDER_AND_OPERATIONAL_MUTATIONS_DISABLED'
   }));
 
   registerIdentityRoutes(app, database, config, verificationDelivery);
