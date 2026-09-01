@@ -152,7 +152,7 @@ for (const gate of ["'VIEW_PROFILE'", 'requirePrincipal']) {
 }
 if (/app\.(?:post|put|patch|delete)\(/.test(routes)) errors.push('Communications closure routes expose an unapproved mutation');
 
-const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
+const main = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
 for (const value of ['registerCommunicationsClosureRoutes', 'communicationsClosureExecution']) {
   if (!main.includes(value)) errors.push(`API bootstrap missing Phase 0.16 value: ${value}`);
 }

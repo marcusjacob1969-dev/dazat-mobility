@@ -161,7 +161,7 @@ for (const truth of [
 ]) if (!config.includes(truth)) errors.push(`Configuration missing institutional transport boundary: ${truth}`);
 const environment = readFileSync(join(root, '.env.example'), 'utf8');
 if (!environment.includes('INSTITUTIONAL_TRANSPORT_MUTATION_MODE=disabled')) errors.push('Environment missing Phase 0.18 disabled truth');
-const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
+const main = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
 for (const truth of ['registerInstitutionalTransportRoutes', 'institutionalTransportMutation']) {
   if (!main.includes(truth)) errors.push(`API bootstrap missing Phase 0.18 value: ${truth}`);
 }

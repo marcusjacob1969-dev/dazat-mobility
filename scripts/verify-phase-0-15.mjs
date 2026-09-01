@@ -120,7 +120,7 @@ for (const gate of ["'VIEW_PROFILE'", 'requirePrincipal']) {
 }
 if (/app\.(?:post|put|patch|delete)\(/.test(routes)) errors.push('Communications operations routes expose an unapproved mutation');
 
-const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
+const main = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
 for (const value of [
   'registerCommunicationsOperationsRoutes',
   'contactCentreMutation', 'communicationsScenarioExecution'

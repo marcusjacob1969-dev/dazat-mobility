@@ -112,6 +112,7 @@
 ./docs/engineering/phase-0-22-checklist.md
 ./docs/engineering/phase-0-23-checklist.md
 ./docs/engineering/phase-0-24-dependency-security.md
+./docs/engineering/phase-0-25-checklist.md
 ./docs/engineering/phase-0-3-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
 ./docs/engineering/phase-0-5-checklist.md
@@ -136,6 +137,7 @@
 ./docs/traceability/phase-0-21-runtime-readiness.md
 ./docs/traceability/phase-0-22-ci-migration-verification.md
 ./docs/traceability/phase-0-23-workspace-compilation.md
+./docs/traceability/phase-0-25-api-runtime-contract.md
 ./docs/traceability/phase-0-3-requirements.md
 ./docs/traceability/phase-0-4-requirements.md
 ./docs/traceability/phase-0-5-requirements.md
@@ -214,6 +216,7 @@
 ./scripts/verify-phase-0-20.mjs
 ./scripts/verify-phase-0-21.mjs
 ./scripts/verify-phase-0-22.mjs
+./scripts/verify-phase-0-25.mjs
 ./scripts/verify-phase-0-3.mjs
 ./scripts/verify-phase-0-4.mjs
 ./scripts/verify-phase-0-5.mjs
@@ -223,6 +226,7 @@
 ./scripts/verify-phase-0-9.mjs
 ./scripts/verify-postgres-migrations.mjs
 ./services/api/package.json
+./services/api/src/app.ts
 ./services/api/src/config.ts
 ./services/api/src/db.ts
 ./services/api/src/main.ts
@@ -275,6 +279,7 @@
 ./services/workers/package.json
 ./services/workers/src/main.ts
 ./services/workers/tsconfig.json
+./tests/api/runtime-contract.test.mjs
 ./tests/domain/authentication.test.mjs
 ./tests/domain/booking-status.test.mjs
 ./tests/domain/communications-closure-source.test.mjs

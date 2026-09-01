@@ -174,7 +174,7 @@ for (const truth of ["readonly institutionalLiveMutationMode: 'disabled'", 'INST
 }
 const environment = readFileSync(join(root, '.env.example'), 'utf8');
 if (!environment.includes('INSTITUTIONAL_LIVE_MUTATION_MODE=disabled')) errors.push('Environment missing Phase 0.20 disabled truth');
-const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
+const main = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
 for (const truth of ['registerInstitutionalLiveOperationsRoutes', 'NOT_REQUIRED_FOR_PHASE_0_20_INSTITUTIONAL_LIVE_OPERATIONS_FOUNDATION', 'institutionalLiveMutation']) {
   if (!main.includes(truth)) errors.push(`API bootstrap missing Phase 0.20 value: ${truth}`);
 }

@@ -94,7 +94,7 @@ for (const gate of ["'VIEW_PROFILE'", 'IDEMPOTENCY_KEY_REQUIRED', 'row.recipient
   if (!routes.includes(gate) && !service.includes(gate)) errors.push(`Communications API gate missing: ${gate}`);
 }
 
-const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
+const main = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
 for (const value of ['registerCommunicationRoutes', 'communicationProvider']) {
   if (!main.includes(value)) errors.push(`API bootstrap missing Phase 0.13 value: ${value}`);
 }

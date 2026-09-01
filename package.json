@@ -56,6 +56,8 @@
     "test:phase-0-21-domain": "node --test tests/domain/postgres-migration-runner-source.test.mjs",
     "test:phase-0-22-domain": "node --test tests/domain/postgres-migration-ci-source.test.mjs",
     "verify:migrations:postgres": "node scripts/verify-postgres-migrations.mjs",
-    "audit:security": "npm audit --audit-level=high"
+    "audit:security": "npm audit --audit-level=high",
+    "verify:phase-0-25": "node scripts/verify-phase-0-25.mjs",
+    "test:api-runtime": "npm run test:runtime --workspace @dazat/api"
   }
 }

@@ -146,7 +146,7 @@ const environment = readFileSync(join(root, '.env.example'), 'utf8');
 for (const value of ['ORGANISATION_MUTATION_MODE=disabled', 'ORGANISATION_INTEGRATION_MODE=disabled']) {
   if (!environment.includes(value)) errors.push(`Environment missing disabled Phase 0.17 truth: ${value}`);
 }
-const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
+const main = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
 for (const value of ['registerOrganisationOperationsRoutes', 'organisationMutation', 'organisationIntegration']) {
   if (!main.includes(value)) errors.push(`API bootstrap missing Phase 0.17 value: ${value}`);
 }

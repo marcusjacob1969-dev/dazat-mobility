@@ -169,7 +169,7 @@ for (const truth of [
 ]) if (!config.includes(truth)) errors.push(`Configuration missing organisation commercial boundary: ${truth}`);
 const environment = readFileSync(join(root, '.env.example'), 'utf8');
 if (!environment.includes('ORGANISATION_COMMERCIAL_MUTATION_MODE=disabled')) errors.push('Environment missing Phase 0.19 disabled truth');
-const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
+const main = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
 for (const truth of [
   'registerOrganisationCommercialOperationsRoutes',
   'organisationCommercialMutation'
