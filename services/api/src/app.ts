@@ -1,4 +1,4 @@
-import Fastify, { type FastifyInstance } from 'fastify';
+import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
 import type { ApiConfig } from './config.js';
 import type { DatabasePool } from './db.js';
 import { registerIdentityRoutes } from './modules/identity/routes.js';
@@ -44,13 +44,18 @@ function configuredPricing(config: ApiConfig): PricingPort {
 export function buildApi(config: ApiConfig, dependencies: ApiDependencies): FastifyInstance {
   const app = Fastify({
     logger: { level: config.logLevel },
-    bodyLimit: 1_048_576
+    bodyLimit: 1_048_576,
+    requestIdHeader: false
   });
   const { database } = dependencies;
   const verificationDelivery = dependencies.verificationDelivery === undefined
     ? configuredVerificationDelivery(config)
     : dependencies.verificationDelivery;
   const pricing = dependencies.pricing ?? configuredPricing(config);
+
+  app.addHook('onRequest', async (request, reply) => {
+    reply.header('x-request-id', request.id);
+  });
 
   app.addHook('onSend', async (_request, reply, payload) => {
     reply.headers({
@@ -64,6 +69,31 @@ export function buildApi(config: ApiConfig, dependencies: ApiDependencies): Fast
       'x-frame-options': 'DENY'
     });
     return payload;
+  });
+
+  app.setNotFoundHandler(async (_request, reply) => reply.code(404).send({
+    code: 'ROUTE_NOT_FOUND',
+    message: 'The requested DAZAT API route does not exist.'
+  }));
+
+  app.setErrorHandler(async (error: FastifyError, request, reply) => {
+    if (error.statusCode === 413) {
+      return reply.code(413).send({
+        code: 'REQUEST_BODY_TOO_LARGE',
+        message: 'The request body exceeds the permitted size.'
+      });
+    }
+    if (error.statusCode && error.statusCode >= 400 && error.statusCode < 500) {
+      return reply.code(error.statusCode).send({
+        code: 'REQUEST_REJECTED',
+        message: 'The request could not be accepted.'
+      });
+    }
+    request.log.error({ err: error }, 'unhandled API error');
+    return reply.code(500).send({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'The request could not be completed.'
+    });
   });
 
   app.get('/health/live', async () => ({ status: 'LIVE' }));
@@ -99,8 +129,8 @@ export function buildApi(config: ApiConfig, dependencies: ApiDependencies): Fast
 
   app.get('/v1/build-info', async () => ({
     product: 'DAZAT Mobility',
-    checkpoint: 'engineering-phase-0.27',
-    implementationStatus: 'API_RUNTIME_CONFIGURATION_AND_HTTP_SECURITY_CONTRACTS_VERIFIED_PROVIDER_AND_OPERATIONAL_MUTATIONS_DISABLED'
+    checkpoint: 'engineering-phase-0.28',
+    implementationStatus: 'API_RUNTIME_CONFIGURATION_HTTP_AND_ERROR_SECURITY_CONTRACTS_VERIFIED_PROVIDER_AND_OPERATIONAL_MUTATIONS_DISABLED'
   }));
 
   registerIdentityRoutes(app, database, config, verificationDelivery);
