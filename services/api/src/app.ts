@@ -67,6 +67,11 @@ export function buildApi(config: ApiConfig, dependencies: ApiDependencies): Fast
       }
     },
     logController: new LogController({ disableRequestLogging: true }),
+    trustProxy: false,
+    connectionTimeout: 10_000,
+    requestTimeout: 30_000,
+    keepAliveTimeout: 5_000,
+    maxRequestsPerSocket: 100,
     bodyLimit: 1_048_576,
     requestIdHeader: false
   });
@@ -168,8 +173,8 @@ export function buildApi(config: ApiConfig, dependencies: ApiDependencies): Fast
 
   app.get('/v1/build-info', async () => ({
     product: 'DAZAT Mobility',
-    checkpoint: 'engineering-phase-0.30',
-    implementationStatus: 'API_RUNTIME_CONFIGURATION_HTTP_ERROR_AND_LOG_PRIVACY_CONTRACTS_VERIFIED_PROVIDER_AND_OPERATIONAL_MUTATIONS_DISABLED'
+    checkpoint: 'engineering-phase-0.31',
+    implementationStatus: 'API_RUNTIME_CONFIGURATION_HTTP_ERROR_LOG_PRIVACY_AND_NETWORK_TRUST_CONTRACTS_VERIFIED_PROVIDER_AND_OPERATIONAL_MUTATIONS_DISABLED'
   }));
 
   registerIdentityRoutes(app, database, config, verificationDelivery);

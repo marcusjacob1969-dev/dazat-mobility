@@ -12,9 +12,11 @@ const errors = [];
 for (const path of required) if (!existsSync(join(root, path))) errors.push(`Missing Phase 0.30 file: ${path}`);
 const app = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
 const tests = readFileSync(join(root, 'tests/api/runtime-contract.test.mjs'), 'utf8');
-for (const truth of ["checkpoint: 'engineering-phase-0.30'", 'new LogController({ disableRequestLogging: true })', "route: request.routeOptions.url ?? 'UNMATCHED'", "censor: '[REDACTED]'", "message: '[REDACTED]'", "stack: '[REDACTED]'"]) {
+for (const truth of ['new LogController({ disableRequestLogging: true })', "route: request.routeOptions.url ?? 'UNMATCHED'", "censor: '[REDACTED]'", "message: '[REDACTED]'", "stack: '[REDACTED]'"]) {
   if (!app.includes(truth)) errors.push(`Log-privacy source missing: ${truth}`);
 }
+const checkpoint = app.match(/checkpoint: 'engineering-phase-0\.(\d+)'/);
+if (!checkpoint || Number(checkpoint[1]) < 30) errors.push('API factory checkpoint predates Phase 0.30');
 for (const secret of ['req.headers.authorization', 'req.headers.cookie', 'req.headers.x-api-key', 'res.headers.set-cookie']) {
   if (!app.includes(secret)) errors.push(`Log redaction path missing: ${secret}`);
 }
