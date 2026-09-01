@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.31**.
+Current checkpoint: **Engineering Phase 0.32**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -17,6 +17,8 @@ Phase 0.29 closes the executable API error boundary with runtime contracts for m
 Phase 0.30 adds privacy-safe operational logging: credential-field redaction, query-free route logging, minimised request/error serializers and runtime proof that sensitive values do not enter logs.
 
 Phase 0.31 adds explicit network trust and resource boundaries: forwarding headers are untrusted until an approved edge is configured, while connection, request, keep-alive and socket-reuse limits are runtime-tested.
+
+Phase 0.32 adds direct session-authority runtime contracts: malformed tokens avoid storage, only token hashes are queried, revoked/expired sessions and denied account capabilities fail closed, and only authoritative sessions refresh activity.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 
