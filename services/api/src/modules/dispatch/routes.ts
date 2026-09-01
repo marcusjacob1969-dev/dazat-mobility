@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { DatabasePool } from '../../db.js';
+import { bearerTokenFromRequest as bearer } from '../../security/bearer-token.js';
 import type { ApiConfig } from '../../config.js';
 import { authenticateBearerSession } from '../identity/session-service.js';
 import {
@@ -34,12 +35,6 @@ const availabilitySchema = z.object({
 const declineOfferSchema = z.object({
   reasonCode: z.enum(['NOT_SUITABLE', 'TAKING_BREAK', 'FINISHING_SOON', 'OTHER'])
 }).strict();
-
-function bearer(request: FastifyRequest): string | null {
-  const header = request.headers.authorization;
-  if (!header?.startsWith('Bearer ')) return null;
-  return header.slice(7).trim() || null;
-}
 
 function idempotencyKey(request: FastifyRequest): string | null {
   const value = request.headers['idempotency-key'];
