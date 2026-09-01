@@ -3,6 +3,7 @@ import type { AccountCapability } from '@dazat/domain';
 import type { SubmitPreShiftCheckRequest } from '@dazat/contracts';
 import { z } from 'zod';
 import type { DatabasePool } from '../../db.js';
+import { bearerTokenFromRequest as bearer } from '../../security/bearer-token.js';
 import { authenticateBearerSession } from '../identity/session-service.js';
 import {
   MaintenanceReliabilityConflictError,
@@ -13,11 +14,6 @@ import {
   listCurrentVerifiedDriverPerks,
   submitDriverPreShiftCheck
 } from './maintenance-reliability-service.js';
-
-function bearer(request: FastifyRequest): string | null {
-  const value = request.headers.authorization;
-  return value?.startsWith('Bearer ') ? value.slice(7).trim() || null : null;
-}
 
 function idempotencyKey(request: FastifyRequest): string | null {
   const value = request.headers['idempotency-key'];
