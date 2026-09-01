@@ -1,16 +1,12 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { DatabasePool } from '../../db.js';
+import { bearerTokenFromRequest as bearer } from '../../security/bearer-token.js';
 import { authenticateBearerSession } from '../identity/session-service.js';
 import {
   getCommunicationsClosureCapabilities,
   getCommunicationsLaunchReadiness,
   getRecipientCommunicationsClosureStatus
 } from './communications-closure-service.js';
-
-function bearer(request: FastifyRequest): string | null {
-  const header = request.headers.authorization;
-  return header?.startsWith('Bearer ') ? header.slice(7).trim() || null : null;
-}
 
 async function requirePrincipal(request: FastifyRequest, reply: FastifyReply, pool: DatabasePool) {
   const token = bearer(request);
