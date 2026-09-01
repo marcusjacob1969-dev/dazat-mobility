@@ -19,7 +19,7 @@ if (manifest.join('\n') !== source.join('\n')) errors.push('SOURCE_MANIFEST.txt 
 
 const workflow = readFileSync(join(root, required[0]), 'utf8');
 for (const truth of [
-  'pull_request:', 'branches: [master]', 'postgis/postgis:16-3.4',
+  'pull_request:', 'branches: [main]', 'postgis/postgis:16-3.4',
   'POSTGRES_DB: dazat_migration_verify_ci', 'DAZAT_MIGRATION_VALIDATION_TARGET: ephemeral',
   'actions/checkout@v4', 'actions/setup-node@v4', 'node-version: 24',
   'workspace-check:', 'cache: npm', 'npm ci --ignore-scripts',
