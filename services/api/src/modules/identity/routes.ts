@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { DatabasePool } from '../../db.js';
+import { bearerTokenFromRequest as bearerFromRequest } from '../../security/bearer-token.js';
 import type { ApiConfig } from '../../config.js';
 import { startAccountRegistration } from './registration-service.js';
 import {
@@ -52,13 +53,6 @@ function toDeviceContext(device: NonNullable<z.infer<typeof confirmVerificationS
 function hashIp(ip: string): string {
   // Operational abuse correlation only. Do not store raw IP in the registration command record.
   return createHash('sha256').update(ip).digest('hex');
-}
-
-function bearerFromRequest(request: FastifyRequest): string | null {
-  const header = request.headers.authorization;
-  if (!header?.startsWith('Bearer ')) return null;
-  const token = header.slice('Bearer '.length).trim();
-  return token || null;
 }
 
 async function requirePrincipal(request: FastifyRequest, reply: FastifyReply, pool: DatabasePool) {
