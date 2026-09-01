@@ -59,6 +59,7 @@
     "audit:security": "npm audit --audit-level=high",
     "verify:phase-0-25": "node scripts/verify-phase-0-25.mjs",
     "test:api-runtime": "npm run test:runtime --workspace @dazat/api",
-    "verify:phase-0-26": "node scripts/verify-phase-0-26.mjs"
+    "verify:phase-0-26": "node scripts/verify-phase-0-26.mjs",
+    "verify:phase-0-27": "node scripts/verify-phase-0-27.mjs"
   }
 }
