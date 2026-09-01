@@ -63,6 +63,7 @@
     "verify:phase-0-27": "node scripts/verify-phase-0-27.mjs",
     "verify:phase-0-28": "node scripts/verify-phase-0-28.mjs",
     "verify:phase-0-29": "node scripts/verify-phase-0-29.mjs",
-    "verify:phase-0-30": "node scripts/verify-phase-0-30.mjs"
+    "verify:phase-0-30": "node scripts/verify-phase-0-30.mjs",
+    "verify:phase-0-31": "node scripts/verify-phase-0-31.mjs"
   }
 }
