@@ -58,6 +58,7 @@
     "verify:migrations:postgres": "node scripts/verify-postgres-migrations.mjs",
     "audit:security": "npm audit --audit-level=high",
     "verify:phase-0-25": "node scripts/verify-phase-0-25.mjs",
-    "test:api-runtime": "npm run test:runtime --workspace @dazat/api"
+    "test:api-runtime": "npm run test:runtime --workspace @dazat/api",
+    "verify:phase-0-26": "node scripts/verify-phase-0-26.mjs"
   }
 }

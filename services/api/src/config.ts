@@ -70,9 +70,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     throw new Error('RIDECHECK_PEPPER of at least 32 characters is required');
   }
 
-  const verificationDeliveryMode = env.VERIFICATION_DELIVERY_MODE === 'disabled'
-    ? 'disabled'
-    : 'development_console';
+  const verificationDeliveryMode = env.VERIFICATION_DELIVERY_MODE === 'development_console'
+    ? 'development_console'
+    : 'disabled';
   const pricingMode = env.PRICING_MODE === 'development_fixture' ? 'development_fixture' : 'disabled';
   if (env.PAYMENT_PROVIDER_MODE && env.PAYMENT_PROVIDER_MODE !== 'disabled') {
     throw new Error('PAYMENT_PROVIDER_MODE must remain disabled until a provider and production controls are approved');

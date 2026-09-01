@@ -2,9 +2,11 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.25**.
+Current checkpoint: **Engineering Phase 0.26**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
+
+Phase 0.26 makes configuration security executable: verification delivery now defaults disabled, development fixtures require explicit selection, and secrets, provider/mutation switches, pricing amounts and safety-critical numeric bounds are runtime-tested.
 
 The server-authoritative vertical slice now reaches governed Journey completion:
 

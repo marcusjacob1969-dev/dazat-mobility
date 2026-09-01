@@ -18,10 +18,11 @@ for (const truth of [
   "app.get('/health/live'",
   "app.get('/health/ready'",
   "await database.query('SELECT 1')",
-  "checkpoint: 'engineering-phase-0.25'",
   "status: 'NOT_READY'",
   'await database.end()'
 ]) if (!app.includes(truth)) errors.push(`API factory missing: ${truth}`);
+const checkpoint = app.match(/checkpoint: 'engineering-phase-0\.(\d+)'/);
+if (!checkpoint || Number(checkpoint[1]) < 25) errors.push('API factory checkpoint predates Phase 0.25');
 
 const main = readFileSync(join(root, 'services/api/src/main.ts'), 'utf8');
 if (!main.includes('buildApi(config, { database })')) errors.push('Production entry point does not delegate to the API factory');
