@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { DatabasePool } from '../../db.js';
+import { bearerTokenFromRequest as bearer } from '../../security/bearer-token.js';
 import { authenticateBearerSession } from '../identity/session-service.js';
 import {
   FleetOperationsForbiddenError,
@@ -11,10 +12,6 @@ import {
   validateDriverVehicleAssignment
 } from './fleet-operations-service.js';
 
-function bearer(request: FastifyRequest): string | null {
-  const value = request.headers.authorization;
-  return value?.startsWith('Bearer ') ? value.slice(7).trim() || null : null;
-}
 async function requireDriver(request: FastifyRequest, reply: FastifyReply, pool: DatabasePool) {
   const token = bearer(request);
   if (!token) { await reply.code(401).send({ code: 'AUTHENTICATION_REQUIRED' }); return null; }
