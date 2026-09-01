@@ -7,6 +7,7 @@ const root = fileURLToPath(new URL('../..', import.meta.url));
 const workflow = readFileSync(`${root}/.github/workflows/postgres-migration-verification.yml`, 'utf8');
 
 test('CI uses a disposable allowlisted PostGIS database', () => {
+  assert.match(workflow, /branches: \[main\]/);
   assert.match(workflow, /postgis\/postgis:16-3\.4/);
   assert.match(workflow, /POSTGRES_DB: dazat_migration_verify_ci/);
   assert.match(workflow, /DAZAT_MIGRATION_VALIDATION_TARGET: ephemeral/);
