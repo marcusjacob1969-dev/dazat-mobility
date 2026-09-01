@@ -31,7 +31,7 @@ test('liveness and build metadata do not depend on database availability', async
 
   const build = await app.inject({ method: 'GET', url: '/v1/build-info' });
   assert.equal(build.statusCode, 200);
-  assert.equal(build.json().checkpoint, 'engineering-phase-0.29');
+  assert.equal(build.json().checkpoint, 'engineering-phase-0.30');
   assert.equal(build.headers['cache-control'], 'no-store');
   assert.equal(build.headers['x-content-type-options'], 'nosniff');
   assert.equal(build.headers['x-frame-options'], 'DENY');
@@ -125,6 +125,45 @@ test('server-owned correlation IDs are unique between requests', async () => {
   assert.match(first.headers['x-request-id'], /^req-/);
   assert.match(second.headers['x-request-id'], /^req-/);
   assert.notEqual(first.headers['x-request-id'], second.headers['x-request-id']);
+  await app.close();
+});
+
+test('operational logs exclude credentials query values and internal error details', async () => {
+  const dependency = databaseDouble(async () => ({ rows: [] }));
+  const records = [];
+  const app = buildApi(
+    { ...config, logLevel: 'info' },
+    {
+      database: dependency.database,
+      logStream: { write: (message) => records.push(message) }
+    }
+  );
+  app.get('/__phase-0-30/log-privacy-contract', async () => {
+    throw new Error('internal-database-password-must-not-enter-logs');
+  });
+  const response = await app.inject({
+    method: 'GET',
+    url: '/__phase-0-30/log-privacy-contract?token=query-secret-must-not-enter-logs',
+    headers: {
+      authorization: 'Bearer authorization-secret-must-not-enter-logs',
+      cookie: 'session=cookie-secret-must-not-enter-logs',
+      'x-api-key': 'api-key-secret-must-not-enter-logs'
+    }
+  });
+  assert.equal(response.statusCode, 500);
+  const output = records.join('');
+  for (const secret of [
+    'internal-database-password-must-not-enter-logs',
+    'query-secret-must-not-enter-logs',
+    'authorization-secret-must-not-enter-logs',
+    'cookie-secret-must-not-enter-logs',
+    'api-key-secret-must-not-enter-logs'
+  ]) {
+    assert.equal(output.includes(secret), false);
+  }
+  assert.equal(output.includes('/__phase-0-30/log-privacy-contract?'), false);
+  assert.equal(output.includes('/__phase-0-30/log-privacy-contract'), true);
+  assert.equal(output.includes(response.headers['x-request-id']), true);
   await app.close();
 });
 
