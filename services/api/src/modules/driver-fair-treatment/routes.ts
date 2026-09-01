@@ -3,6 +3,7 @@ import type { AccountCapability } from '@dazat/domain';
 import type { SubmitDriverAppealRequest, SubmitRiderConductReportRequest } from '@dazat/contracts';
 import { z } from 'zod';
 import type { DatabasePool } from '../../db.js';
+import { bearerTokenFromRequest as bearer } from '../../security/bearer-token.js';
 import { authenticateBearerSession } from '../identity/session-service.js';
 import {
   DriverFairTreatmentConflictError,
@@ -15,11 +16,6 @@ import {
   submitDriverAppeal,
   submitRiderConductReport
 } from './driver-fair-treatment-service.js';
-
-function bearer(request: FastifyRequest): string | null {
-  const value = request.headers.authorization;
-  return value?.startsWith('Bearer ') ? value.slice(7).trim() || null : null;
-}
 
 function idempotencyKey(request: FastifyRequest): string | null {
   const value = request.headers['idempotency-key'];

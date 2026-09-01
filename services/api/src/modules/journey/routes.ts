@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { ApiConfig } from '../../config.js';
 import type { DatabasePool } from '../../db.js';
+import { bearerTokenFromRequest as bearer } from '../../security/bearer-token.js';
 import { authenticateBearerSession } from '../identity/session-service.js';
 import {
   acknowledgeDriverAssignment,
@@ -67,12 +68,6 @@ function toRouteChangeLocation(location: z.infer<typeof routeChangeLocationSchem
 
 function toRouteChangeRequest(input: z.infer<typeof routeChangeSchema>): RouteChangeRequest {
   return { ...input, location: toRouteChangeLocation(input.location) };
-}
-
-function bearer(request: FastifyRequest): string | null {
-  const header = request.headers.authorization;
-  if (!header?.startsWith('Bearer ')) return null;
-  return header.slice(7).trim() || null;
 }
 
 function idempotencyKey(request: FastifyRequest): string | null {

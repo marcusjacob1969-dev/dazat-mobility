@@ -121,6 +121,7 @@
 ./docs/engineering/phase-0-30-checklist.md
 ./docs/engineering/phase-0-31-checklist.md
 ./docs/engineering/phase-0-32-checklist.md
+./docs/engineering/phase-0-33-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
 ./docs/engineering/phase-0-5-checklist.md
 ./docs/engineering/phase-0-6-checklist.md
@@ -153,6 +154,7 @@
 ./docs/traceability/phase-0-30-log-privacy.md
 ./docs/traceability/phase-0-31-network-trust.md
 ./docs/traceability/phase-0-32-session-authority.md
+./docs/traceability/phase-0-33-bearer-boundary.md
 ./docs/traceability/phase-0-4-requirements.md
 ./docs/traceability/phase-0-5-requirements.md
 ./docs/traceability/phase-0-6-requirements.md
@@ -239,6 +241,7 @@
 ./scripts/verify-phase-0-30.mjs
 ./scripts/verify-phase-0-31.mjs
 ./scripts/verify-phase-0-32.mjs
+./scripts/verify-phase-0-33.mjs
 ./scripts/verify-phase-0-4.mjs
 ./scripts/verify-phase-0-5.mjs
 ./scripts/verify-phase-0-6.mjs
@@ -295,11 +298,13 @@
 ./services/api/src/modules/safety/safety-service.ts
 ./services/api/src/modules/telephony-voice/routes.ts
 ./services/api/src/modules/telephony-voice/telephony-voice-service.ts
+./services/api/src/security/bearer-token.ts
 ./services/api/src/security/secret-utils.ts
 ./services/api/tsconfig.json
 ./services/workers/package.json
 ./services/workers/src/main.ts
 ./services/workers/tsconfig.json
+./tests/api/bearer-token-runtime.test.mjs
 ./tests/api/config-security.test.mjs
 ./tests/api/runtime-contract.test.mjs
 ./tests/api/session-auth-runtime.test.mjs

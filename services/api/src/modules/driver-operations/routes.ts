@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { AccountCapability } from '@dazat/domain';
 import { z } from 'zod';
 import type { DatabasePool } from '../../db.js';
+import { bearerTokenFromRequest as bearer } from '../../security/bearer-token.js';
 import { authenticateBearerSession } from '../identity/session-service.js';
 import {
   DriverOperationsConflictError,
@@ -12,11 +13,6 @@ import {
   getDriverOperatingEligibilityProjection,
   startOrResumeDriverApplication
 } from './driver-operations-service.js';
-
-function bearer(request: FastifyRequest): string | null {
-  const header = request.headers.authorization;
-  return header?.startsWith('Bearer ') ? header.slice(7).trim() || null : null;
-}
 
 function idempotencyKey(request: FastifyRequest): string | null {
   const value = request.headers['idempotency-key'];

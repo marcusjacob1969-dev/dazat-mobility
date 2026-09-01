@@ -13,9 +13,11 @@ for (const path of required) if (!existsSync(join(root, path))) errors.push(`Mis
 const app = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
 const session = readFileSync(join(root, 'services/api/src/modules/identity/session-service.ts'), 'utf8');
 const tests = readFileSync(join(root, 'tests/api/session-auth-runtime.test.mjs'), 'utf8');
-for (const truth of ["checkpoint: 'engineering-phase-0.32'", "bearerToken.startsWith('dzs_')", 'hashOpaqueSecret(bearerToken)', 'isSessionAuthoritative', 'canUseAccountCapability', 'last_seen_at']) {
+for (const truth of ["bearerToken.startsWith('dzs_')", 'hashOpaqueSecret(bearerToken)', 'isSessionAuthoritative', 'canUseAccountCapability', 'last_seen_at']) {
   if (!(app + session).includes(truth)) errors.push(`Session-authority source missing: ${truth}`);
 }
+const checkpoint = app.match(/checkpoint: 'engineering-phase-0\.(\d+)'/);
+if (!checkpoint || Number(checkpoint[1]) < 32) errors.push('API factory checkpoint predates Phase 0.32');
 for (const truth of ['malformed bearer tokens fail before database access', 'queries only a token hash', 'revoked and expired sessions fail closed', 'account capability denial fails closed']) {
   if (!tests.includes(truth)) errors.push(`Runtime session contract missing: ${truth}`);
 }

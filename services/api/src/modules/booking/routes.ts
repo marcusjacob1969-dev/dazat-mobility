@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { DatabasePool } from '../../db.js';
+import { bearerTokenFromRequest as bearer } from '../../security/bearer-token.js';
 import {
   BookingConflictError,
   BookingForbiddenError,
@@ -45,12 +46,6 @@ function toLocationInput(location: z.infer<typeof locationSchema>): LocationInpu
     ...(location.structuredAddress === undefined ? {} : { structuredAddress: location.structuredAddress }),
     ...(location.providerReference === undefined ? {} : { providerReference: location.providerReference })
   };
-}
-
-function bearer(request: FastifyRequest): string | null {
-  const header = request.headers.authorization;
-  if (!header?.startsWith('Bearer ')) return null;
-  return header.slice(7).trim() || null;
 }
 
 function idempotencyKey(request: FastifyRequest): string | null {
