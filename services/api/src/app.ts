@@ -42,12 +42,29 @@ function configuredPricing(config: ApiConfig): PricingPort {
 }
 
 export function buildApi(config: ApiConfig, dependencies: ApiDependencies): FastifyInstance {
-  const app = Fastify({ logger: { level: config.logLevel } });
+  const app = Fastify({
+    logger: { level: config.logLevel },
+    bodyLimit: 1_048_576
+  });
   const { database } = dependencies;
   const verificationDelivery = dependencies.verificationDelivery === undefined
     ? configuredVerificationDelivery(config)
     : dependencies.verificationDelivery;
   const pricing = dependencies.pricing ?? configuredPricing(config);
+
+  app.addHook('onSend', async (_request, reply, payload) => {
+    reply.headers({
+      'cache-control': 'no-store',
+      'content-security-policy': "default-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+      'cross-origin-resource-policy': 'same-origin',
+      'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+      'referrer-policy': 'no-referrer',
+      'strict-transport-security': 'max-age=31536000; includeSubDomains',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'DENY'
+    });
+    return payload;
+  });
 
   app.get('/health/live', async () => ({ status: 'LIVE' }));
 
@@ -82,8 +99,8 @@ export function buildApi(config: ApiConfig, dependencies: ApiDependencies): Fast
 
   app.get('/v1/build-info', async () => ({
     product: 'DAZAT Mobility',
-    checkpoint: 'engineering-phase-0.26',
-    implementationStatus: 'API_RUNTIME_AND_CONFIGURATION_SECURITY_CONTRACTS_VERIFIED_PROVIDER_AND_OPERATIONAL_MUTATIONS_DISABLED'
+    checkpoint: 'engineering-phase-0.27',
+    implementationStatus: 'API_RUNTIME_CONFIGURATION_AND_HTTP_SECURITY_CONTRACTS_VERIFIED_PROVIDER_AND_OPERATIONAL_MUTATIONS_DISABLED'
   }));
 
   registerIdentityRoutes(app, database, config, verificationDelivery);
