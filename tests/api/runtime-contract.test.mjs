@@ -31,7 +31,7 @@ test('liveness and build metadata do not depend on database availability', async
 
   const build = await app.inject({ method: 'GET', url: '/v1/build-info' });
   assert.equal(build.statusCode, 200);
-  assert.equal(build.json().checkpoint, 'engineering-phase-0.28');
+  assert.equal(build.json().checkpoint, 'engineering-phase-0.29');
   assert.equal(build.headers['cache-control'], 'no-store');
   assert.equal(build.headers['x-content-type-options'], 'nosniff');
   assert.equal(build.headers['x-frame-options'], 'DENY');
@@ -75,6 +75,56 @@ test('unknown routes use a privacy-safe contract and ignore supplied request IDs
   });
   assert.notEqual(response.headers['x-request-id'], 'attacker-controlled-id');
   assert.equal(response.body.includes('secret'), false);
+  await app.close();
+});
+
+test('malformed JSON uses the stable client-error contract without reflecting input', async () => {
+  const dependency = databaseDouble(async () => { throw new Error('database must not be reached'); });
+  const app = buildApi(config, { database: dependency.database });
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/identity/registrations',
+    headers: { 'content-type': 'application/json' },
+    payload: '{"secret":"must-not-be-returned"'
+  });
+  assert.equal(response.statusCode, 400);
+  assert.deepEqual(response.json(), {
+    code: 'REQUEST_REJECTED',
+    message: 'The request could not be accepted.'
+  });
+  assert.equal(response.body.includes('secret'), false);
+  assert.match(response.headers['x-request-id'], /^req-/);
+  await app.close();
+});
+
+test('unexpected server failures use a stable contract without leaking error details', async () => {
+  const dependency = databaseDouble(async () => ({ rows: [] }));
+  const app = buildApi(config, { database: dependency.database });
+  app.get('/__phase-0-29/unhandled-error-contract', async () => {
+    throw new Error('credential host and stack detail must stay private');
+  });
+  const response = await app.inject({
+    method: 'GET',
+    url: '/__phase-0-29/unhandled-error-contract'
+  });
+  assert.equal(response.statusCode, 500);
+  assert.deepEqual(response.json(), {
+    code: 'INTERNAL_SERVER_ERROR',
+    message: 'The request could not be completed.'
+  });
+  assert.equal(response.body.includes('credential'), false);
+  assert.match(response.headers['x-request-id'], /^req-/);
+  await app.close();
+});
+
+test('server-owned correlation IDs are unique between requests', async () => {
+  const dependency = databaseDouble(async () => ({ rows: [] }));
+  const app = buildApi(config, { database: dependency.database });
+  const first = await app.inject({ method: 'GET', url: '/health/live' });
+  const second = await app.inject({ method: 'GET', url: '/health/live' });
+  assert.match(first.headers['x-request-id'], /^req-/);
+  assert.match(second.headers['x-request-id'], /^req-/);
+  assert.notEqual(first.headers['x-request-id'], second.headers['x-request-id']);
   await app.close();
 });
 
