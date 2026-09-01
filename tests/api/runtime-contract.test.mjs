@@ -31,7 +31,7 @@ test('liveness and build metadata do not depend on database availability', async
 
   const build = await app.inject({ method: 'GET', url: '/v1/build-info' });
   assert.equal(build.statusCode, 200);
-  assert.equal(build.json().checkpoint, 'engineering-phase-0.30');
+  assert.equal(build.json().checkpoint, 'engineering-phase-0.31');
   assert.equal(build.headers['cache-control'], 'no-store');
   assert.equal(build.headers['x-content-type-options'], 'nosniff');
   assert.equal(build.headers['x-frame-options'], 'DENY');
@@ -164,6 +164,44 @@ test('operational logs exclude credentials query values and internal error detai
   assert.equal(output.includes('/__phase-0-30/log-privacy-contract?'), false);
   assert.equal(output.includes('/__phase-0-30/log-privacy-contract'), true);
   assert.equal(output.includes(response.headers['x-request-id']), true);
+  await app.close();
+});
+
+test('caller forwarding headers cannot impersonate a trusted edge', async () => {
+  const dependency = databaseDouble(async () => ({ rows: [] }));
+  const app = buildApi(config, { database: dependency.database });
+  app.get('/__phase-0-31/network-trust-contract', async (request) => ({
+    ip: request.ip,
+    protocol: request.protocol,
+    hostname: request.hostname
+  }));
+  const response = await app.inject({
+    method: 'GET',
+    url: '/__phase-0-31/network-trust-contract',
+    headers: {
+      host: 'api.dazat.invalid',
+      'x-forwarded-for': '203.0.113.99',
+      'x-forwarded-proto': 'https',
+      'x-forwarded-host': 'attacker.invalid'
+    },
+    remoteAddress: '127.0.0.1'
+  });
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(response.json(), {
+    ip: '127.0.0.1',
+    protocol: 'http',
+    hostname: 'api.dazat.invalid'
+  });
+  await app.close();
+});
+
+test('network timeout and connection reuse limits are explicit', async () => {
+  const dependency = databaseDouble(async () => ({ rows: [] }));
+  const app = buildApi(config, { database: dependency.database });
+  assert.equal(app.server.timeout, 10_000);
+  assert.equal(app.server.requestTimeout, 30_000);
+  assert.equal(app.server.keepAliveTimeout, 5_000);
+  assert.equal(app.server.maxRequestsPerSocket, 100);
   await app.close();
 });
 
