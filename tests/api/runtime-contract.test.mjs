@@ -31,10 +31,28 @@ test('liveness and build metadata do not depend on database availability', async
 
   const build = await app.inject({ method: 'GET', url: '/v1/build-info' });
   assert.equal(build.statusCode, 200);
-  assert.equal(build.json().checkpoint, 'engineering-phase-0.26');
+  assert.equal(build.json().checkpoint, 'engineering-phase-0.27');
+  assert.equal(build.headers['cache-control'], 'no-store');
+  assert.equal(build.headers['x-content-type-options'], 'nosniff');
+  assert.equal(build.headers['x-frame-options'], 'DENY');
+  assert.match(build.headers['content-security-policy'], /frame-ancestors 'none'/);
 
   await app.close();
   assert.equal(dependency.closeCount(), 1);
+});
+
+test('oversized request bodies are rejected before domain handling', async () => {
+  const dependency = databaseDouble(async () => { throw new Error('database must not be reached'); });
+  const app = buildApi(config, { database: dependency.database });
+  const response = await app.inject({
+    method: 'POST',
+    url: '/v1/identity/registrations',
+    headers: { 'content-type': 'application/json', 'idempotency-key': 'oversized-contract' },
+    payload: JSON.stringify({ padding: 'x'.repeat(1_048_576) })
+  });
+  assert.equal(response.statusCode, 413);
+  assert.equal(response.headers['cache-control'], 'no-store');
+  await app.close();
 });
 
 test('readiness reports the database dependency as ready after a successful probe', async () => {
