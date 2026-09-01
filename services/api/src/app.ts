@@ -1,4 +1,4 @@
-import Fastify, { type FastifyError, type FastifyInstance } from 'fastify';
+import Fastify, { LogController, type FastifyError, type FastifyInstance } from 'fastify';
 import type { ApiConfig } from './config.js';
 import type { DatabasePool } from './db.js';
 import { registerIdentityRoutes } from './modules/identity/routes.js';
@@ -27,6 +27,7 @@ export interface ApiDependencies {
   readonly database: DatabasePool;
   readonly verificationDelivery?: ContactVerificationDeliveryPort | null;
   readonly pricing?: PricingPort;
+  readonly logStream?: { write(message: string): void };
 }
 
 function configuredVerificationDelivery(config: ApiConfig): ContactVerificationDeliveryPort | null {
@@ -43,7 +44,29 @@ function configuredPricing(config: ApiConfig): PricingPort {
 
 export function buildApi(config: ApiConfig, dependencies: ApiDependencies): FastifyInstance {
   const app = Fastify({
-    logger: { level: config.logLevel },
+    logger: {
+      level: config.logLevel,
+      ...(dependencies.logStream ? { stream: dependencies.logStream } : {}),
+      redact: {
+        paths: [
+          'req.headers.authorization',
+          'req.headers.cookie',
+          'req.headers.x-api-key',
+          'res.headers.set-cookie'
+        ],
+        censor: '[REDACTED]'
+      },
+      serializers: {
+        req: (request) => ({ method: request.method }),
+        err: (error) => ({
+          type: error.name,
+          message: '[REDACTED]',
+          stack: '[REDACTED]',
+          code: error.code
+        })
+      }
+    },
+    logController: new LogController({ disableRequestLogging: true }),
     bodyLimit: 1_048_576,
     requestIdHeader: false
   });
@@ -71,6 +94,16 @@ export function buildApi(config: ApiConfig, dependencies: ApiDependencies): Fast
     return payload;
   });
 
+  app.addHook('onResponse', async (request, reply) => {
+    app.log.info({
+      requestId: request.id,
+      method: request.method,
+      route: request.routeOptions.url ?? 'UNMATCHED',
+      statusCode: reply.statusCode,
+      responseTimeMs: reply.elapsedTime
+    }, 'request completed');
+  });
+
   app.setNotFoundHandler(async (_request, reply) => reply.code(404).send({
     code: 'ROUTE_NOT_FOUND',
     message: 'The requested DAZAT API route does not exist.'
@@ -89,7 +122,13 @@ export function buildApi(config: ApiConfig, dependencies: ApiDependencies): Fast
         message: 'The request could not be accepted.'
       });
     }
-    request.log.error({ err: error }, 'unhandled API error');
+    app.log.error({
+      requestId: request.id,
+      method: request.method,
+      route: request.routeOptions.url ?? 'UNMATCHED',
+      errorName: error.name,
+      errorCode: error.code
+    }, 'unhandled API error');
     return reply.code(500).send({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'The request could not be completed.'
@@ -129,8 +168,8 @@ export function buildApi(config: ApiConfig, dependencies: ApiDependencies): Fast
 
   app.get('/v1/build-info', async () => ({
     product: 'DAZAT Mobility',
-    checkpoint: 'engineering-phase-0.29',
-    implementationStatus: 'API_RUNTIME_CONFIGURATION_HTTP_AND_COMPLETE_ERROR_BOUNDARY_CONTRACTS_VERIFIED_PROVIDER_AND_OPERATIONAL_MUTATIONS_DISABLED'
+    checkpoint: 'engineering-phase-0.30',
+    implementationStatus: 'API_RUNTIME_CONFIGURATION_HTTP_ERROR_AND_LOG_PRIVACY_CONTRACTS_VERIFIED_PROVIDER_AND_OPERATIONAL_MUTATIONS_DISABLED'
   }));
 
   registerIdentityRoutes(app, database, config, verificationDelivery);
