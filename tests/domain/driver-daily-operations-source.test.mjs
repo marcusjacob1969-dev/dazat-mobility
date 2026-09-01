@@ -24,11 +24,74 @@ const {
   arrivalCommunicationPlanIsSafe,
   assessDriverConnectivity,
   evaluateDriverOfferDisclosure,
+  evaluateDriverFatigueSafety,
   evaluateDriverSupportRouting,
   homewardPreferenceMayInfluenceRanking,
   queuedCriticalEventSubmissionRoute,
   supplySignalMayBePublished
 } = await import('../../packages/domain/src/driver-daily-operations.ts');
+
+const fatiguePolicy = {
+  warningAfterDutyMinutes: 480,
+  restRequiredAfterDutyMinutes: 600,
+  minimumQualifyingRestMinutes: 30
+};
+
+test('fatigue safety warns before the configured duty boundary', () => {
+  const result = evaluateDriverFatigueSafety({
+    shiftStartedAt: new Date('2030-01-01T00:00:00Z'), lastQualifyingRestStartedAt: null, lastQualifyingRestEndedAt: null,
+    now: new Date('2030-01-01T08:30:00Z'), activeJourney: false,
+    driverReportedFatigue: false, drowsinessSignalObserved: false, policy: fatiguePolicy
+  });
+  assert.equal(result.state, 'WARNING');
+  assert.equal(result.newOffersAllowed, true);
+  assert.equal(result.breakPromptRequired, true);
+});
+
+test('configured duty limit blocks new offers and journey starts without creating fault', () => {
+  const result = evaluateDriverFatigueSafety({
+    shiftStartedAt: new Date('2030-01-01T00:00:00Z'), lastQualifyingRestStartedAt: null, lastQualifyingRestEndedAt: null,
+    now: new Date('2030-01-01T10:00:00Z'), activeJourney: false,
+    driverReportedFatigue: false, drowsinessSignalObserved: false, policy: fatiguePolicy
+  });
+  assert.equal(result.state, 'REST_REQUIRED');
+  assert.equal(result.newOffersAllowed, false);
+  assert.equal(result.newJourneyStartAllowed, false);
+  assert.equal(result.driverFaultFindingCreated, false);
+  assert.ok(result.blockers.includes('DUTY_LIMIT_REACHED'));
+});
+
+test('reported fatigue fails safe even before a numerical limit', () => {
+  const result = evaluateDriverFatigueSafety({
+    shiftStartedAt: new Date('2030-01-01T00:00:00Z'), lastQualifyingRestStartedAt: null, lastQualifyingRestEndedAt: null,
+    now: new Date('2030-01-01T02:00:00Z'), activeJourney: false,
+    driverReportedFatigue: true, drowsinessSignalObserved: false, policy: fatiguePolicy
+  });
+  assert.equal(result.state, 'REST_REQUIRED');
+  assert.ok(result.blockers.includes('DRIVER_REPORTED_FATIGUE'));
+});
+
+test('fatigue during an active journey escalates controlled handover and passenger continuity', () => {
+  const result = evaluateDriverFatigueSafety({
+    shiftStartedAt: new Date('2030-01-01T00:00:00Z'), lastQualifyingRestStartedAt: null, lastQualifyingRestEndedAt: null,
+    now: new Date('2030-01-01T10:30:00Z'), activeJourney: true,
+    driverReportedFatigue: false, drowsinessSignalObserved: true, policy: fatiguePolicy
+  });
+  assert.equal(result.state, 'ACTIVE_JOURNEY_HANDOVER_REQUIRED');
+  assert.equal(result.controlRoomEscalationRequired, true);
+  assert.equal(result.activePassengerContinuityRequired, true);
+});
+
+test('missing duty evidence fails closed and invalid policy is rejected', () => {
+  const input = {
+    shiftStartedAt: null, lastQualifyingRestStartedAt: null, lastQualifyingRestEndedAt: null, now: new Date('2030-01-01T00:00:00Z'),
+    activeJourney: false, driverReportedFatigue: false, drowsinessSignalObserved: false, policy: fatiguePolicy
+  };
+  assert.equal(evaluateDriverFatigueSafety(input).newJourneyStartAllowed, false);
+  assert.throws(() => evaluateDriverFatigueSafety({
+    ...input, policy: { ...fatiguePolicy, restRequiredAfterDutyMinutes: 400 }
+  }), /ordered positive safe integers/);
+});
 
 test('an offer fails closed when ETA and independent Driver earning disclosure are absent', () => {
   const decision = evaluateDriverOfferDisclosure({

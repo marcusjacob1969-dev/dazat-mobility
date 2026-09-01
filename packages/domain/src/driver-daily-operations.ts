@@ -33,6 +33,82 @@ export type DriverSupportCategory = (typeof DRIVER_SUPPORT_CATEGORIES)[number];
 export type DriverSupportRisk = 'ROUTINE' | 'PRIORITY' | 'HIGH_RISK_ACTIVE';
 export type SupplySignalKind = 'CURRENT_OBSERVATION' | 'FORECAST';
 
+export type DriverFatigueSafetyState = 'CLEAR' | 'WARNING' | 'REST_REQUIRED' | 'ACTIVE_JOURNEY_HANDOVER_REQUIRED';
+
+export interface DriverFatigueSafetyInput {
+  readonly shiftStartedAt: Date | null;
+  readonly lastQualifyingRestStartedAt: Date | null;
+  readonly lastQualifyingRestEndedAt: Date | null;
+  readonly now: Date;
+  readonly activeJourney: boolean;
+  readonly driverReportedFatigue: boolean;
+  readonly drowsinessSignalObserved: boolean;
+  readonly policy: {
+    readonly warningAfterDutyMinutes: number;
+    readonly restRequiredAfterDutyMinutes: number;
+    readonly minimumQualifyingRestMinutes: number;
+  };
+}
+
+export interface DriverFatigueSafetyDecision {
+  readonly state: DriverFatigueSafetyState;
+  readonly observedDutyMinutes: number | null;
+  readonly newOffersAllowed: boolean;
+  readonly newJourneyStartAllowed: boolean;
+  readonly breakPromptRequired: boolean;
+  readonly controlRoomEscalationRequired: boolean;
+  readonly activePassengerContinuityRequired: boolean;
+  readonly driverFaultFindingCreated: false;
+  readonly blockers: readonly string[];
+}
+
+export function evaluateDriverFatigueSafety(input: DriverFatigueSafetyInput): DriverFatigueSafetyDecision {
+  const { warningAfterDutyMinutes, restRequiredAfterDutyMinutes, minimumQualifyingRestMinutes } = input.policy;
+  if (!Number.isSafeInteger(warningAfterDutyMinutes) || warningAfterDutyMinutes <= 0
+    || !Number.isSafeInteger(restRequiredAfterDutyMinutes) || restRequiredAfterDutyMinutes <= warningAfterDutyMinutes
+    || !Number.isSafeInteger(minimumQualifyingRestMinutes) || minimumQualifyingRestMinutes <= 0) {
+    throw new Error('Fatigue policy boundaries must be ordered positive safe integers');
+  }
+  const nowMs = input.now.getTime();
+  if (Number.isNaN(nowMs)) throw new Error('Fatigue assessment time must be valid');
+  const restMinutes = input.lastQualifyingRestStartedAt && input.lastQualifyingRestEndedAt
+    ? Math.floor((input.lastQualifyingRestEndedAt.getTime() - input.lastQualifyingRestStartedAt.getTime()) / 60_000)
+    : null;
+  if (restMinutes !== null && restMinutes < 0) throw new Error('Rest evidence cannot end before it starts');
+  const qualifyingRestEndedAt = restMinutes !== null && restMinutes >= minimumQualifyingRestMinutes
+    ? input.lastQualifyingRestEndedAt : null;
+  const effectiveStart = qualifyingRestEndedAt && input.shiftStartedAt
+    && qualifyingRestEndedAt > input.shiftStartedAt
+    ? qualifyingRestEndedAt : input.shiftStartedAt;
+  const observedDutyMinutes = effectiveStart ? Math.floor((nowMs - effectiveStart.getTime()) / 60_000) : null;
+  if (observedDutyMinutes !== null && observedDutyMinutes < 0) {
+    throw new Error('Fatigue evidence cannot be in the future');
+  }
+  const evidenceMissing = observedDutyMinutes === null;
+  const restRequired = evidenceMissing || input.driverReportedFatigue || input.drowsinessSignalObserved
+    || observedDutyMinutes >= restRequiredAfterDutyMinutes;
+  const warning = !restRequired && observedDutyMinutes >= warningAfterDutyMinutes;
+  const state: DriverFatigueSafetyState = restRequired
+    ? input.activeJourney ? 'ACTIVE_JOURNEY_HANDOVER_REQUIRED' : 'REST_REQUIRED'
+    : warning ? 'WARNING' : 'CLEAR';
+  const blockers: string[] = [];
+  if (evidenceMissing) blockers.push('DUTY_TIME_EVIDENCE_MISSING');
+  if (input.driverReportedFatigue) blockers.push('DRIVER_REPORTED_FATIGUE');
+  if (input.drowsinessSignalObserved) blockers.push('DROWSINESS_SIGNAL_OBSERVED');
+  if (observedDutyMinutes !== null && observedDutyMinutes >= restRequiredAfterDutyMinutes) blockers.push('DUTY_LIMIT_REACHED');
+  return {
+    state,
+    observedDutyMinutes,
+    newOffersAllowed: !restRequired,
+    newJourneyStartAllowed: !restRequired,
+    breakPromptRequired: warning || restRequired,
+    controlRoomEscalationRequired: state === 'ACTIVE_JOURNEY_HANDOVER_REQUIRED',
+    activePassengerContinuityRequired: state === 'ACTIVE_JOURNEY_HANDOVER_REQUIRED',
+    driverFaultFindingCreated: false,
+    blockers
+  };
+}
+
 export interface DriverOfferDisclosureInput {
   readonly pickupDistanceMetres: number | null;
   readonly pickupEtaMinutes: number | null;

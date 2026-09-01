@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.33**.
+Current checkpoint: **Engineering Phase 0.34**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -19,6 +19,10 @@ Phase 0.30 adds privacy-safe operational logging: credential-field redaction, qu
 Phase 0.31 adds explicit network trust and resource boundaries: forwarding headers are untrusted until an approved edge is configured, while connection, request, keep-alive and socket-reuse limits are runtime-tested.
 
 Phase 0.32 adds direct session-authority runtime contracts: malformed tokens avoid storage, only token hashes are queried, revoked/expired sessions and denied account capabilities fail closed, and only authoritative sessions refresh activity.
+
+Phase 0.33 centralises bounded, ambiguity-resistant bearer credential parsing across every authenticated API route module.
+
+Phase 0.34 adds a fail-closed Driver fatigue and duty-time safety decision: configured warning/rest boundaries, Driver self-report and drowsiness evidence stop new offers and Journey starts, while an active passenger triggers controlled handover and Control Room escalation without creating an automatic Driver fault finding.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 

@@ -14,7 +14,9 @@ for (const path of required) if (!existsSync(join(root, path))) errors.push(`Mis
 const app = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
 const parser = readFileSync(join(root, 'services/api/src/security/bearer-token.ts'), 'utf8');
 const tests = readFileSync(join(root, 'tests/api/bearer-token-runtime.test.mjs'), 'utf8');
-for (const truth of ["checkpoint: 'engineering-phase-0.33'", 'MAXIMUM_BEARER_TOKEN_LENGTH = 512', 'bearerPattern', 'bearerTokenFromAuthorization', 'bearerTokenFromRequest']) {
+const checkpoint = app.match(/checkpoint: 'engineering-phase-0\.(\d+)'/);
+if (!checkpoint || Number(checkpoint[1]) < 33) errors.push('Build checkpoint predates Phase 0.33');
+for (const truth of ['MAXIMUM_BEARER_TOKEN_LENGTH = 512', 'bearerPattern', 'bearerTokenFromAuthorization', 'bearerTokenFromRequest']) {
   if (!(app + parser).includes(truth)) errors.push(`Shared bearer source missing: ${truth}`);
 }
 for (const truth of ['case-insensitive standard scheme', 'missing empty ambiguous and multi-value credentials', 'oversized credential headers']) {
