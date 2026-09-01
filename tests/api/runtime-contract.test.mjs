@@ -31,11 +31,12 @@ test('liveness and build metadata do not depend on database availability', async
 
   const build = await app.inject({ method: 'GET', url: '/v1/build-info' });
   assert.equal(build.statusCode, 200);
-  assert.equal(build.json().checkpoint, 'engineering-phase-0.27');
+  assert.equal(build.json().checkpoint, 'engineering-phase-0.28');
   assert.equal(build.headers['cache-control'], 'no-store');
   assert.equal(build.headers['x-content-type-options'], 'nosniff');
   assert.equal(build.headers['x-frame-options'], 'DENY');
   assert.match(build.headers['content-security-policy'], /frame-ancestors 'none'/);
+  assert.match(build.headers['x-request-id'], /^req-/);
 
   await app.close();
   assert.equal(dependency.closeCount(), 1);
@@ -51,7 +52,29 @@ test('oversized request bodies are rejected before domain handling', async () =>
     payload: JSON.stringify({ padding: 'x'.repeat(1_048_576) })
   });
   assert.equal(response.statusCode, 413);
+  assert.deepEqual(response.json(), {
+    code: 'REQUEST_BODY_TOO_LARGE',
+    message: 'The request body exceeds the permitted size.'
+  });
   assert.equal(response.headers['cache-control'], 'no-store');
+  await app.close();
+});
+
+test('unknown routes use a privacy-safe contract and ignore supplied request IDs', async () => {
+  const dependency = databaseDouble(async () => ({ rows: [] }));
+  const app = buildApi(config, { database: dependency.database });
+  const response = await app.inject({
+    method: 'GET',
+    url: '/v1/not-a-real-route?secret=must-not-be-returned',
+    headers: { 'x-request-id': 'attacker-controlled-id' }
+  });
+  assert.equal(response.statusCode, 404);
+  assert.deepEqual(response.json(), {
+    code: 'ROUTE_NOT_FOUND',
+    message: 'The requested DAZAT API route does not exist.'
+  });
+  assert.notEqual(response.headers['x-request-id'], 'attacker-controlled-id');
+  assert.equal(response.body.includes('secret'), false);
   await app.close();
 });
 
