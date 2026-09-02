@@ -18,6 +18,9 @@ export interface ApiConfig {
   readonly dispatchOfferWaveSize: number;
   readonly dispatchLocationMaxAgeSeconds: number;
   readonly dispatchMinimumLocationConfidence: number;
+  readonly driverFatigueWarningAfterDutyMinutes: number;
+  readonly driverFatigueRestRequiredAfterDutyMinutes: number;
+  readonly driverFatigueMinimumQualifyingRestMinutes: number;
   readonly journeyLocationMaxAgeSeconds: number;
   readonly journeyLocationMaximumFutureSkewSeconds: number;
   readonly journeyLocationMaximumAccuracyMetres: number;
@@ -119,6 +122,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       throw new Error('Invalid DEVELOPMENT_QUOTE_AMOUNT_MINOR');
     }
   }
+  const driverFatigueWarningAfterDutyMinutes = parseInteger(env, 'DRIVER_FATIGUE_WARNING_AFTER_DUTY_MINUTES', 480, 60, 720);
+  const driverFatigueRestRequiredAfterDutyMinutes = parseInteger(env, 'DRIVER_FATIGUE_REST_REQUIRED_AFTER_DUTY_MINUTES', 600, 120, 840);
+  if (driverFatigueRestRequiredAfterDutyMinutes <= driverFatigueWarningAfterDutyMinutes) {
+    throw new Error('DRIVER_FATIGUE_REST_REQUIRED_AFTER_DUTY_MINUTES must exceed the warning boundary');
+  }
 
   return {
     port,
@@ -139,6 +147,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     dispatchOfferTtlSeconds: parseInteger(env, 'DISPATCH_OFFER_TTL_SECONDS', 30, 10, 180),
     dispatchOfferWaveSize: parseInteger(env, 'DISPATCH_OFFER_WAVE_SIZE', 3, 1, 20),
     dispatchLocationMaxAgeSeconds: parseInteger(env, 'DISPATCH_LOCATION_MAX_AGE_SECONDS', 90, 15, 600),
+    driverFatigueWarningAfterDutyMinutes,
+    driverFatigueRestRequiredAfterDutyMinutes,
+    driverFatigueMinimumQualifyingRestMinutes: parseInteger(env, 'DRIVER_FATIGUE_MINIMUM_QUALIFYING_REST_MINUTES', 30, 15, 180),
     dispatchMinimumLocationConfidence: (() => {
       const value = Number(env.DISPATCH_MINIMUM_LOCATION_CONFIDENCE ?? '0.5');
       if (!Number.isFinite(value) || value < 0 || value > 1) throw new Error('Invalid DISPATCH_MINIMUM_LOCATION_CONFIDENCE');
