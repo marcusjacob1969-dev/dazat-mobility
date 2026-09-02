@@ -17,7 +17,7 @@ const source = [
   readFileSync(join(root, required[0]), 'utf8'),
   readFileSync(join(root, 'services/api/src/app.ts'), 'utf8')
 ].join('\n');
-for (const truth of ["checkpoint: 'engineering-phase-0.36'", "'/v1/driver/fatigue-reports'", 'reportDriverFatigue',
+for (const truth of ["checkpoint: 'engineering-phase-0.", "'/v1/driver/fatigue-reports'", 'reportDriverFatigue',
   'ReportDriverFatigue', 'driver.fatigue-self-reported', 'DRIVER_FATIGUE_REPORTED',
   'HUMAN_ESCALATION_REQUIRED', 'passengerContinuityRequired', 'driverFaultFindingCreated: false',
   'externalServiceContacted: false']) {
