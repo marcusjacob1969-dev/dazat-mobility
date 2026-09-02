@@ -73,6 +73,7 @@
 ./database/migrations/0018_institutional_passenger_recurring_bulk_foundation.sql
 ./database/migrations/0019_organisation_agreement_policy_finance_governance_foundation.sql
 ./database/migrations/0020_institutional_live_operations_final_closure_foundation.sql
+./database/migrations/0021_driver_fatigue_runtime_boundary.sql
 ./database/seeds/README.md
 ./docs/architecture/ADR-0001-production-foundation.md
 ./docs/architecture/ADR-0002-identity-account-foundation.md
@@ -123,6 +124,7 @@
 ./docs/engineering/phase-0-32-checklist.md
 ./docs/engineering/phase-0-33-checklist.md
 ./docs/engineering/phase-0-34-checklist.md
+./docs/engineering/phase-0-35-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
 ./docs/engineering/phase-0-5-checklist.md
 ./docs/engineering/phase-0-6-checklist.md
@@ -157,6 +159,7 @@
 ./docs/traceability/phase-0-32-session-authority.md
 ./docs/traceability/phase-0-33-bearer-boundary.md
 ./docs/traceability/phase-0-34-fatigue-safety.md
+./docs/traceability/phase-0-35-fatigue-runtime.md
 ./docs/traceability/phase-0-4-requirements.md
 ./docs/traceability/phase-0-5-requirements.md
 ./docs/traceability/phase-0-6-requirements.md
@@ -245,6 +248,7 @@
 ./scripts/verify-phase-0-32.mjs
 ./scripts/verify-phase-0-33.mjs
 ./scripts/verify-phase-0-34.mjs
+./scripts/verify-phase-0-35.mjs
 ./scripts/verify-phase-0-4.mjs
 ./scripts/verify-phase-0-5.mjs
 ./scripts/verify-phase-0-6.mjs

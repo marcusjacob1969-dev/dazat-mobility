@@ -27,6 +27,7 @@ function eligibleInput(overrides = {}) {
     maxLocationAgeSeconds: 90,
     hasActiveAssignment: false,
     hasScheduleConflict: false,
+    fatigueSafetyPassed: true,
     hardRequirementsMatch: true,
     ...overrides
   };
@@ -62,6 +63,12 @@ test('scoped permission and restrictions remain Dispatch hard filters', () => {
   const restricted = evaluateDriverDispatchEligibility(eligibleInput({ operatingRestrictionActive: true }), now);
   assert.equal(restricted.eligible, false);
   assert.ok(restricted.blockers.includes('OPERATING_RESTRICTION_ACTIVE'));
+});
+
+test('fatigue Safety is a Dispatch hard filter', () => {
+  const result = evaluateDriverDispatchEligibility(eligibleInput({ fatigueSafetyPassed: false }), now);
+  assert.equal(result.eligible, false);
+  assert.ok(result.blockers.includes('FATIGUE_SAFETY_BLOCKED'));
 });
 
 test('availability and offer state machines reject unsafe shortcuts', () => {

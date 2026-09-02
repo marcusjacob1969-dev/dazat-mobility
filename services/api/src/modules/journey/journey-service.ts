@@ -6,6 +6,7 @@ import {
   canStartJourney,
   evaluateArrivalEvidence,
   evaluateLocationEvidence,
+  evaluateDriverFatigueSafety,
   evaluateRideCheckAttempt,
   type BookingStatus,
   type JourneyStatus,
@@ -899,13 +900,39 @@ export async function startJourney(
       [journeyId, locked.journeyLegId]
     );
     const eligible = await assignmentStillEligible(client, locked);
+    const fatigue = await client.query<{
+      shift_started_at: Date | null; last_qualifying_rest_started_at: Date | null;
+      last_qualifying_rest_ended_at: Date | null; driver_reported_fatigue: boolean;
+      drowsiness_signal_observed: boolean;
+    }>(
+      `SELECT shift_started_at, last_qualifying_rest_started_at, last_qualifying_rest_ended_at,
+              driver_reported_fatigue, drowsiness_signal_observed
+         FROM driver.current_fatigue_safety_projection WHERE driver_profile_id = $1`,
+      [locked.driverProfileId]
+    );
+    const fatigueRow = fatigue.rows[0];
+    const fatigueDecision = evaluateDriverFatigueSafety({
+      shiftStartedAt: fatigueRow?.shift_started_at ?? null,
+      lastQualifyingRestStartedAt: fatigueRow?.last_qualifying_rest_started_at ?? null,
+      lastQualifyingRestEndedAt: fatigueRow?.last_qualifying_rest_ended_at ?? null,
+      now: new Date(),
+      activeJourney: false,
+      driverReportedFatigue: fatigueRow?.driver_reported_fatigue ?? false,
+      drowsinessSignalObserved: fatigueRow?.drowsiness_signal_observed ?? false,
+      policy: {
+        warningAfterDutyMinutes: config.driverFatigueWarningAfterDutyMinutes,
+        restRequiredAfterDutyMinutes: config.driverFatigueRestRequiredAfterDutyMinutes,
+        minimumQualifyingRestMinutes: config.driverFatigueMinimumQualifyingRestMinutes
+      }
+    });
+    const fatigueSafetyAllowed = fatigueDecision.newJourneyStartAllowed;
     const location = await latestLocation(client, journeyId);
     const pickupDecision = location ? evaluatePickupLocation(location, locked, new Date(), config) : null;
     const allowed = canStartJourney({
       journeyStatus: locked.journeyStatus,
       rideCheckStatus: rideCheck.rows[0]?.status ?? null,
       assignmentActive: locked.assignmentStatus === 'ACTIVE',
-      assignmentStillEligible: eligible,
+      assignmentStillEligible: eligible && fatigueSafetyAllowed,
       activeOperationalHold: Boolean(hold.rowCount),
       pickupEvidenceAccepted: pickupDecision?.accepted === true && Boolean(arrivalEvidence.rowCount)
     });
@@ -915,6 +942,7 @@ export async function startJourney(
       if (rideCheck.rows[0]?.status !== 'VERIFIED') blockers.push('RIDECHECK_NOT_VERIFIED');
       if (locked.assignmentStatus !== 'ACTIVE') blockers.push('ASSIGNMENT_NOT_ACTIVE');
       if (!eligible) blockers.push('ASSIGNMENT_ELIGIBILITY_CHANGED');
+      if (!fatigueSafetyAllowed) blockers.push('FATIGUE_SAFETY_BLOCKED');
       if (hold.rowCount) blockers.push('ACTIVE_OPERATIONAL_OR_SAFETY_HOLD');
       if (!arrivalEvidence.rowCount) blockers.push('ARRIVAL_EVIDENCE_MISSING');
       if (!location) blockers.push('LOCATION_MISSING');
@@ -930,6 +958,7 @@ export async function startJourney(
       locationObservationId: location!.id,
       distanceMetres: pickupDecision!.distanceMetres,
       assignmentEligibilityRevalidated: true,
+      fatigueSafetyRevalidated: true,
       activeHold: false
     }, correlationId, commandId);
     await appendBookingTransition(client, locked, 'IN_PROGRESS', actor, 'PROTECTED_JOURNEY_START_VALIDATED', correlationId, randomUUID());

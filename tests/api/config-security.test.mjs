@@ -78,4 +78,9 @@ test('safety-critical numeric bounds reject invalid values', () => {
   assert.throws(() => loadConfig({ ...validEnvironment, RIDECHECK_MAXIMUM_ATTEMPTS: '0' }), /Invalid RIDECHECK_MAXIMUM_ATTEMPTS/);
   assert.throws(() => loadConfig({ ...validEnvironment, JOURNEY_LOCATION_MINIMUM_CONFIDENCE: '1.1' }), /JOURNEY_LOCATION_MINIMUM_CONFIDENCE/);
   assert.throws(() => loadConfig({ ...validEnvironment, DISPATCH_MINIMUM_LOCATION_CONFIDENCE: '-0.1' }), /DISPATCH_MINIMUM_LOCATION_CONFIDENCE/);
+  assert.throws(() => loadConfig({
+    ...validEnvironment,
+    DRIVER_FATIGUE_WARNING_AFTER_DUTY_MINUTES: '600',
+    DRIVER_FATIGUE_REST_REQUIRED_AFTER_DUTY_MINUTES: '600'
+  }), /must exceed the warning boundary/);
 });

@@ -14,7 +14,9 @@ for (const path of required) if (!existsSync(join(root, path))) errors.push(`Mis
 const source = readFileSync(join(root, 'packages/domain/src/driver-daily-operations.ts'), 'utf8');
 const tests = readFileSync(join(root, 'tests/domain/driver-daily-operations-source.test.mjs'), 'utf8');
 const app = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
-for (const truth of ["checkpoint: 'engineering-phase-0.34'", 'evaluateDriverFatigueSafety', 'DUTY_TIME_EVIDENCE_MISSING',
+const checkpoint = app.match(/checkpoint: 'engineering-phase-0\.(\d+)'/);
+if (!checkpoint || Number(checkpoint[1]) < 34) errors.push('Build checkpoint predates Phase 0.34');
+for (const truth of ['evaluateDriverFatigueSafety', 'DUTY_TIME_EVIDENCE_MISSING',
   'DRIVER_REPORTED_FATIGUE', 'DROWSINESS_SIGNAL_OBSERVED', 'DUTY_LIMIT_REACHED', 'ACTIVE_JOURNEY_HANDOVER_REQUIRED',
   'driverFaultFindingCreated: false']) {
   if (!(app + source).includes(truth)) errors.push(`Fatigue Safety source missing: ${truth}`);
