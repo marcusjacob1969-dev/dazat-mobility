@@ -10,6 +10,7 @@ import {
 } from '@dazat/domain';
 import type {
   ArrivalCommunicationPlanProjection,
+  ClearDriverFatigueAfterRestProjection,
   ConnectivityReconciliationProjection,
   ConnectivityReconciliationRequest,
   DriverDailyOperationsProjection,
@@ -296,6 +297,139 @@ export async function reportDriverFatigue(
       `INSERT INTO driver.daily_operations_outbox_message
          (event_type, aggregate_type, aggregate_id, correlation_id, causation_id, payload)
        VALUES ('driver.fatigue-self-reported','DriverFatigueObservation',$1,$2,$3,$4::jsonb)`,
+      [fatigueObservationId, correlationId, commandId, JSON.stringify(response)]
+    );
+    await client.query('COMMIT');
+    return response;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function clearDriverFatigueAfterRest(
+  pool: DatabasePool,
+  actor: AuthenticatedPrincipal,
+  fatigueObservationId: string,
+  idempotencyKey: string,
+  config: ApiConfig
+): Promise<ClearDriverFatigueAfterRestProjection> {
+  const driverProfileId = requireDriver(actor);
+  const requestFingerprint = fingerprint({ fatigueObservationId });
+  const client = await pool.connect();
+  const commandId = randomUUID();
+  const correlationId = randomUUID();
+  try {
+    await client.query('BEGIN');
+    const existing = await client.query<{
+      request_fingerprint: string;
+      response_body: ClearDriverFatigueAfterRestProjection;
+    }>(
+      `SELECT request_fingerprint, response_body FROM driver.daily_operations_command_deduplication
+        WHERE command_type = 'ClearDriverFatigueAfterRest' AND driver_profile_id = $1 AND idempotency_key = $2`,
+      [driverProfileId, idempotencyKey]
+    );
+    if (existing.rowCount) {
+      if (existing.rows[0]!.request_fingerprint !== requestFingerprint) {
+        throw new DriverDailyOperationsIdempotencyConflictError('Idempotency key was already used for another fatigue clearance');
+      }
+      await client.query('COMMIT');
+      return existing.rows[0]!.response_body;
+    }
+    const observation = await client.query<{ driver_shift_session_id: string }>(
+      `SELECT driver_shift_session_id FROM driver.driver_fatigue_observation
+        WHERE id = $1 AND driver_profile_id = $2 AND status = 'ACTIVE' FOR UPDATE`,
+      [fatigueObservationId, driverProfileId]
+    );
+    if (!observation.rowCount) {
+      throw new DriverDailyOperationsNotFoundError('Active fatigue observation not found for this Driver');
+    }
+    const shiftId = observation.rows[0]!.driver_shift_session_id;
+    const shift = await client.query(
+      `SELECT 1 FROM driver.driver_shift_session
+        WHERE id = $1 AND driver_profile_id = $2 AND status = 'ACTIVE' FOR UPDATE`,
+      [shiftId, driverProfileId]
+    );
+    if (!shift.rowCount) throw new DriverDailyOperationsConflictError('Fatigue clearance requires the observation active shift');
+    const activeWork = await client.query(
+      `SELECT assignment.id
+         FROM dispatch.driver_assignment assignment
+         LEFT JOIN journey.journey journey ON journey.booking_id = assignment.booking_id
+        WHERE assignment.driver_profile_id = $1
+          AND (assignment.status = 'ACTIVE' OR journey.status IN ('ASSIGNED','ARRIVING','PASSENGER_VERIFIED','IN_PROGRESS'))
+        LIMIT 1 FOR UPDATE OF assignment`,
+      [driverProfileId]
+    );
+    if (activeWork.rowCount) {
+      throw new DriverDailyOperationsConflictError('Controlled handover must complete before fatigue clearance');
+    }
+    const availability = await client.query<{ status: string; version: string | number }>(
+      `SELECT status, version FROM driver.availability_state
+        WHERE driver_profile_id = $1 FOR UPDATE`,
+      [driverProfileId]
+    );
+    if (!availability.rowCount || availability.rows[0]!.status !== 'BREAK') {
+      throw new DriverDailyOperationsConflictError('Driver must remain on BREAK throughout qualifying rest');
+    }
+    const rest = await client.query<{ server_now: Date; rest_minutes: string | number }>(
+      `SELECT clock_timestamp() AS server_now,
+              floor(extract(epoch FROM (clock_timestamp() - event.occurred_at)) / 60)::integer AS rest_minutes
+         FROM driver.driver_shift_event event
+        WHERE event.driver_shift_session_id = $1 AND event.to_availability = 'BREAK'
+        ORDER BY event.occurred_at DESC LIMIT 1`,
+      [shiftId]
+    );
+    if (!rest.rowCount || Number(rest.rows[0]!.rest_minutes) < config.driverFatigueMinimumQualifyingRestMinutes) {
+      throw new DriverDailyOperationsConflictError('Server-evidenced qualifying rest is not yet complete');
+    }
+    const serverNow = rest.rows[0]!.server_now;
+    const qualifyingRestMinutes = Number(rest.rows[0]!.rest_minutes);
+    await client.query(
+      `UPDATE driver.driver_fatigue_observation
+          SET status = 'CLEARED', cleared_at = $3, cleared_by_person_id = $4,
+              clear_reason = 'SERVER_EVIDENCED_QUALIFYING_REST'
+        WHERE id = $1 AND driver_profile_id = $2`,
+      [fatigueObservationId, driverProfileId, serverNow, actor.personId]
+    );
+    const updatedAvailability = await client.query<{ version: string | number }>(
+      `UPDATE driver.availability_state
+          SET version = version + 1, updated_at = $2
+        WHERE driver_profile_id = $1 AND status = 'BREAK'
+        RETURNING version`,
+      [driverProfileId, serverNow]
+    );
+    const availabilityVersion = Number(updatedAvailability.rows[0]!.version);
+    await client.query(
+      `INSERT INTO driver.driver_shift_event
+         (driver_shift_session_id, driver_profile_id, event_type, from_availability,
+          to_availability, availability_version, command_id, reason_code, occurred_at)
+       VALUES ($1,$2,'REST_COMPLETED','BREAK','BREAK',$3,$4,'SERVER_EVIDENCED_QUALIFYING_REST',$5)`,
+      [shiftId, driverProfileId, availabilityVersion, commandId, serverNow]
+    );
+    const response: ClearDriverFatigueAfterRestProjection = {
+      fatigueObservationId,
+      driverShiftSessionId: shiftId,
+      status: 'CLEARED',
+      qualifyingRestMinutes,
+      availabilityStatus: 'BREAK',
+      availabilityVersion,
+      automaticReturnToWork: false,
+      activeJourneyChecked: true,
+      driverFaultFindingCreated: false,
+      clearedAt: serverNow.toISOString()
+    };
+    await client.query(
+      `INSERT INTO driver.daily_operations_command_deduplication
+         (command_id, idempotency_key, command_type, driver_profile_id, request_fingerprint, response_status, response_body)
+       VALUES ($1,$2,'ClearDriverFatigueAfterRest',$3,$4,200,$5::jsonb)`,
+      [commandId, idempotencyKey, driverProfileId, requestFingerprint, JSON.stringify(response)]
+    );
+    await client.query(
+      `INSERT INTO driver.daily_operations_outbox_message
+         (event_type, aggregate_type, aggregate_id, correlation_id, causation_id, payload)
+       VALUES ('driver.fatigue-rest-cleared','DriverFatigueObservation',$1,$2,$3,$4::jsonb)`,
       [fatigueObservationId, correlationId, commandId, JSON.stringify(response)]
     );
     await client.query('COMMIT');

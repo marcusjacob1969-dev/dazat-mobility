@@ -10,6 +10,7 @@ import {
   DriverDailyOperationsForbiddenError,
   DriverDailyOperationsIdempotencyConflictError,
   DriverDailyOperationsNotFoundError,
+  clearDriverFatigueAfterRest,
   getArrivalCommunicationPlan,
   getDriverDailyOperations,
   getDriverSupplyDemand,
@@ -133,6 +134,24 @@ export function registerDriverDailyOperationsRoutes(app: FastifyInstance, pool: 
       const known = sendError(reply, error); if (known) return known;
       request.log.error({ err: error }, 'Driver fatigue self-report failed');
       return reply.code(500).send({ code: 'DRIVER_FATIGUE_REPORT_UNAVAILABLE' });
+    }
+  });
+
+  app.post('/v1/driver/fatigue-observations/:fatigueObservationId/clear-after-rest', async (request, reply) => {
+    const principal = await requireDriver(request, reply, pool, 'VIEW_PROFILE');
+    if (!principal) return;
+    const key = idempotencyKey(request);
+    if (!key) return reply.code(400).send({ code: 'IDEMPOTENCY_KEY_REQUIRED' });
+    const params = z.object({ fatigueObservationId: z.string().uuid() }).strict().safeParse(request.params);
+    if (!params.success) return reply.code(400).send({ code: 'INVALID_FATIGUE_OBSERVATION_ID' });
+    try {
+      return reply.code(200).send(await clearDriverFatigueAfterRest(
+        pool, principal, params.data.fatigueObservationId, key, config
+      ));
+    } catch (error) {
+      const known = sendError(reply, error); if (known) return known;
+      request.log.error({ err: error }, 'Driver fatigue rest clearance failed');
+      return reply.code(500).send({ code: 'DRIVER_FATIGUE_REST_CLEARANCE_UNAVAILABLE' });
     }
   });
 

@@ -148,6 +148,19 @@ export interface DriverFatigueSelfReportProjection {
   readonly recordedAt: string;
 }
 
+export interface ClearDriverFatigueAfterRestProjection {
+  readonly fatigueObservationId: string;
+  readonly driverShiftSessionId: string;
+  readonly status: 'CLEARED';
+  readonly qualifyingRestMinutes: number;
+  readonly availabilityStatus: 'BREAK';
+  readonly availabilityVersion: number;
+  readonly automaticReturnToWork: false;
+  readonly activeJourneyChecked: true;
+  readonly driverFaultFindingCreated: false;
+  readonly clearedAt: string;
+}
+
 export interface DriverSupplySignalProjection {
   readonly observationId: string;
   readonly kind: 'CURRENT_OBSERVATION' | 'FORECAST';
