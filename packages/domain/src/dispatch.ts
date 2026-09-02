@@ -102,6 +102,7 @@ export const DRIVER_ELIGIBILITY_BLOCKERS = [
   'LOCATION_CONFIDENCE_LOW',
   'ACTIVE_ASSIGNMENT',
   'SCHEDULE_CONFLICT',
+  'FATIGUE_SAFETY_BLOCKED',
   'HARD_REQUIREMENT_MISMATCH'
 ] as const;
 export type DriverEligibilityBlocker = (typeof DRIVER_ELIGIBILITY_BLOCKERS)[number];
@@ -123,6 +124,7 @@ export interface DriverDispatchEligibilityInput {
   readonly maxLocationAgeSeconds: number;
   readonly hasActiveAssignment: boolean;
   readonly hasScheduleConflict: boolean;
+  readonly fatigueSafetyPassed: boolean;
   readonly hardRequirementsMatch: boolean;
 }
 
@@ -151,6 +153,7 @@ export function evaluateDriverDispatchEligibility(
   if (input.locationConfidence === null || input.locationConfidence < input.minimumLocationConfidence) blockers.push('LOCATION_CONFIDENCE_LOW');
   if (input.hasActiveAssignment) blockers.push('ACTIVE_ASSIGNMENT');
   if (input.hasScheduleConflict) blockers.push('SCHEDULE_CONFLICT');
+  if (!input.fatigueSafetyPassed) blockers.push('FATIGUE_SAFETY_BLOCKED');
   if (!input.hardRequirementsMatch) blockers.push('HARD_REQUIREMENT_MISMATCH');
   return { eligible: blockers.length === 0, blockers };
 }
