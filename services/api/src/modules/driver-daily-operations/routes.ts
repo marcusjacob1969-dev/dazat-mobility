@@ -15,9 +15,10 @@ import {
   getDriverSupplyDemand,
   listDriverSupportCases,
   openDriverSupportCase,
+  reportDriverFatigue,
   reconcileDriverConnectivity
 } from './driver-daily-operations-service.js';
-import type { ConnectivityReconciliationRequest, OpenDriverSupportCaseRequest } from '@dazat/contracts';
+import type { ConnectivityReconciliationRequest, DriverFatigueSelfReportRequest, OpenDriverSupportCaseRequest } from '@dazat/contracts';
 
 const queuedCriticalEventSchema = z.object({
   clientEventId: z.string().uuid(),
@@ -44,6 +45,12 @@ const supportCaseSchema = z.object({
   vehicleId: z.string().uuid().optional(),
   immediateDanger: z.boolean(),
   serviceContinuityAtRisk: z.boolean()
+}).strict();
+
+const fatigueSelfReportSchema = z.object({
+  observedAt: z.string().datetime({ offset: true }),
+  evidenceReference: z.string().trim().min(3).max(500),
+  immediateDanger: z.boolean()
 }).strict();
 
 function idempotencyKey(request: FastifyRequest): string | null {
@@ -109,6 +116,23 @@ export function registerDriverDailyOperationsRoutes(app: FastifyInstance, pool: 
       const known = sendError(reply, error); if (known) return known;
       request.log.error({ err: error }, 'Driver connectivity reconciliation failed');
       return reply.code(500).send({ code: 'DRIVER_CONNECTIVITY_RECONCILIATION_UNAVAILABLE' });
+    }
+  });
+
+  app.post('/v1/driver/fatigue-reports', async (request, reply) => {
+    const principal = await requireDriver(request, reply, pool, 'ACTIVE_JOURNEY');
+    if (!principal) return;
+    const key = idempotencyKey(request);
+    if (!key) return reply.code(400).send({ code: 'IDEMPOTENCY_KEY_REQUIRED' });
+    const body = fatigueSelfReportSchema.safeParse(request.body);
+    if (!body.success) return reply.code(400).send({ code: 'INVALID_DRIVER_FATIGUE_REPORT' });
+    try {
+      const input: DriverFatigueSelfReportRequest = body.data;
+      return reply.code(201).send(await reportDriverFatigue(pool, principal, input, key));
+    } catch (error) {
+      const known = sendError(reply, error); if (known) return known;
+      request.log.error({ err: error }, 'Driver fatigue self-report failed');
+      return reply.code(500).send({ code: 'DRIVER_FATIGUE_REPORT_UNAVAILABLE' });
     }
   });
 
