@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.37**.
+Current checkpoint: **Engineering Phase 0.38**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -29,6 +29,8 @@ Phase 0.35 connects that decision to append-preserved shift/fatigue evidence, se
 Phase 0.36 adds an idempotent Driver fatigue self-report command. It atomically records evidence, stops new work, moves an unassigned Driver to BREAK, or—when a passenger is active—opens a Safety hold and owned human-escalation case while preserving passenger continuity and avoiding any automatic Driver fault finding.
 
 Phase 0.37 adds governed fatigue clearance after server-evidenced qualifying rest. Clearance is blocked while any assignment or Journey remains active, retains BREAK after clearing, appends an authoritative `REST_COMPLETED` event, and requires a separate eligibility-checked work-intent command before the Driver can receive work again.
+
+Phase 0.38 adds an authoritative Driver fatigue-recovery status read. It reports server-measured rest progress, the configured requirement and exact clearance blockers without mutating state, inventing a fault finding or implying an automatic return to work.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 
