@@ -15,7 +15,9 @@ const dispatch = readFileSync(join(root, 'services/api/src/modules/dispatch/disp
 const journey = readFileSync(join(root, 'services/api/src/modules/journey/journey-service.ts'), 'utf8');
 const config = readFileSync(join(root, 'services/api/src/config.ts'), 'utf8');
 const app = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
-for (const truth of ["checkpoint: 'engineering-phase-0.35'", 'driver.driver_fatigue_observation',
+const checkpoint = app.match(/checkpoint: 'engineering-phase-0\.(\d+)'/);
+if (!checkpoint || Number(checkpoint[1]) < 35) errors.push('Build checkpoint predates Phase 0.35');
+for (const truth of ['driver.driver_fatigue_observation',
   'driver.current_fatigue_safety_projection', 'driver_fatigue_observation_guard', 'FATIGUE_SAFETY_BLOCKED',
   'fatigueSafetyPassed', 'fatigueSafetyRevalidated: true', 'DRIVER_FATIGUE_WARNING_AFTER_DUTY_MINUTES',
   'DRIVER_FATIGUE_REST_REQUIRED_AFTER_DUTY_MINUTES', 'DRIVER_FATIGUE_MINIMUM_QUALIFYING_REST_MINUTES']) {

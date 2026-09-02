@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.35**.
+Current checkpoint: **Engineering Phase 0.36**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -25,6 +25,8 @@ Phase 0.33 centralises bounded, ambiguity-resistant bearer credential parsing ac
 Phase 0.34 adds a fail-closed Driver fatigue and duty-time safety decision: configured warning/rest boundaries, Driver self-report and drowsiness evidence stop new offers and Journey starts, while an active passenger triggers controlled handover and Control Room escalation without creating an automatic Driver fault finding.
 
 Phase 0.35 connects that decision to append-preserved shift/fatigue evidence, server-side Dispatch candidate filtering, offer-acceptance revalidation and protected Journey-start revalidation. Provisional DAZAT safety boundaries are explicit configuration, not claims about a universal legal limit.
+
+Phase 0.36 adds an idempotent Driver fatigue self-report command. It atomically records evidence, stops new work, moves an unassigned Driver to BREAK, or—when a passenger is active—opens a Safety hold and owned human-escalation case while preserving passenger continuity and avoiding any automatic Driver fault finding.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 

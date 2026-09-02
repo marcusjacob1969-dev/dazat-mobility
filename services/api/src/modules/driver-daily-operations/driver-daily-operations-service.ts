@@ -13,6 +13,8 @@ import type {
   ConnectivityReconciliationProjection,
   ConnectivityReconciliationRequest,
   DriverDailyOperationsProjection,
+  DriverFatigueSelfReportProjection,
+  DriverFatigueSelfReportRequest,
   DriverSupplyProjection,
   DriverSupportCaseProjection,
   OpenDriverSupportCaseRequest
@@ -128,6 +130,182 @@ export async function getDriverDailyOperations(
     source: 'AUTHORITATIVE_CURRENT_PROJECTION',
     evaluatedAt: now.toISOString()
   };
+}
+
+export async function reportDriverFatigue(
+  pool: DatabasePool,
+  actor: AuthenticatedPrincipal,
+  request: DriverFatigueSelfReportRequest,
+  idempotencyKey: string
+): Promise<DriverFatigueSelfReportProjection> {
+  const driverProfileId = requireDriver(actor);
+  const observedAt = new Date(request.observedAt);
+  const now = new Date();
+  if (Number.isNaN(observedAt.getTime()) || observedAt.getTime() > now.getTime() + 30_000
+    || now.getTime() - observedAt.getTime() > 86_400_000) {
+    throw new DriverDailyOperationsConflictError('Fatigue observation time is outside the accepted evidence window');
+  }
+  const requestFingerprint = fingerprint(request);
+  const client = await pool.connect();
+  const commandId = randomUUID();
+  const correlationId = randomUUID();
+  try {
+    await client.query('BEGIN');
+    const existingCommand = await client.query<{ request_fingerprint: string; response_body: DriverFatigueSelfReportProjection }>(
+      `SELECT request_fingerprint, response_body FROM driver.daily_operations_command_deduplication
+        WHERE command_type = 'ReportDriverFatigue' AND driver_profile_id = $1 AND idempotency_key = $2`,
+      [driverProfileId, idempotencyKey]
+    );
+    if (existingCommand.rowCount) {
+      if (existingCommand.rows[0]!.request_fingerprint !== requestFingerprint) {
+        throw new DriverDailyOperationsIdempotencyConflictError('Idempotency key was already used for another fatigue report');
+      }
+      await client.query('COMMIT');
+      return existingCommand.rows[0]!.response_body;
+    }
+    const shift = await client.query<{ id: string }>(
+      `SELECT id FROM driver.driver_shift_session
+        WHERE driver_profile_id = $1 AND status = 'ACTIVE' FOR UPDATE`,
+      [driverProfileId]
+    );
+    if (!shift.rowCount) throw new DriverDailyOperationsConflictError('Fatigue self-report requires an active Driver shift');
+    const shiftId = shift.rows[0]!.id;
+    let observation = await client.query<{ id: string; created_at: Date }>(
+      `SELECT id, created_at FROM driver.driver_fatigue_observation
+        WHERE driver_shift_session_id = $1 AND observation_type = 'DRIVER_REPORTED_FATIGUE'
+          AND status = 'ACTIVE' FOR UPDATE`,
+      [shiftId]
+    );
+    if (!observation.rowCount) {
+      observation = await client.query<{ id: string; created_at: Date }>(
+        `INSERT INTO driver.driver_fatigue_observation
+           (driver_profile_id, driver_shift_session_id, observation_type, source_type,
+            evidence_reference, observed_at)
+         VALUES ($1,$2,'DRIVER_REPORTED_FATIGUE','DRIVER_SELF_REPORT',$3,$4)
+         RETURNING id, created_at`,
+        [driverProfileId, shiftId, request.evidenceReference, observedAt]
+      );
+    }
+    const fatigueObservationId = observation.rows[0]!.id;
+    const active = await client.query<{
+      journey_id: string; booking_id: string; vehicle_id: string;
+    }>(
+      `SELECT journey.id AS journey_id, assignment.booking_id, assignment.vehicle_id
+         FROM dispatch.driver_assignment assignment
+         JOIN journey.journey journey ON journey.booking_id = assignment.booking_id
+        WHERE assignment.driver_profile_id = $1 AND assignment.status = 'ACTIVE'
+          AND journey.status IN ('PASSENGER_VERIFIED','IN_PROGRESS','ARRIVING')
+        ORDER BY assignment.assigned_at DESC LIMIT 1 FOR UPDATE OF assignment`,
+      [driverProfileId]
+    );
+    const activeRow = active.rows[0];
+    let operationalHoldId: string | undefined;
+    let supportCaseId: string | undefined;
+    if (activeRow) {
+      let hold = await client.query<{ id: string }>(
+        `SELECT id FROM journey.operational_hold
+          WHERE journey_id = $1 AND reason_code = 'DRIVER_FATIGUE_REPORTED' AND status = 'ACTIVE' FOR UPDATE`,
+        [activeRow.journey_id]
+      );
+      if (!hold.rowCount) {
+        hold = await client.query<{ id: string }>(
+          `INSERT INTO journey.operational_hold
+             (journey_id, status, reason_code, source_type, source_id)
+           VALUES ($1,'ACTIVE','DRIVER_FATIGUE_REPORTED','SAFETY',$2) RETURNING id`,
+          [activeRow.journey_id, fatigueObservationId]
+        );
+        await client.query(
+          `INSERT INTO journey.operational_hold_transition
+             (operational_hold_id, from_status, to_status, actor_type, actor_id, reason_code)
+           VALUES ($1,NULL,'ACTIVE','DRIVER',$2,'DRIVER_FATIGUE_REPORTED')`,
+          [hold.rows[0]!.id, actor.personId]
+        );
+      }
+      operationalHoldId = hold.rows[0]!.id;
+      let support = await client.query<{ id: string }>(
+        `SELECT id FROM operations.driver_support_case
+          WHERE driver_profile_id = $1 AND journey_id = $2 AND category = 'SAFETY'
+            AND summary_reference = $3
+            AND status IN ('HUMAN_ESCALATION_REQUIRED','IN_PROGRESS')
+          ORDER BY created_at DESC LIMIT 1 FOR UPDATE`,
+        [driverProfileId, activeRow.journey_id, `fatigue-observation:${fatigueObservationId}`]
+      );
+      if (!support.rowCount) {
+        support = await client.query<{ id: string }>(
+          `INSERT INTO operations.driver_support_case
+             (driver_profile_id, category, risk, status, journey_id, booking_id, vehicle_id,
+              summary_reference, human_escalation_required, created_by_person_id)
+           VALUES ($1,'SAFETY','HIGH_RISK_ACTIVE','HUMAN_ESCALATION_REQUIRED',$2,$3,$4,$5,true,$6)
+           RETURNING id`,
+          [driverProfileId, activeRow.journey_id, activeRow.booking_id, activeRow.vehicle_id,
+            `fatigue-observation:${fatigueObservationId}`, actor.personId]
+        );
+        await client.query(
+          `INSERT INTO operations.driver_support_case_event
+             (support_case_id, from_status, to_status, actor_type, actor_id, reason_code, evidence_references)
+           VALUES ($1,NULL,'HUMAN_ESCALATION_REQUIRED','DRIVER',$2,'ACTIVE_JOURNEY_FATIGUE_REPORTED',$3::jsonb)`,
+          [support.rows[0]!.id, actor.personId, JSON.stringify([`fatigue-observation:${fatigueObservationId}`])]
+        );
+      }
+      supportCaseId = support.rows[0]!.id;
+    } else {
+      const availability = await client.query<{ status: string; version: string | number }>(
+        `SELECT status, version FROM driver.availability_state
+          WHERE driver_profile_id = $1 AND status IN ('AVAILABLE','OFFERED','FINISHING_SOON') FOR UPDATE`,
+        [driverProfileId]
+      );
+      if (availability.rowCount) {
+        const nextVersion = Number(availability.rows[0]!.version) + 1;
+        await client.query(
+          `UPDATE driver.availability_state SET status = 'BREAK', version = $2, updated_at = now()
+            WHERE driver_profile_id = $1`,
+          [driverProfileId, nextVersion]
+        );
+        await client.query(
+          `INSERT INTO driver.driver_shift_event
+             (driver_shift_session_id, driver_profile_id, event_type, from_availability,
+              to_availability, availability_version, command_id, reason_code)
+           VALUES ($1,$2,'WORK_INTENT_CHANGED',$3::driver.availability_status,$4::driver.availability_status,$5,$6,'DRIVER_FATIGUE_REPORTED')`,
+          [shiftId, driverProfileId, availability.rows[0]!.status, 'BREAK', nextVersion, randomUUID()]
+        );
+      }
+    }
+    const response: DriverFatigueSelfReportProjection = {
+      fatigueObservationId,
+      driverShiftSessionId: shiftId,
+      activeJourney: Boolean(activeRow),
+      ...(activeRow ? { journeyId: activeRow.journey_id, bookingId: activeRow.booking_id } : {}),
+      ...(operationalHoldId ? { operationalHoldId } : {}),
+      ...(supportCaseId ? { supportCaseId } : {}),
+      newOffersAllowed: false,
+      newJourneyStartAllowed: false,
+      breakRequired: true,
+      controlRoomEscalationRequired: Boolean(activeRow),
+      passengerContinuityRequired: Boolean(activeRow),
+      driverFaultFindingCreated: false,
+      externalServiceContacted: false,
+      recordedAt: observation.rows[0]!.created_at.toISOString()
+    };
+    await client.query(
+      `INSERT INTO driver.daily_operations_command_deduplication
+         (command_id, idempotency_key, command_type, driver_profile_id, request_fingerprint, response_status, response_body)
+       VALUES ($1,$2,'ReportDriverFatigue',$3,$4,201,$5::jsonb)`,
+      [commandId, idempotencyKey, driverProfileId, requestFingerprint, JSON.stringify(response)]
+    );
+    await client.query(
+      `INSERT INTO driver.daily_operations_outbox_message
+         (event_type, aggregate_type, aggregate_id, correlation_id, causation_id, payload)
+       VALUES ('driver.fatigue-self-reported','DriverFatigueObservation',$1,$2,$3,$4::jsonb)`,
+      [fatigueObservationId, correlationId, commandId, JSON.stringify(response)]
+    );
+    await client.query('COMMIT');
+    return response;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function reconcileDriverConnectivity(
