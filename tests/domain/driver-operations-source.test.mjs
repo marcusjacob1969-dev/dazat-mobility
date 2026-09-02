@@ -135,6 +135,7 @@ test('Dispatch hard filters scoped permission and active operating restriction',
     maxLocationAgeSeconds: 90,
     hasActiveAssignment: false,
     hasScheduleConflict: false,
+    fatigueSafetyPassed: true,
     hardRequirementsMatch: true
   };
   assert.equal(evaluateDriverDispatchEligibility(base, now).eligible, true);
