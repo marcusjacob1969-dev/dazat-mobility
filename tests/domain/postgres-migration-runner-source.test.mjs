@@ -13,7 +13,7 @@ test('migration runner requires an explicit disposable target confirmation', () 
 });
 
 test('migration runner applies the complete ordered migration chain with psql stop-on-error', () => {
-  assert.match(runner, /migrations\.length !== 23/);
+  assert.match(runner, /migrations\.length !== 24/);
   assert.match(runner, /0001_foundation\.sql/);
   assert.match(runner, /ON_ERROR_STOP=1/);
   assert.match(runner, /Applying \$\{migration\}/);

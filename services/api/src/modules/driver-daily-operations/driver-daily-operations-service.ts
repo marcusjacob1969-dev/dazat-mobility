@@ -190,9 +190,9 @@ export async function reportDriverFatigue(
     }
     const fatigueObservationId = observation.rows[0]!.id;
     const active = await client.query<{
-      journey_id: string; booking_id: string; vehicle_id: string;
+      assignment_id: string; journey_id: string; booking_id: string; vehicle_id: string;
     }>(
-      `SELECT journey.id AS journey_id, assignment.booking_id, assignment.vehicle_id
+      `SELECT assignment.id AS assignment_id, journey.id AS journey_id, assignment.booking_id, assignment.vehicle_id
          FROM dispatch.driver_assignment assignment
          JOIN journey.journey journey ON journey.booking_id = assignment.booking_id
         WHERE assignment.driver_profile_id = $1 AND assignment.status = 'ACTIVE'
@@ -203,6 +203,7 @@ export async function reportDriverFatigue(
     const activeRow = active.rows[0];
     let operationalHoldId: string | undefined;
     let supportCaseId: string | undefined;
+    let controlledHandoverId: string | undefined;
     if (activeRow) {
       let hold = await client.query<{ id: string }>(
         `SELECT id FROM journey.operational_hold
@@ -250,6 +251,28 @@ export async function reportDriverFatigue(
         );
       }
       supportCaseId = support.rows[0]!.id;
+      let handover = await client.query<{ id: string }>(
+        `SELECT id FROM operations.driver_fatigue_handover
+          WHERE fatigue_observation_id = $1 FOR UPDATE`,
+        [fatigueObservationId]
+      );
+      if (!handover.rowCount) {
+        handover = await client.query<{ id: string }>(
+          `INSERT INTO operations.driver_fatigue_handover
+             (fatigue_observation_id, operational_hold_id, support_case_id, journey_id,
+              assignment_id, driver_profile_id)
+           VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
+          [fatigueObservationId, operationalHoldId, supportCaseId, activeRow.journey_id,
+            activeRow.assignment_id, driverProfileId]
+        );
+        await client.query(
+          `INSERT INTO operations.driver_fatigue_handover_transition
+             (handover_id, from_status, to_status, actor_type, actor_id, reason_code, evidence_references)
+           VALUES ($1,NULL,'REQUESTED','DRIVER',$2,'ACTIVE_JOURNEY_FATIGUE_REPORTED',$3::jsonb)`,
+          [handover.rows[0]!.id, actor.personId, JSON.stringify([`fatigue-observation:${fatigueObservationId}`])]
+        );
+      }
+      controlledHandoverId = handover.rows[0]!.id;
     } else {
       const availability = await client.query<{ status: string; version: string | number }>(
         `SELECT status, version FROM driver.availability_state
@@ -279,6 +302,7 @@ export async function reportDriverFatigue(
       ...(activeRow ? { journeyId: activeRow.journey_id, bookingId: activeRow.booking_id } : {}),
       ...(operationalHoldId ? { operationalHoldId } : {}),
       ...(supportCaseId ? { supportCaseId } : {}),
+      ...(controlledHandoverId ? { controlledHandoverId } : {}),
       newOffersAllowed: false,
       newJourneyStartAllowed: false,
       breakRequired: true,
