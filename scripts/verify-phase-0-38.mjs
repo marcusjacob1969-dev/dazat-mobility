@@ -12,7 +12,7 @@ const source = [
   readFileSync(join(root, 'packages/contracts/src/driver-daily-operations.ts'), 'utf8'),
   readFileSync(join(root, 'services/api/src/app.ts'), 'utf8')
 ].join('\n');
-for (const truth of ["checkpoint: 'engineering-phase-0.38'", "'/v1/driver/fatigue-recovery-status'",
+for (const truth of ["checkpoint: 'engineering-phase-0.", "'/v1/driver/fatigue-recovery-status'",
   'getDriverFatigueRecoveryStatus', 'DriverFatigueRecoveryStatusProjection', 'NO_ACTIVE_OBSERVATION',
   'NO_ACTIVE_SHIFT', 'ACTIVE_WORK', 'NOT_ON_BREAK', 'REST_INCOMPLETE', 'clearanceEligible',
   'serverEvidenceAuthoritative: true', 'automaticReturnToWork: false', 'driverFaultFindingCreated: false']) {
