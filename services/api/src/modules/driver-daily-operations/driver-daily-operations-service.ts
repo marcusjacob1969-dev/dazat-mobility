@@ -16,6 +16,7 @@ import type {
   DriverDailyOperationsProjection,
   DriverFatigueSelfReportProjection,
   DriverFatigueSelfReportRequest,
+  DriverFatigueRecoveryStatusProjection,
   DriverSupplyProjection,
   DriverSupportCaseProjection,
   OpenDriverSupportCaseRequest
@@ -440,6 +441,78 @@ export async function clearDriverFatigueAfterRest(
   } finally {
     client.release();
   }
+}
+
+export async function getDriverFatigueRecoveryStatus(
+  pool: DatabasePool,
+  actor: AuthenticatedPrincipal,
+  config: ApiConfig
+): Promise<DriverFatigueRecoveryStatusProjection> {
+  const driverProfileId = requireDriver(actor);
+  const result = await pool.query<{
+    availability_status: DriverFatigueRecoveryStatusProjection['availabilityStatus'];
+    observation_id: string | null;
+    shift_id: string | null;
+    shift_active: boolean;
+    active_work: boolean;
+    rest_minutes: string | number | null;
+    server_now: Date;
+  }>(
+    `SELECT availability.status AS availability_status,
+            observation.id AS observation_id,
+            observation.driver_shift_session_id AS shift_id,
+            EXISTS (SELECT 1 FROM driver.driver_shift_session active_shift
+                     WHERE active_shift.id = observation.driver_shift_session_id AND active_shift.status = 'ACTIVE') AS shift_active,
+            EXISTS (
+              SELECT 1 FROM dispatch.driver_assignment assignment
+              LEFT JOIN journey.journey active_journey ON active_journey.booking_id = assignment.booking_id
+              WHERE assignment.driver_profile_id = profile.id
+                AND (assignment.status = 'ACTIVE' OR active_journey.status IN ('ASSIGNED','ARRIVING','PASSENGER_VERIFIED','IN_PROGRESS'))
+            ) AS active_work,
+            CASE WHEN break_event.occurred_at IS NULL THEN NULL
+                 ELSE floor(extract(epoch FROM (clock_timestamp() - break_event.occurred_at)) / 60)::integer END AS rest_minutes,
+            clock_timestamp() AS server_now
+       FROM driver.driver_profile profile
+       JOIN driver.availability_state availability ON availability.driver_profile_id = profile.id
+       LEFT JOIN LATERAL (
+         SELECT fatigue.id, fatigue.driver_shift_session_id
+           FROM driver.driver_fatigue_observation fatigue
+          WHERE fatigue.driver_profile_id = profile.id AND fatigue.status = 'ACTIVE'
+          ORDER BY fatigue.observed_at DESC LIMIT 1
+       ) observation ON true
+       LEFT JOIN LATERAL (
+         SELECT event.occurred_at
+           FROM driver.driver_shift_event event
+          WHERE event.driver_shift_session_id = observation.driver_shift_session_id
+            AND event.to_availability = 'BREAK'
+          ORDER BY event.occurred_at DESC LIMIT 1
+       ) break_event ON true
+      WHERE profile.id = $1`,
+    [driverProfileId]
+  );
+  if (!result.rowCount) throw new DriverDailyOperationsNotFoundError('Driver availability state not found');
+  const row = result.rows[0]!;
+  const qualifyingRestMinutes = Math.max(0, Number(row.rest_minutes ?? 0));
+  const blockers: DriverFatigueRecoveryStatusProjection['blockers'][number][] = [];
+  if (!row.observation_id) blockers.push('NO_ACTIVE_OBSERVATION');
+  if (row.observation_id && !row.shift_active) blockers.push('NO_ACTIVE_SHIFT');
+  if (row.active_work) blockers.push('ACTIVE_WORK');
+  if (row.availability_status !== 'BREAK') blockers.push('NOT_ON_BREAK');
+  if (qualifyingRestMinutes < config.driverFatigueMinimumQualifyingRestMinutes) blockers.push('REST_INCOMPLETE');
+  return {
+    fatigueStatus: row.observation_id ? 'ACTIVE' : 'NONE',
+    ...(row.observation_id ? { fatigueObservationId: row.observation_id } : {}),
+    ...(row.shift_id ? { driverShiftSessionId: row.shift_id } : {}),
+    availabilityStatus: row.availability_status,
+    qualifyingRestMinutes,
+    requiredRestMinutes: config.driverFatigueMinimumQualifyingRestMinutes,
+    clearanceEligible: blockers.length === 0,
+    blockers,
+    serverEvidenceAuthoritative: true,
+    automaticReturnToWork: false,
+    driverFaultFindingCreated: false,
+    evaluatedAt: row.server_now.toISOString()
+  };
 }
 
 export async function reconcileDriverConnectivity(
