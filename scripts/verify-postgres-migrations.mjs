@@ -33,8 +33,8 @@ const migrationsDirectory = join(root, 'database/migrations');
 const migrations = readdirSync(migrationsDirectory)
   .filter((name) => /^\d{4}_[a-z0-9_]+\.sql$/.test(name))
   .sort();
-if (migrations.length !== 20 || migrations[0] !== '0001_foundation.sql' || !migrations.at(-1)?.startsWith('0020_')) {
-  fail('migration inventory must be the ordered 0001–0020 chain');
+if (migrations.length !== 21 || migrations[0] !== '0001_foundation.sql' || !migrations.at(-1)?.startsWith('0021_')) {
+  fail('migration inventory must be the ordered 0001–0021 chain');
 }
 
 function psql(args) {
@@ -64,7 +64,8 @@ for (const migration of migrations) {
 const requiredRelations = [
   'identity.person', 'booking.booking', 'journey.journey', 'finance.payment',
   'communications.communication_request', 'organisation.organisation',
-  'organisation.institutional_attention_item', 'organisation.institution_exit_plan'
+  'organisation.institutional_attention_item', 'organisation.institution_exit_plan',
+  'driver.driver_fatigue_observation', 'driver.current_fatigue_safety_projection'
 ];
 const relationList = requiredRelations.map((relation) => `'${relation}'`).join(', ');
 const missing = psql(['--tuples-only', '--no-align', '--command', `SELECT string_agg(relation, ',') FROM unnest(ARRAY[${relationList}]) AS relation WHERE to_regclass(relation) IS NULL`]).trim();
