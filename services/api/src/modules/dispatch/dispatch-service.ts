@@ -5,6 +5,7 @@ import type { ApiConfig } from '../../config.js';
 import {
   assertDriverAvailabilityTransition,
   evaluateDriverDispatchEligibility,
+  evaluateDriverFatigueSafety,
   evaluateDriverOfferDisclosure,
   type BookingStatus,
   type DriverAvailabilityStatus,
@@ -43,6 +44,32 @@ interface InternalEligibility {
   readonly serviceCapabilities: Readonly<Record<string, unknown>>;
   readonly availabilityVersion: number;
   readonly availabilityStatus: DriverAvailabilityStatus;
+}
+
+interface FatigueProjectionRow {
+  readonly shift_started_at: Date | null;
+  readonly last_qualifying_rest_started_at: Date | null;
+  readonly last_qualifying_rest_ended_at: Date | null;
+  readonly driver_reported_fatigue: boolean;
+  readonly drowsiness_signal_observed: boolean;
+}
+
+function fatigueSafetyPassed(row: FatigueProjectionRow, config: ApiConfig): boolean {
+  const decision = evaluateDriverFatigueSafety({
+    shiftStartedAt: row.shift_started_at,
+    lastQualifyingRestStartedAt: row.last_qualifying_rest_started_at,
+    lastQualifyingRestEndedAt: row.last_qualifying_rest_ended_at,
+    now: new Date(),
+    activeJourney: false,
+    driverReportedFatigue: row.driver_reported_fatigue,
+    drowsinessSignalObserved: row.drowsiness_signal_observed,
+    policy: {
+      warningAfterDutyMinutes: config.driverFatigueWarningAfterDutyMinutes,
+      restRequiredAfterDutyMinutes: config.driverFatigueRestRequiredAfterDutyMinutes,
+      minimumQualifyingRestMinutes: config.driverFatigueMinimumQualifyingRestMinutes
+    }
+  });
+  return decision.newOffersAllowed && decision.newJourneyStartAllowed;
 }
 
 async function recordDriverShiftAvailabilityEvent(
@@ -177,6 +204,11 @@ async function readDriverEligibility(
     schedule_conflict: boolean;
     maintenance_operating_permitted: boolean | null;
     maintenance_restricted_service_codes: string[] | null;
+    shift_started_at: Date | null;
+    last_qualifying_rest_started_at: Date | null;
+    last_qualifying_rest_ended_at: Date | null;
+    driver_reported_fatigue: boolean;
+    drowsiness_signal_observed: boolean;
   }>(
     `SELECT dp.onboarding_status,
             av.status AS availability_status,
@@ -192,6 +224,11 @@ async function readDriverEligibility(
             ves.service_capabilities,
             maintenance.operating_permitted AS maintenance_operating_permitted,
             maintenance.restricted_service_codes AS maintenance_restricted_service_codes,
+            fatigue.shift_started_at,
+            fatigue.last_qualifying_rest_started_at,
+            fatigue.last_qualifying_rest_ended_at,
+            COALESCE(fatigue.driver_reported_fatigue, false) AS driver_reported_fatigue,
+            COALESCE(fatigue.drowsiness_signal_observed, false) AS drowsiness_signal_observed,
             EXISTS (
               SELECT 1 FROM driver.current_driver_vehicle_authorisation dva
                WHERE dva.driver_profile_id = dp.id
@@ -261,6 +298,8 @@ async function readDriverEligibility(
        ) ves ON true
        LEFT JOIN vehicle_fleet.current_vehicle_maintenance_gate maintenance
          ON maintenance.vehicle_id = $2
+       LEFT JOIN driver.current_fatigue_safety_projection fatigue
+         ON fatigue.driver_profile_id = dp.id
       WHERE dp.id = $1`,
     [actor.driverProfileId, vehicleId, regionCode, requiredServiceCodes,
       serviceAt?.toISOString() ?? null, excludedCommitmentBookingId]
@@ -289,6 +328,7 @@ async function readDriverEligibility(
     maxLocationAgeSeconds: config.dispatchLocationMaxAgeSeconds,
     hasActiveAssignment: row.active_assignment,
     hasScheduleConflict: row.schedule_conflict,
+    fatigueSafetyPassed: fatigueSafetyPassed(row, config),
     hardRequirementsMatch: hardRequirementsMatch(requirements, capabilities)
   });
   return {
@@ -366,7 +406,9 @@ export async function setDriverAvailability(
       if (Number.isNaN(observedAt.getTime())) throw new DriverNotEligibleError(['LOCATION_MISSING']);
       if (request.location!.confidence < 0 || request.location!.confidence > 1) throw new DriverNotEligibleError(['LOCATION_CONFIDENCE_LOW']);
       const preliminary = await readDriverEligibility(client, actor, vehicleId, request.regionCode!, config, [], []);
-      const blockers = preliminary.decision.blockers.filter((blocker) => !['NOT_AVAILABLE', 'LOCATION_MISSING', 'LOCATION_STALE', 'LOCATION_CONFIDENCE_LOW'].includes(blocker));
+      const ignoredPreShiftBlockers = ['NOT_AVAILABLE', 'LOCATION_MISSING', 'LOCATION_STALE', 'LOCATION_CONFIDENCE_LOW'];
+      if (from === 'OFFLINE') ignoredPreShiftBlockers.push('FATIGUE_SAFETY_BLOCKED');
+      const blockers = preliminary.decision.blockers.filter((blocker) => !ignoredPreShiftBlockers.includes(blocker));
       if (Date.now() - observedAt.getTime() > config.dispatchLocationMaxAgeSeconds * 1_000) blockers.push('LOCATION_STALE');
       if (observedAt.getTime() > Date.now() + 30_000) blockers.push('LOCATION_STALE');
       if (request.location!.confidence < config.dispatchMinimumLocationConfidence) blockers.push('LOCATION_CONFIDENCE_LOW');
@@ -595,6 +637,9 @@ export async function startBookingDispatch(
       current_permission_ids: string[]; active_restriction_ids: string[];
       maintenance_plan_version_id: string | null; maintenance_operating_permitted: boolean | null;
       maintenance_restricted_service_codes: string[] | null; vehicle_restriction_ids: string[] | null;
+      shift_started_at: Date | null; last_qualifying_rest_started_at: Date | null;
+      last_qualifying_rest_ended_at: Date | null; driver_reported_fatigue: boolean;
+      drowsiness_signal_observed: boolean;
     }>(
       `SELECT av.driver_profile_id, av.vehicle_id, av.version AS availability_version,
               av.status AS availability_status, av.location_observed_at, av.location_confidence,
@@ -606,6 +651,11 @@ export async function startBookingDispatch(
               maintenance.operating_permitted AS maintenance_operating_permitted,
               maintenance.restricted_service_codes AS maintenance_restricted_service_codes,
               maintenance.active_restriction_ids AS vehicle_restriction_ids,
+              fatigue.shift_started_at,
+              fatigue.last_qualifying_rest_started_at,
+              fatigue.last_qualifying_rest_ended_at,
+              COALESCE(fatigue.driver_reported_fatigue, false) AS driver_reported_fatigue,
+              COALESCE(fatigue.drowsiness_signal_observed, false) AS drowsiness_signal_observed,
               round(ST_Distance(av.location, ST_SetSRID(ST_MakePoint($2, $1), 4326)::geography)) AS provisional_distance_metres,
               EXISTS (
                 SELECT 1 FROM driver.current_driver_vehicle_authorisation dva
@@ -669,6 +719,8 @@ export async function startBookingDispatch(
          ) ves ON true
          LEFT JOIN vehicle_fleet.current_vehicle_maintenance_gate maintenance
            ON maintenance.vehicle_id = av.vehicle_id
+         LEFT JOIN driver.current_fatigue_safety_projection fatigue
+           ON fatigue.driver_profile_id = av.driver_profile_id
         WHERE av.region_code = $3 AND av.status IN ('AVAILABLE','FINISHING_SOON') AND av.location IS NOT NULL
         ORDER BY provisional_distance_metres ASC NULLS LAST, av.updated_at ASC
         LIMIT 200`,
@@ -697,6 +749,7 @@ export async function startBookingDispatch(
       maxLocationAgeSeconds: config.dispatchLocationMaxAgeSeconds,
       hasActiveAssignment: row.active_assignment,
       hasScheduleConflict: row.schedule_conflict,
+      fatigueSafetyPassed: fatigueSafetyPassed(row, config),
       hardRequirementsMatch: hardRequirementsMatch(context.requirements, row.service_capabilities ?? {})
     }, now).eligible);
 
