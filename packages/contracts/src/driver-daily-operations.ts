@@ -139,6 +139,7 @@ export interface DriverFatigueSelfReportProjection {
   readonly bookingId?: string;
   readonly operationalHoldId?: string;
   readonly supportCaseId?: string;
+  readonly controlledHandoverId?: string;
   readonly newOffersAllowed: false;
   readonly newJourneyStartAllowed: false;
   readonly breakRequired: true;
