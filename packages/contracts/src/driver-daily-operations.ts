@@ -1,6 +1,7 @@
 export type DriverConnectivityState = 'ONLINE' | 'DEGRADED' | 'OFFLINE' | 'RECOVERING' | 'STALE';
 export type QueuedCriticalEventKind = 'SOS' | 'SILENT_ASSISTANCE' | 'RIDER_CONDUCT' | 'LOCATION_OBSERVATION' | 'ARRIVAL_COMMUNICATION_ACK';
 export type DriverSupportCategory = 'SAFETY' | 'BREAKDOWN' | 'PAYMENTS' | 'ACCOUNT' | 'COMPLIANCE' | 'TECHNICAL' | 'PASSENGER' | 'FLEET';
+export type DriverAvailabilityStatus = 'OFFLINE' | 'AVAILABLE' | 'OFFERED' | 'ASSIGNED' | 'BREAK' | 'FINISHING_SOON';
 
 export interface DriverScheduledWorkSummary {
   readonly commitmentId: string;
@@ -14,7 +15,7 @@ export interface DriverScheduledWorkSummary {
 
 export interface DriverDailyOperationsProjection {
   readonly driverProfileId: string;
-  readonly availabilityStatus: 'OFFLINE' | 'AVAILABLE' | 'OFFERED' | 'ASSIGNED' | 'BREAK' | 'FINISHING_SOON';
+  readonly availabilityStatus: DriverAvailabilityStatus;
   readonly availabilityVersion: number;
   readonly shiftId?: string;
   readonly shiftStartedAt?: string;
@@ -159,6 +160,28 @@ export interface ClearDriverFatigueAfterRestProjection {
   readonly activeJourneyChecked: true;
   readonly driverFaultFindingCreated: false;
   readonly clearedAt: string;
+}
+
+export type DriverFatigueClearanceBlocker =
+  | 'NO_ACTIVE_OBSERVATION'
+  | 'NO_ACTIVE_SHIFT'
+  | 'ACTIVE_WORK'
+  | 'NOT_ON_BREAK'
+  | 'REST_INCOMPLETE';
+
+export interface DriverFatigueRecoveryStatusProjection {
+  readonly fatigueStatus: 'NONE' | 'ACTIVE';
+  readonly fatigueObservationId?: string;
+  readonly driverShiftSessionId?: string;
+  readonly availabilityStatus: DriverAvailabilityStatus;
+  readonly qualifyingRestMinutes: number;
+  readonly requiredRestMinutes: number;
+  readonly clearanceEligible: boolean;
+  readonly blockers: readonly DriverFatigueClearanceBlocker[];
+  readonly serverEvidenceAuthoritative: true;
+  readonly automaticReturnToWork: false;
+  readonly driverFaultFindingCreated: false;
+  readonly evaluatedAt: string;
 }
 
 export interface DriverSupplySignalProjection {

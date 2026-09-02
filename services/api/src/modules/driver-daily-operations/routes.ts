@@ -13,6 +13,7 @@ import {
   clearDriverFatigueAfterRest,
   getArrivalCommunicationPlan,
   getDriverDailyOperations,
+  getDriverFatigueRecoveryStatus,
   getDriverSupplyDemand,
   listDriverSupportCases,
   openDriverSupportCase,
@@ -91,6 +92,18 @@ export function registerDriverDailyOperationsRoutes(app: FastifyInstance, pool: 
       const known = sendError(reply, error); if (known) return known;
       request.log.error({ err: error }, 'Driver daily operations projection failed');
       return reply.code(500).send({ code: 'DRIVER_DAILY_OPERATIONS_UNAVAILABLE' });
+    }
+  });
+
+  app.get('/v1/driver/fatigue-recovery-status', async (request, reply) => {
+    const principal = await requireDriver(request, reply, pool, 'VIEW_PROFILE');
+    if (!principal) return;
+    try {
+      return reply.code(200).send(await getDriverFatigueRecoveryStatus(pool, principal, config));
+    } catch (error) {
+      const known = sendError(reply, error); if (known) return known;
+      request.log.error({ err: error }, 'Driver fatigue recovery status failed');
+      return reply.code(500).send({ code: 'DRIVER_FATIGUE_RECOVERY_STATUS_UNAVAILABLE' });
     }
   });
 
