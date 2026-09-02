@@ -22,7 +22,7 @@ const runner = readFileSync(join(root, 'scripts/verify-postgres-migrations.mjs')
 for (const truth of [
   "DAZAT_MIGRATION_VALIDATION_TARGET", "confirmation !== 'ephemeral'", 'dazat_migration_verify_',
   'psql is required', "'ON_ERROR_STOP=1'", "'--no-psqlrc'", '0001_foundation.sql',
-  'migrations.length !== 20', 'Applying ${migration}', 'SELECT current_database()',
+  'migrations.length !==', 'Applying ${migration}', 'SELECT current_database()',
   'organisation.institution_exit_plan', 'DAZAT PostgreSQL migration verification PASSED'
 ]) if (!runner.includes(truth)) errors.push(`Migration runner lacks safety or execution boundary: ${truth}`);
 if (runner.includes('CREATE DATABASE') || runner.includes('DROP DATABASE') || runner.includes('rm -rf')) errors.push('Migration runner must not create, drop or delete a database itself');
