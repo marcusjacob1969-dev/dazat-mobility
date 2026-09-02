@@ -124,6 +124,30 @@ export interface DriverSupportCaseProjection {
   readonly createdAt: string;
 }
 
+export interface DriverFatigueSelfReportRequest {
+  readonly observedAt: string;
+  readonly evidenceReference: string;
+  readonly immediateDanger: boolean;
+}
+
+export interface DriverFatigueSelfReportProjection {
+  readonly fatigueObservationId: string;
+  readonly driverShiftSessionId: string;
+  readonly activeJourney: boolean;
+  readonly journeyId?: string;
+  readonly bookingId?: string;
+  readonly operationalHoldId?: string;
+  readonly supportCaseId?: string;
+  readonly newOffersAllowed: false;
+  readonly newJourneyStartAllowed: false;
+  readonly breakRequired: true;
+  readonly controlRoomEscalationRequired: boolean;
+  readonly passengerContinuityRequired: boolean;
+  readonly driverFaultFindingCreated: false;
+  readonly externalServiceContacted: false;
+  readonly recordedAt: string;
+}
+
 export interface DriverSupplySignalProjection {
   readonly observationId: string;
   readonly kind: 'CURRENT_OBSERVATION' | 'FORECAST';
