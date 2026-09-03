@@ -77,6 +77,7 @@
 ./database/migrations/0022_driver_fatigue_self_report_continuity.sql
 ./database/migrations/0023_driver_fatigue_rest_clearance.sql
 ./database/migrations/0024_driver_fatigue_handover_lifecycle.sql
+./database/migrations/0025_control_room_fatigue_handover_ownership.sql
 ./database/seeds/README.md
 ./docs/architecture/ADR-0001-production-foundation.md
 ./docs/architecture/ADR-0002-identity-account-foundation.md
@@ -133,6 +134,8 @@
 ./docs/engineering/phase-0-38-checklist.md
 ./docs/engineering/phase-0-39-checklist.md
 ./docs/engineering/phase-0-4-checklist.md
+./docs/engineering/phase-0-40-checklist.md
+./docs/engineering/phase-0-41-checklist.md
 ./docs/engineering/phase-0-5-checklist.md
 ./docs/engineering/phase-0-6-checklist.md
 ./docs/engineering/phase-0-7-checklist.md
@@ -172,6 +175,8 @@
 ./docs/traceability/phase-0-38-fatigue-recovery-status.md
 ./docs/traceability/phase-0-39-fatigue-handover.md
 ./docs/traceability/phase-0-4-requirements.md
+./docs/traceability/phase-0-40-control-room-handover-ownership.md
+./docs/traceability/phase-0-41-control-room-handover-task.md
 ./docs/traceability/phase-0-5-requirements.md
 ./docs/traceability/phase-0-6-requirements.md
 ./docs/traceability/phase-0-7-requirements.md
@@ -185,6 +190,7 @@
 ./packages/contracts/src/communications-closure.ts
 ./packages/contracts/src/communications-operations.ts
 ./packages/contracts/src/communications.ts
+./packages/contracts/src/control-room-fatigue.ts
 ./packages/contracts/src/dispatch.ts
 ./packages/contracts/src/driver-daily-operations.ts
 ./packages/contracts/src/driver-fair-treatment.ts
@@ -265,6 +271,8 @@
 ./scripts/verify-phase-0-38.mjs
 ./scripts/verify-phase-0-39.mjs
 ./scripts/verify-phase-0-4.mjs
+./scripts/verify-phase-0-40.mjs
+./scripts/verify-phase-0-41.mjs
 ./scripts/verify-phase-0-5.mjs
 ./scripts/verify-phase-0-6.mjs
 ./scripts/verify-phase-0-7.mjs
@@ -285,6 +293,8 @@
 ./services/api/src/modules/communications-operations/routes.ts
 ./services/api/src/modules/communications/communications-service.ts
 ./services/api/src/modules/communications/routes.ts
+./services/api/src/modules/control-room-fatigue/control-room-fatigue-service.ts
+./services/api/src/modules/control-room-fatigue/routes.ts
 ./services/api/src/modules/dispatch/dispatch-service.ts
 ./services/api/src/modules/dispatch/routes.ts
 ./services/api/src/modules/driver-daily-operations/driver-daily-operations-service.ts
