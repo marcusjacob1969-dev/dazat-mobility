@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.41**.
+Current checkpoint: **Engineering Phase 0.42**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -37,6 +37,8 @@ Phase 0.39 adds a durable controlled-handover lifecycle whenever fatigue is repo
 Phase 0.40 adds a task-scoped Control Room claim command. Only a currently authorised fatigue-handover operator with an active account can claim a `REQUESTED` handover; the atomic command creates one bounded task scope, advances the handover to `OWNED`, moves its Support case to `IN_PROGRESS`, retains the Safety hold and passenger-continuity requirement, and claims no operational outcome or external contact.
 
 Phase 0.41 adds a current-task-owner-only Control Room handover projection. It exposes lifecycle state, supporting aggregate status and only valid next-action names while excluding passenger identity, contact details, precise location, Safety narrative and financial data; the read grants no mutation authority.
+
+Phase 0.42 adds an idempotent current-task-owner safe-stop confirmation. It requires current role/task authority, an active hold, an in-progress Support case and an eligible handover state; it records the evidence reference and advances only to `SAFE_STOP_CONFIRMED`, while deliberately retaining the Safety hold and refusing to claim handover completion or external contact.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 

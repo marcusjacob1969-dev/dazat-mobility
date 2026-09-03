@@ -78,6 +78,8 @@
 ./database/migrations/0023_driver_fatigue_rest_clearance.sql
 ./database/migrations/0024_driver_fatigue_handover_lifecycle.sql
 ./database/migrations/0025_control_room_fatigue_handover_ownership.sql
+./database/migrations/0026_control_room_fatigue_safe_stop.sql
+./database/migrations/0027_control_room_fatigue_handover_completion.sql
 ./database/seeds/README.md
 ./docs/architecture/ADR-0001-production-foundation.md
 ./docs/architecture/ADR-0002-identity-account-foundation.md
@@ -136,6 +138,8 @@
 ./docs/engineering/phase-0-4-checklist.md
 ./docs/engineering/phase-0-40-checklist.md
 ./docs/engineering/phase-0-41-checklist.md
+./docs/engineering/phase-0-42-checklist.md
+./docs/engineering/phase-0-43-checklist.md
 ./docs/engineering/phase-0-5-checklist.md
 ./docs/engineering/phase-0-6-checklist.md
 ./docs/engineering/phase-0-7-checklist.md
@@ -177,6 +181,8 @@
 ./docs/traceability/phase-0-4-requirements.md
 ./docs/traceability/phase-0-40-control-room-handover-ownership.md
 ./docs/traceability/phase-0-41-control-room-handover-task.md
+./docs/traceability/phase-0-42-fatigue-safe-stop.md
+./docs/traceability/phase-0-43-fatigue-handover-completion.md
 ./docs/traceability/phase-0-5-requirements.md
 ./docs/traceability/phase-0-6-requirements.md
 ./docs/traceability/phase-0-7-requirements.md
@@ -273,6 +279,8 @@
 ./scripts/verify-phase-0-4.mjs
 ./scripts/verify-phase-0-40.mjs
 ./scripts/verify-phase-0-41.mjs
+./scripts/verify-phase-0-42.mjs
+./scripts/verify-phase-0-43.mjs
 ./scripts/verify-phase-0-5.mjs
 ./scripts/verify-phase-0-6.mjs
 ./scripts/verify-phase-0-7.mjs

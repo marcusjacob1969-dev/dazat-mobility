@@ -40,3 +40,39 @@ export interface ControlRoomFatigueHandoverTaskProjection {
   readonly taskScopeAuthoritative: true;
   readonly evaluatedAt: string;
 }
+
+export interface ConfirmFatigueSafeStopRequest {
+  readonly evidenceReference: string;
+}
+
+export interface ConfirmFatigueSafeStopProjection {
+  readonly controlledHandoverId: string;
+  readonly taskScopeId: string;
+  readonly status: 'SAFE_STOP_CONFIRMED';
+  readonly version: number;
+  readonly safeStopEvidenceRecorded: true;
+  readonly operationalHoldStatus: 'ACTIVE';
+  readonly supportCaseStatus: 'IN_PROGRESS';
+  readonly passengerContinuityRequired: true;
+  readonly handoverComplete: false;
+  readonly externalServiceContacted: false;
+  readonly confirmedAt: string;
+}
+
+export interface CompleteFatigueHandoverRequest {
+  readonly completionEvidenceReference: string;
+}
+
+export interface CompleteFatigueHandoverProjection {
+  readonly controlledHandoverId: string;
+  readonly taskScopeId: string;
+  readonly status: 'COMPLETED';
+  readonly version: number;
+  readonly operationalHoldStatus: 'RELEASED';
+  readonly supportCaseStatus: 'RESOLVED';
+  readonly passengerContinuityVerified: true;
+  readonly fatigueObservationCleared: false;
+  readonly driverReturnedToWork: false;
+  readonly externalServiceContacted: false;
+  readonly completedAt: string;
+}

@@ -12,7 +12,7 @@ const source = [
   readFileSync(join(root, 'packages/contracts/src/control-room-fatigue.ts'), 'utf8'),
   readFileSync(join(root, 'services/api/src/app.ts'), 'utf8')
 ].join('\n');
-for (const truth of ["checkpoint: 'engineering-phase-0.41'", "'/v1/control-room/fatigue-handovers/:controlledHandoverId'",
+for (const truth of ["checkpoint: 'engineering-phase-0.", "'/v1/control-room/fatigue-handovers/:controlledHandoverId'",
   'getFatigueHandoverTask', 'ControlRoomFatigueHandoverTaskProjection', 'permittedNextActions',
   'task.operator_person_id = $2', 'task.valid_until > now()', 'role_assignment.valid_until > now()',
   'passengerIdentityIncluded: false', 'passengerContactIncluded: false', 'preciseLocationIncluded: false',
