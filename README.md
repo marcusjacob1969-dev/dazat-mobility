@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.42**.
+Current checkpoint: **Engineering Phase 0.45**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -39,6 +39,12 @@ Phase 0.40 adds a task-scoped Control Room claim command. Only a currently autho
 Phase 0.41 adds a current-task-owner-only Control Room handover projection. It exposes lifecycle state, supporting aggregate status and only valid next-action names while excluding passenger identity, contact details, precise location, Safety narrative and financial data; the read grants no mutation authority.
 
 Phase 0.42 adds an idempotent current-task-owner safe-stop confirmation. It requires current role/task authority, an active hold, an in-progress Support case and an eligible handover state; it records the evidence reference and advances only to `SAFE_STOP_CONFIRMED`, while deliberately retaining the Safety hold and refusing to claim handover completion or external contact.
+
+Phase 0.43 adds guarded fatigue-handover completion. It requires a safe-stop or passenger-transfer evidence state plus canonical termination of the original assignment and Journey leg before releasing only the linked fatigue hold and resolving Support; Driver recovery remains separate.
+
+Phase 0.44 links an existing canonical replacement assignment to an owned fatigue handover. It requires terminal original work, a different active Driver on the same Booking and the Journey's authoritative replacement leg, while withholding any passenger-transfer or completion claim.
+
+Phase 0.45 records passenger transfer only when the canonical replacement Journey leg is already in progress. It stores a bounded evidence reference, retains the fatigue hold for a separate completion decision and claims neither external contact nor completed handover.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 
