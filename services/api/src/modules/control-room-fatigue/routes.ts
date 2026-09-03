@@ -8,6 +8,8 @@ import {
   completeFatigueHandover,
   confirmFatigueSafeStop,
   getFatigueHandoverTask,
+  recordFatigueReplacementAssignment,
+  recordFatiguePassengerTransfer,
   ControlRoomFatigueConflictError,
   ControlRoomFatigueForbiddenError,
   ControlRoomFatigueIdempotencyConflictError,
@@ -16,6 +18,10 @@ import {
 
 const safeStopSchema = z.object({ evidenceReference: z.string().trim().min(3).max(500) }).strict();
 const completionSchema = z.object({ completionEvidenceReference: z.string().trim().min(3).max(500) }).strict();
+const replacementSchema = z.object({
+  replacementAssignmentId: z.string().uuid(),
+  evidenceReference: z.string().trim().min(3).max(500)
+}).strict();
 
 function keyFrom(request: FastifyRequest): string | null {
   const value = request.headers['idempotency-key'];
@@ -104,6 +110,48 @@ export function registerControlRoomFatigueRoutes(app: FastifyInstance, pool: Dat
       const known = sendKnown(reply, error); if (known) return known;
       request.log.error({ err: error }, 'Control Room fatigue handover completion failed');
       return reply.code(500).send({ code: 'CONTROL_ROOM_FATIGUE_HANDOVER_COMPLETION_UNAVAILABLE' });
+    }
+  });
+
+  app.post('/v1/control-room/fatigue-handovers/:controlledHandoverId/replacement-assignment', async (request, reply) => {
+    const token = bearerTokenFromRequest(request);
+    if (!token) return reply.code(401).send({ code: 'AUTHENTICATION_REQUIRED' });
+    const actor = await authenticateBearerSession(pool, token, 'SAFETY');
+    if (!actor) return reply.code(401).send({ code: 'SESSION_INVALID_OR_SAFETY_CAPABILITY_UNAVAILABLE' });
+    const params = z.object({ controlledHandoverId: z.string().uuid() }).strict().safeParse(request.params);
+    const body = replacementSchema.safeParse(request.body);
+    if (!params.success || !body.success) return reply.code(400).send({ code: 'INVALID_REPLACEMENT_ASSIGNMENT' });
+    const key = keyFrom(request);
+    if (!key) return reply.code(400).send({ code: 'IDEMPOTENCY_KEY_REQUIRED' });
+    try {
+      return reply.code(200).send(await recordFatigueReplacementAssignment(
+        pool, actor, params.data.controlledHandoverId, body.data, key
+      ));
+    } catch (error) {
+      const known = sendKnown(reply, error); if (known) return known;
+      request.log.error({ err: error }, 'Control Room fatigue replacement assignment failed');
+      return reply.code(500).send({ code: 'CONTROL_ROOM_FATIGUE_REPLACEMENT_UNAVAILABLE' });
+    }
+  });
+
+  app.post('/v1/control-room/fatigue-handovers/:controlledHandoverId/passenger-transfer', async (request, reply) => {
+    const token = bearerTokenFromRequest(request);
+    if (!token) return reply.code(401).send({ code: 'AUTHENTICATION_REQUIRED' });
+    const actor = await authenticateBearerSession(pool, token, 'SAFETY');
+    if (!actor) return reply.code(401).send({ code: 'SESSION_INVALID_OR_SAFETY_CAPABILITY_UNAVAILABLE' });
+    const params = z.object({ controlledHandoverId: z.string().uuid() }).strict().safeParse(request.params);
+    const body = safeStopSchema.safeParse(request.body);
+    if (!params.success || !body.success) return reply.code(400).send({ code: 'INVALID_PASSENGER_TRANSFER' });
+    const key = keyFrom(request);
+    if (!key) return reply.code(400).send({ code: 'IDEMPOTENCY_KEY_REQUIRED' });
+    try {
+      return reply.code(200).send(await recordFatiguePassengerTransfer(
+        pool, actor, params.data.controlledHandoverId, body.data, key
+      ));
+    } catch (error) {
+      const known = sendKnown(reply, error); if (known) return known;
+      request.log.error({ err: error }, 'Control Room fatigue passenger transfer failed');
+      return reply.code(500).send({ code: 'CONTROL_ROOM_FATIGUE_PASSENGER_TRANSFER_UNAVAILABLE' });
     }
   });
 }
