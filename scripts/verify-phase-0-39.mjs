@@ -16,7 +16,7 @@ const source = [
   readFileSync(join(root, required[0]), 'utf8'),
   readFileSync(join(root, 'services/api/src/app.ts'), 'utf8')
 ].join('\n');
-for (const truth of ["checkpoint: 'engineering-phase-0.39'", 'operations.driver_fatigue_handover',
+for (const truth of ["checkpoint: 'engineering-phase-0.", 'operations.driver_fatigue_handover',
   'driver_fatigue_handover_transition', 'controlledHandoverId', 'ACTIVE_JOURNEY_FATIGUE_REPORTED',
   "'REQUESTED','OWNED','REPLACEMENT_ASSIGNED','PASSENGER_TRANSFERRED','SAFE_STOP_CONFIRMED','COMPLETED'",
   'passenger_continuity_required', 'Invalid fatigue handover transition',

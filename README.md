@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.39**.
+Current checkpoint: **Engineering Phase 0.41**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -33,6 +33,10 @@ Phase 0.37 adds governed fatigue clearance after server-evidenced qualifying res
 Phase 0.38 adds an authoritative Driver fatigue-recovery status read. It reports server-measured rest progress, the configured requirement and exact clearance blockers without mutating state, inventing a fault finding or implying an automatic return to work.
 
 Phase 0.39 adds a durable controlled-handover lifecycle whenever fatigue is reported during an active Journey. It binds the fatigue observation, Safety hold, owned Support case, Journey and original assignment into one append-traced continuity record while keeping ownership, replacement, passenger-transfer, safe-stop and completion claims unavailable until separately evidenced.
+
+Phase 0.40 adds a task-scoped Control Room claim command. Only a currently authorised fatigue-handover operator with an active account can claim a `REQUESTED` handover; the atomic command creates one bounded task scope, advances the handover to `OWNED`, moves its Support case to `IN_PROGRESS`, retains the Safety hold and passenger-continuity requirement, and claims no operational outcome or external contact.
+
+Phase 0.41 adds a current-task-owner-only Control Room handover projection. It exposes lifecycle state, supporting aggregate status and only valid next-action names while excluding passenger identity, contact details, precise location, Safety narrative and financial data; the read grants no mutation authority.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 

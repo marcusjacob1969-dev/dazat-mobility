@@ -28,7 +28,7 @@ const routeFiles = readdirSync(modulesRoot, { withFileTypes: true })
   .map((entry) => join(modulesRoot, entry.name, 'routes.ts'))
   .filter(existsSync);
 const authRoutes = routeFiles.filter((path) => readFileSync(path, 'utf8').includes('authenticateBearerSession'));
-if (authRoutes.length !== 19) errors.push(`Expected 19 authenticated route modules, found ${authRoutes.length}`);
+if (authRoutes.length !== 20) errors.push(`Expected 20 authenticated route modules, found ${authRoutes.length}`);
 for (const path of authRoutes) {
   const source = readFileSync(path, 'utf8');
   if (!source.includes("security/bearer-token.js")) errors.push(`Authenticated route bypasses shared bearer parser: ${path}`);
@@ -40,4 +40,4 @@ if (errors.length) {
   process.exit(1);
 }
 console.log('DAZAT Engineering Phase 0.33 verification PASSED');
-console.log('Checked one shared bounded bearer parser across all nineteen authenticated route modules.');
+console.log('Checked one shared bounded bearer parser across all twenty authenticated route modules.');
