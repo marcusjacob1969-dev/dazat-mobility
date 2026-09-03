@@ -1,5 +1,13 @@
 import { createHash, randomUUID } from 'node:crypto';
-import type { ClaimFatigueHandoverProjection, ControlRoomFatigueHandoverTaskProjection, FatigueHandoverNextAction } from '@dazat/contracts';
+import type {
+  ClaimFatigueHandoverProjection,
+  CompleteFatigueHandoverProjection,
+  CompleteFatigueHandoverRequest,
+  ConfirmFatigueSafeStopProjection,
+  ConfirmFatigueSafeStopRequest,
+  ControlRoomFatigueHandoverTaskProjection,
+  FatigueHandoverNextAction
+} from '@dazat/contracts';
 import type { DatabasePool } from '../../db.js';
 import type { AuthenticatedPrincipal } from '../identity/session-service.js';
 
@@ -198,6 +206,254 @@ export async function claimFatigueHandover(
       `INSERT INTO operations.control_room_outbox_message
          (event_type, aggregate_type, aggregate_id, aggregate_version, correlation_id, causation_id, payload)
        VALUES ('control-room.fatigue-handover-owned','DriverFatigueHandover',$1,$2,$3,$4,$5::jsonb)`,
+      [controlledHandoverId, version, correlationId, commandId, JSON.stringify(response)]
+    );
+    await client.query('COMMIT');
+    return response;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function confirmFatigueSafeStop(
+  pool: DatabasePool,
+  actor: AuthenticatedPrincipal,
+  controlledHandoverId: string,
+  request: ConfirmFatigueSafeStopRequest,
+  idempotencyKey: string
+): Promise<ConfirmFatigueSafeStopProjection> {
+  if (actor.accountStatus !== 'ACTIVE') {
+    throw new ControlRoomFatigueForbiddenError('An active account is required for Control Room work');
+  }
+  const requestFingerprint = fingerprint({ controlledHandoverId, ...request });
+  const client = await pool.connect();
+  const commandId = randomUUID();
+  const correlationId = randomUUID();
+  try {
+    await client.query('BEGIN');
+    const existing = await client.query<{
+      request_fingerprint: string;
+      response_body: ConfirmFatigueSafeStopProjection;
+    }>(
+      `SELECT request_fingerprint, response_body FROM operations.control_room_command_deduplication
+        WHERE command_type = 'ConfirmFatigueSafeStop' AND operator_person_id = $1 AND idempotency_key = $2`,
+      [actor.personId, idempotencyKey]
+    );
+    if (existing.rowCount) {
+      if (existing.rows[0]!.request_fingerprint !== requestFingerprint) {
+        throw new ControlRoomFatigueIdempotencyConflictError('Idempotency key was already used for another safe-stop confirmation');
+      }
+      await client.query('COMMIT');
+      return existing.rows[0]!.response_body;
+    }
+    const handover = await client.query<{
+      task_scope_id: string;
+      from_status: 'OWNED' | 'REPLACEMENT_ASSIGNED';
+      version: string | number;
+      support_case_status: string;
+      hold_status: string;
+    }>(
+      `SELECT task.id AS task_scope_id, handover.status AS from_status, handover.version,
+              support_case.status AS support_case_status, hold.status AS hold_status
+         FROM operations.control_room_task_scope task
+         JOIN operations.control_room_role_assignment role_assignment ON role_assignment.id = task.role_assignment_id
+         JOIN operations.driver_fatigue_handover handover ON handover.id = task.subject_id
+         JOIN operations.driver_support_case support_case ON support_case.id = handover.support_case_id
+         JOIN journey.operational_hold hold ON hold.id = handover.operational_hold_id
+        WHERE task.subject_id = $1 AND task.operator_person_id = $2
+          AND task.purpose = 'DRIVER_FATIGUE_HANDOVER'
+          AND task.valid_from <= now() AND task.valid_until > now()
+          AND role_assignment.operator_person_id = $2
+          AND role_assignment.valid_from <= now() AND role_assignment.valid_until > now()
+          AND handover.status IN ('OWNED','REPLACEMENT_ASSIGNED')
+          AND support_case.status = 'IN_PROGRESS' AND hold.status = 'ACTIVE'
+        FOR UPDATE OF handover, support_case, hold`,
+      [controlledHandoverId, actor.personId]
+    );
+    if (!handover.rowCount) {
+      throw new ControlRoomFatigueConflictError('Current task, active hold and eligible handover state are required');
+    }
+    const row = handover.rows[0]!;
+    const nowResult = await client.query<{ server_now: Date }>('SELECT clock_timestamp() AS server_now');
+    const confirmedAt = nowResult.rows[0]!.server_now;
+    const version = Number(row.version) + 1;
+    await client.query(
+      `UPDATE operations.driver_fatigue_handover
+          SET status = 'SAFE_STOP_CONFIRMED', safe_stop_evidence_reference = $2,
+              version = $3, updated_at = $4
+        WHERE id = $1`,
+      [controlledHandoverId, request.evidenceReference, version, confirmedAt]
+    );
+    await client.query(
+      `INSERT INTO operations.driver_fatigue_handover_transition
+         (handover_id, from_status, to_status, actor_type, actor_id, reason_code, evidence_references, occurred_at)
+       VALUES ($1,$2,'SAFE_STOP_CONFIRMED','CONTROL_ROOM',$3,'SAFE_STOP_EVIDENCE_RECORDED',$4::jsonb,$5)`,
+      [controlledHandoverId, row.from_status, actor.personId, JSON.stringify([request.evidenceReference]), confirmedAt]
+    );
+    const response: ConfirmFatigueSafeStopProjection = {
+      controlledHandoverId,
+      taskScopeId: row.task_scope_id,
+      status: 'SAFE_STOP_CONFIRMED',
+      version,
+      safeStopEvidenceRecorded: true,
+      operationalHoldStatus: 'ACTIVE',
+      supportCaseStatus: 'IN_PROGRESS',
+      passengerContinuityRequired: true,
+      handoverComplete: false,
+      externalServiceContacted: false,
+      confirmedAt: confirmedAt.toISOString()
+    };
+    await client.query(
+      `INSERT INTO operations.control_room_command_deduplication
+         (command_id, idempotency_key, command_type, operator_person_id, request_fingerprint, response_status, response_body)
+       VALUES ($1,$2,'ConfirmFatigueSafeStop',$3,$4,200,$5::jsonb)`,
+      [commandId, idempotencyKey, actor.personId, requestFingerprint, JSON.stringify(response)]
+    );
+    await client.query(
+      `INSERT INTO operations.control_room_outbox_message
+         (event_type, aggregate_type, aggregate_id, aggregate_version, correlation_id, causation_id, payload)
+       VALUES ('control-room.fatigue-safe-stop-confirmed','DriverFatigueHandover',$1,$2,$3,$4,$5::jsonb)`,
+      [controlledHandoverId, version, correlationId, commandId, JSON.stringify(response)]
+    );
+    await client.query('COMMIT');
+    return response;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function completeFatigueHandover(
+  pool: DatabasePool,
+  actor: AuthenticatedPrincipal,
+  controlledHandoverId: string,
+  request: CompleteFatigueHandoverRequest,
+  idempotencyKey: string
+): Promise<CompleteFatigueHandoverProjection> {
+  if (actor.accountStatus !== 'ACTIVE') {
+    throw new ControlRoomFatigueForbiddenError('An active account is required for Control Room work');
+  }
+  const requestFingerprint = fingerprint({ controlledHandoverId, ...request });
+  const client = await pool.connect();
+  const commandId = randomUUID();
+  const correlationId = randomUUID();
+  try {
+    await client.query('BEGIN');
+    const existing = await client.query<{
+      request_fingerprint: string;
+      response_body: CompleteFatigueHandoverProjection;
+    }>(
+      `SELECT request_fingerprint, response_body FROM operations.control_room_command_deduplication
+        WHERE command_type = 'CompleteFatigueHandover' AND operator_person_id = $1 AND idempotency_key = $2`,
+      [actor.personId, idempotencyKey]
+    );
+    if (existing.rowCount) {
+      if (existing.rows[0]!.request_fingerprint !== requestFingerprint) {
+        throw new ControlRoomFatigueIdempotencyConflictError('Idempotency key was already used for another handover completion');
+      }
+      await client.query('COMMIT');
+      return existing.rows[0]!.response_body;
+    }
+    const handover = await client.query<{
+      task_scope_id: string;
+      from_status: 'PASSENGER_TRANSFERRED' | 'SAFE_STOP_CONFIRMED';
+      version: string | number;
+      support_case_id: string;
+      operational_hold_id: string;
+    }>(
+      `SELECT task.id AS task_scope_id, handover.status AS from_status, handover.version,
+              handover.support_case_id, handover.operational_hold_id
+         FROM operations.control_room_task_scope task
+         JOIN operations.control_room_role_assignment role_assignment ON role_assignment.id = task.role_assignment_id
+         JOIN operations.driver_fatigue_handover handover ON handover.id = task.subject_id
+         JOIN operations.driver_support_case support_case ON support_case.id = handover.support_case_id
+         JOIN journey.operational_hold hold ON hold.id = handover.operational_hold_id
+         JOIN dispatch.driver_assignment assignment ON assignment.id = handover.assignment_id
+         JOIN journey.journey_leg leg ON leg.driver_assignment_id = assignment.id
+        WHERE task.subject_id = $1 AND task.operator_person_id = $2
+          AND task.purpose = 'DRIVER_FATIGUE_HANDOVER'
+          AND task.valid_from <= now() AND task.valid_until > now()
+          AND role_assignment.operator_person_id = $2
+          AND role_assignment.valid_from <= now() AND role_assignment.valid_until > now()
+          AND handover.status IN ('PASSENGER_TRANSFERRED','SAFE_STOP_CONFIRMED')
+          AND support_case.status = 'IN_PROGRESS' AND hold.status = 'ACTIVE'
+          AND hold.reason_code = 'DRIVER_FATIGUE_SAFETY'
+          AND assignment.status IN ('CANCELLED','COMPLETED','REASSIGNED')
+          AND leg.status IN ('INTERRUPTED','COMPLETED')
+        FOR UPDATE OF handover, support_case, hold, assignment, leg`,
+      [controlledHandoverId, actor.personId]
+    );
+    if (!handover.rowCount) {
+      throw new ControlRoomFatigueConflictError('Terminal original assignment and journey leg, current task, evidence and active fatigue hold are required');
+    }
+    const row = handover.rows[0]!;
+    const nowResult = await client.query<{ server_now: Date }>('SELECT clock_timestamp() AS server_now');
+    const completedAt = nowResult.rows[0]!.server_now;
+    const version = Number(row.version) + 1;
+    await client.query(
+      `UPDATE operations.driver_fatigue_handover
+          SET status = 'COMPLETED', completed_at = $2, version = $3, updated_at = $2
+        WHERE id = $1`,
+      [controlledHandoverId, completedAt, version]
+    );
+    await client.query(
+      `INSERT INTO operations.driver_fatigue_handover_transition
+         (handover_id, from_status, to_status, actor_type, actor_id, reason_code, evidence_references, occurred_at)
+       VALUES ($1,$2,'COMPLETED','CONTROL_ROOM',$3,'PASSENGER_CONTINUITY_VERIFIED',$4::jsonb,$5)`,
+      [controlledHandoverId, row.from_status, actor.personId, JSON.stringify([request.completionEvidenceReference]), completedAt]
+    );
+    await client.query(
+      `UPDATE journey.operational_hold
+          SET status = 'RELEASED', released_at = $2, released_by = $3,
+              release_reason = 'FATIGUE_HANDOVER_COMPLETED'
+        WHERE id = $1 AND status = 'ACTIVE' AND reason_code = 'DRIVER_FATIGUE_SAFETY'`,
+      [row.operational_hold_id, completedAt, actor.personId]
+    );
+    await client.query(
+      `INSERT INTO journey.operational_hold_transition
+         (operational_hold_id, from_status, to_status, actor_type, actor_id, reason_code, occurred_at)
+       VALUES ($1,'ACTIVE','RELEASED','CONTROL_ROOM',$2,'FATIGUE_HANDOVER_COMPLETED',$3)`,
+      [row.operational_hold_id, actor.personId, completedAt]
+    );
+    await client.query(
+      `UPDATE operations.driver_support_case SET status = 'RESOLVED', updated_at = $2
+        WHERE id = $1 AND status = 'IN_PROGRESS'`,
+      [row.support_case_id, completedAt]
+    );
+    await client.query(
+      `INSERT INTO operations.driver_support_case_event
+         (support_case_id, from_status, to_status, actor_type, actor_id, reason_code, evidence_references, occurred_at)
+       VALUES ($1,'IN_PROGRESS','RESOLVED','CONTROL_ROOM',$2,'FATIGUE_HANDOVER_COMPLETED',$3::jsonb,$4)`,
+      [row.support_case_id, actor.personId, JSON.stringify([request.completionEvidenceReference]), completedAt]
+    );
+    const response: CompleteFatigueHandoverProjection = {
+      controlledHandoverId,
+      taskScopeId: row.task_scope_id,
+      status: 'COMPLETED',
+      version,
+      operationalHoldStatus: 'RELEASED',
+      supportCaseStatus: 'RESOLVED',
+      passengerContinuityVerified: true,
+      fatigueObservationCleared: false,
+      driverReturnedToWork: false,
+      externalServiceContacted: false,
+      completedAt: completedAt.toISOString()
+    };
+    await client.query(
+      `INSERT INTO operations.control_room_command_deduplication
+         (command_id, idempotency_key, command_type, operator_person_id, request_fingerprint, response_status, response_body)
+       VALUES ($1,$2,'CompleteFatigueHandover',$3,$4,200,$5::jsonb)`,
+      [commandId, idempotencyKey, actor.personId, requestFingerprint, JSON.stringify(response)]
+    );
+    await client.query(
+      `INSERT INTO operations.control_room_outbox_message
+         (event_type, aggregate_type, aggregate_id, aggregate_version, correlation_id, causation_id, payload)
+       VALUES ('control-room.fatigue-handover-completed','DriverFatigueHandover',$1,$2,$3,$4,$5::jsonb)`,
       [controlledHandoverId, version, correlationId, commandId, JSON.stringify(response)]
     );
     await client.query('COMMIT');
