@@ -76,3 +76,41 @@ export interface CompleteFatigueHandoverProjection {
   readonly externalServiceContacted: false;
   readonly completedAt: string;
 }
+
+export interface RecordFatigueReplacementAssignmentRequest {
+  readonly replacementAssignmentId: string;
+  readonly evidenceReference: string;
+}
+
+export interface RecordFatigueReplacementAssignmentProjection {
+  readonly controlledHandoverId: string;
+  readonly taskScopeId: string;
+  readonly replacementAssignmentId: string;
+  readonly status: 'REPLACEMENT_ASSIGNED';
+  readonly version: number;
+  readonly operationalHoldStatus: 'ACTIVE';
+  readonly supportCaseStatus: 'IN_PROGRESS';
+  readonly passengerContinuityRequired: true;
+  readonly passengerTransferEvidenceRecorded: false;
+  readonly handoverComplete: false;
+  readonly externalServiceContacted: false;
+  readonly recordedAt: string;
+}
+
+export interface RecordFatiguePassengerTransferRequest {
+  readonly evidenceReference: string;
+}
+
+export interface RecordFatiguePassengerTransferProjection {
+  readonly controlledHandoverId: string;
+  readonly taskScopeId: string;
+  readonly status: 'PASSENGER_TRANSFERRED';
+  readonly version: number;
+  readonly passengerTransferEvidenceRecorded: true;
+  readonly operationalHoldStatus: 'ACTIVE';
+  readonly supportCaseStatus: 'IN_PROGRESS';
+  readonly passengerContinuityRequired: true;
+  readonly handoverComplete: false;
+  readonly externalServiceContacted: false;
+  readonly recordedAt: string;
+}
