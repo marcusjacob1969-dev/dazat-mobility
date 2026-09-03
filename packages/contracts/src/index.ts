@@ -9,6 +9,7 @@ export * from './fleet-operations.js';
 export * from './maintenance-reliability.js';
 export * from './driver-fair-treatment.js';
 export * from './driver-daily-operations.js';
+export * from './control-room-fatigue.js';
 export * from './communications.js';
 export * from './telephony-voice.js';
 export * from './communications-operations.js';
