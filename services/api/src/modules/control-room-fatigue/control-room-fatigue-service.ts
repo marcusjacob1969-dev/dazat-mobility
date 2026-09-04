@@ -12,7 +12,8 @@ import type {
   RecordFatiguePassengerTransferProjection,
   RecordFatiguePassengerTransferRequest,
   RecoverFatigueHandoverOwnershipProjection,
-  RecoverFatigueHandoverOwnershipRequest
+  RecoverFatigueHandoverOwnershipRequest,
+  RecoverableFatigueHandoverQueueProjection
 } from '@dazat/contracts';
 import type { DatabasePool } from '../../db.js';
 import type { AuthenticatedPrincipal } from '../identity/session-service.js';
@@ -24,6 +25,75 @@ export class ControlRoomFatigueIdempotencyConflictError extends Error {}
 
 function fingerprint(value: unknown): string {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex');
+}
+
+export async function listRecoverableFatigueHandovers(
+  pool: DatabasePool,
+  actor: AuthenticatedPrincipal,
+  limit: number
+): Promise<RecoverableFatigueHandoverQueueProjection> {
+  if (actor.accountStatus !== 'ACTIVE') {
+    throw new ControlRoomFatigueForbiddenError('An active account is required for Control Room work');
+  }
+  const result = await pool.query<{
+    controlled_handover_id: string;
+    status: RecoverableFatigueHandoverQueueProjection['items'][number]['status'];
+    version: string | number;
+    previous_task_scope_id: string;
+    previous_task_expired_at: Date;
+    server_now: Date;
+  }>(
+    `SELECT handover.id AS controlled_handover_id, handover.status, handover.version,
+            previous_task.id AS previous_task_scope_id, previous_task.valid_until AS previous_task_expired_at,
+            clock_timestamp() AS server_now
+       FROM operations.driver_fatigue_handover handover
+       JOIN operations.driver_support_case support_case ON support_case.id = handover.support_case_id
+       JOIN journey.operational_hold hold ON hold.id = handover.operational_hold_id
+       JOIN operations.control_room_task_scope previous_task ON previous_task.id = (
+         SELECT scope.id FROM operations.control_room_task_scope scope
+          WHERE scope.subject_id = handover.id AND scope.purpose = 'DRIVER_FATIGUE_HANDOVER'
+          ORDER BY scope.valid_until DESC LIMIT 1
+       )
+      WHERE EXISTS (SELECT 1 FROM operations.control_room_role_assignment supervisor_role
+        WHERE supervisor_role.operator_person_id = $1 AND supervisor_role.role_code = 'SAFETY_SUPERVISOR'
+          AND supervisor_role.valid_from <= now() AND supervisor_role.valid_until > now())
+        AND handover.status IN ('OWNED','REPLACEMENT_ASSIGNED','PASSENGER_TRANSFERRED','SAFE_STOP_CONFIRMED')
+        AND previous_task.valid_until <= now()
+        AND NOT EXISTS (SELECT 1 FROM operations.control_room_task_scope active_task
+          WHERE active_task.subject_id = handover.id AND active_task.purpose = 'DRIVER_FATIGUE_HANDOVER'
+            AND active_task.valid_from <= now() AND active_task.valid_until > now())
+        AND support_case.status = 'IN_PROGRESS' AND hold.status = 'ACTIVE'
+      ORDER BY previous_task.valid_until ASC, handover.id ASC
+      LIMIT $2`,
+    [actor.personId, limit]
+  );
+  let evaluatedAt = result.rows[0]?.server_now;
+  if (!result.rowCount) {
+    const authority = await pool.query<{ server_now: Date }>(
+      `SELECT clock_timestamp() AS server_now FROM operations.control_room_role_assignment
+        WHERE operator_person_id = $1 AND role_code = 'SAFETY_SUPERVISOR'
+          AND valid_from <= now() AND valid_until > now() LIMIT 1`, [actor.personId]
+    );
+    if (!authority.rowCount) throw new ControlRoomFatigueForbiddenError('Current Safety supervisor authority is required');
+    evaluatedAt = authority.rows[0]!.server_now;
+  }
+  const items = result.rows.map((row) => ({
+    controlledHandoverId: row.controlled_handover_id,
+    status: row.status,
+    version: Number(row.version),
+    previousTaskScopeId: row.previous_task_scope_id,
+    previousTaskExpiredAt: row.previous_task_expired_at.toISOString(),
+    supportCaseStatus: 'IN_PROGRESS' as const,
+    operationalHoldStatus: 'ACTIVE' as const,
+    recoveryEligibleAtRead: true as const,
+    passengerContinuityRequired: true as const
+  }));
+  return {
+    items, limit, returnedCount: items.length, commandRevalidationRequired: true,
+    passengerIdentityIncluded: false, passengerContactIncluded: false, preciseLocationIncluded: false,
+    safetyNarrativeIncluded: false, previousOperatorIdentityIncluded: false,
+    evaluatedAt: evaluatedAt!.toISOString()
+  };
 }
 
 export async function getFatigueHandoverTask(

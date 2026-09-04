@@ -29,6 +29,31 @@ export interface RecoverFatigueHandoverOwnershipProjection {
   readonly recoveredAt: string;
 }
 
+export interface RecoverableFatigueHandoverItem {
+  readonly controlledHandoverId: string;
+  readonly status: 'OWNED' | 'REPLACEMENT_ASSIGNED' | 'PASSENGER_TRANSFERRED' | 'SAFE_STOP_CONFIRMED';
+  readonly version: number;
+  readonly previousTaskScopeId: string;
+  readonly previousTaskExpiredAt: string;
+  readonly supportCaseStatus: 'IN_PROGRESS';
+  readonly operationalHoldStatus: 'ACTIVE';
+  readonly recoveryEligibleAtRead: true;
+  readonly passengerContinuityRequired: true;
+}
+
+export interface RecoverableFatigueHandoverQueueProjection {
+  readonly items: readonly RecoverableFatigueHandoverItem[];
+  readonly limit: number;
+  readonly returnedCount: number;
+  readonly commandRevalidationRequired: true;
+  readonly passengerIdentityIncluded: false;
+  readonly passengerContactIncluded: false;
+  readonly preciseLocationIncluded: false;
+  readonly safetyNarrativeIncluded: false;
+  readonly previousOperatorIdentityIncluded: false;
+  readonly evaluatedAt: string;
+}
+
 export type FatigueHandoverNextAction =
   | 'RECORD_REPLACEMENT_ASSIGNMENT'
   | 'RECORD_PASSENGER_TRANSFER'

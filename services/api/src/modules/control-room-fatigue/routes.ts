@@ -8,6 +8,7 @@ import {
   completeFatigueHandover,
   confirmFatigueSafeStop,
   getFatigueHandoverTask,
+  listRecoverableFatigueHandovers,
   recordFatigueReplacementAssignment,
   recordFatiguePassengerTransfer,
   recoverFatigueHandoverOwnership,
@@ -39,6 +40,22 @@ function sendKnown(reply: FastifyReply, error: unknown) {
 }
 
 export function registerControlRoomFatigueRoutes(app: FastifyInstance, pool: DatabasePool): void {
+  app.get('/v1/control-room/fatigue-handovers/recoverable', async (request, reply) => {
+    const token = bearerTokenFromRequest(request);
+    if (!token) return reply.code(401).send({ code: 'AUTHENTICATION_REQUIRED' });
+    const actor = await authenticateBearerSession(pool, token, 'SAFETY');
+    if (!actor) return reply.code(401).send({ code: 'SESSION_INVALID_OR_SAFETY_CAPABILITY_UNAVAILABLE' });
+    const query = z.object({ limit: z.coerce.number().int().min(1).max(100).default(25) }).strict().safeParse(request.query);
+    if (!query.success) return reply.code(400).send({ code: 'INVALID_RECOVERABLE_QUEUE_QUERY' });
+    try {
+      return reply.code(200).send(await listRecoverableFatigueHandovers(pool, actor, query.data.limit));
+    } catch (error) {
+      const known = sendKnown(reply, error); if (known) return known;
+      request.log.error({ err: error }, 'Recoverable fatigue handover queue read failed');
+      return reply.code(500).send({ code: 'CONTROL_ROOM_FATIGUE_RECOVERABLE_QUEUE_UNAVAILABLE' });
+    }
+  });
+
   app.get('/v1/control-room/fatigue-handovers/:controlledHandoverId', async (request, reply) => {
     const token = bearerTokenFromRequest(request);
     if (!token) return reply.code(401).send({ code: 'AUTHENTICATION_REQUIRED' });
