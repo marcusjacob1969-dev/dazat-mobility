@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.47**.
+Current checkpoint: **Engineering Phase 0.48**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -49,6 +49,8 @@ Phase 0.45 records passenger transfer only when the canonical replacement Journe
 Phase 0.46 prevents an unfinished fatigue handover from becoming stranded after its Control Room task expires. A currently authorised Safety operator can recover ownership only when no active scope exists; immutable prior ownership, active passenger protection and in-progress Support truth are retained, with no operational outcome or provider contact invented.
 
 Phase 0.47 gives current Safety supervisors a bounded, oldest-first and privacy-minimised read of recoverable fatigue handovers. It exposes no passenger or previous-operator identity and grants no ownership; the recovery command must revalidate all state transactionally.
+
+Phase 0.48 adds the typed Control Room application boundary for the recoverable queue and evidence-backed recovery command. Calls are bounded, no-store and idempotent where mutating; the UI explains that queue truth is advisory and sensitive passenger/previous-operator scopes remain excluded.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 

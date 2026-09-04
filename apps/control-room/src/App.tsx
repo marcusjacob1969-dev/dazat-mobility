@@ -3,11 +3,20 @@ import { dazatTokens } from '@dazat/design-system';
 export function App() {
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
-      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.20</p>
+      <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.48</p>
       <h1>DAZAT Control Room</h1>
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.
       </p>
+      <section aria-label="Fatigue handover recovery boundary" style={{ maxWidth: 720, marginTop: 24, padding: 24, background: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card }}>
+        <h2 style={{ marginTop: 0 }}>Expired passenger-protection work stays owned</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Safety supervisors receive a bounded oldest-first queue only when a fatigue handover has an expired task, no current owner, an active passenger-protection hold and an in-progress Support case. Passenger identity, contact, precise location, Safety narrative and the previous operator identity are excluded.
+        </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Queue eligibility is advisory. Recovering ownership requires a separate evidence-backed, idempotent command that revalidates current authority and authoritative state under lock. It preserves the hold and claims no completed handover, external contact or Driver recovery.
+        </p>
+      </section>
       <section aria-label="Journey projection contract" style={{ maxWidth: 720, marginTop: 24, padding: 24, background: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card }}>
         <h2 style={{ marginTop: 0 }}>Authoritative active Journey controls</h2>
         <ul style={{ lineHeight: 1.8, color: dazatTokens.color.textMuted }}>
