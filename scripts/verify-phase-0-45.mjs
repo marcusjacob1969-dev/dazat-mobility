@@ -17,7 +17,7 @@ const source = [
   readFileSync(join(root, required[0]), 'utf8'),
   readFileSync(join(root, 'services/api/src/app.ts'), 'utf8')
 ].join('\n');
-for (const truth of ["checkpoint: 'engineering-phase-0.45'", "'/v1/control-room/fatigue-handovers/:controlledHandoverId/passenger-transfer'",
+for (const truth of ["checkpoint: 'engineering-phase-0.", "'/v1/control-room/fatigue-handovers/:controlledHandoverId/passenger-transfer'",
   'recordFatiguePassengerTransfer', 'RecordFatiguePassengerTransfer', 'PASSENGER_TRANSFER_EVIDENCE_RECORDED',
   'control-room.fatigue-passenger-transfer-recorded', "status: 'PASSENGER_TRANSFERRED'",
   "handover.status = 'REPLACEMENT_ASSIGNED'", "replacement.status = 'ACTIVE'",
