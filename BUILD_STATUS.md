@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.47 — Recoverable Fatigue-Handover Supervisor Queue**
+**Engineering Phase 0.48 — Control Room Fatigue-Recovery Client Boundary**
 
 Status: **SOURCE IMPLEMENTED / ALL WORKSPACES COMPILE / 303 DOMAIN TESTS PASS / API RUNTIME TESTS PASS / PROVIDER AND CHARGING INTEGRATIONS DISABLED / DATABASE AND CONCURRENCY RUNTIME PENDING HOSTED CI**
 
@@ -12,6 +12,7 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 
 - Governed recovery of expired Control Room fatigue-handover ownership, with current-role revalidation, no-current-owner protection, immutable prior scope history, bounded evidence and retained passenger Safety hold.
 - Supervisor-only, bounded and privacy-minimised discovery of expired handovers with no current owner, ordered oldest first and explicitly advisory pending command revalidation.
+- Typed Control Room queue/recovery client with bounded no-store reads, explicit idempotency and a truthful minimum-data operator surface.
 
 - All Phase 0.1–0.8 monorepo, Identity, Booking, Dispatch, Journey, Safety, governed-completion, provider-disabled Finance and Driver operating-permission foundations.
 - Guarded active Journey spine: `IN_PROGRESS → ARRIVING → COMPLETED`.
