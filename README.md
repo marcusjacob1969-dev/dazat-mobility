@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.45**.
+Current checkpoint: **Engineering Phase 0.46**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -45,6 +45,8 @@ Phase 0.43 adds guarded fatigue-handover completion. It requires a safe-stop or 
 Phase 0.44 links an existing canonical replacement assignment to an owned fatigue handover. It requires terminal original work, a different active Driver on the same Booking and the Journey's authoritative replacement leg, while withholding any passenger-transfer or completion claim.
 
 Phase 0.45 records passenger transfer only when the canonical replacement Journey leg is already in progress. It stores a bounded evidence reference, retains the fatigue hold for a separate completion decision and claims neither external contact nor completed handover.
+
+Phase 0.46 prevents an unfinished fatigue handover from becoming stranded after its Control Room task expires. A currently authorised Safety operator can recover ownership only when no active scope exists; immutable prior ownership, active passenger protection and in-progress Support truth are retained, with no operational outcome or provider contact invented.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 

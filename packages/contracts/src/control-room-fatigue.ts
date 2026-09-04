@@ -11,6 +11,24 @@ export interface ClaimFatigueHandoverProjection {
   readonly claimedAt: string;
 }
 
+export interface RecoverFatigueHandoverOwnershipRequest {
+  readonly recoveryEvidenceReference: string;
+}
+
+export interface RecoverFatigueHandoverOwnershipProjection {
+  readonly controlledHandoverId: string;
+  readonly previousTaskScopeId: string;
+  readonly taskScopeId: string;
+  readonly status: 'OWNED' | 'REPLACEMENT_ASSIGNED' | 'PASSENGER_TRANSFERRED' | 'SAFE_STOP_CONFIRMED';
+  readonly version: number;
+  readonly supportCaseStatus: 'IN_PROGRESS';
+  readonly operationalHoldStatus: 'ACTIVE';
+  readonly passengerContinuityRequired: true;
+  readonly outcomeClaimed: false;
+  readonly externalServiceContacted: false;
+  readonly recoveredAt: string;
+}
+
 export type FatigueHandoverNextAction =
   | 'RECORD_REPLACEMENT_ASSIGNMENT'
   | 'RECORD_PASSENGER_TRANSFER'

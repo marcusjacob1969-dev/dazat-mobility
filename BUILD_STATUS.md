@@ -2,13 +2,15 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.23 — Dependency-backed Full Workspace Compilation Closure**
+**Engineering Phase 0.46 — Expired Fatigue-Handover Ownership Recovery**
 
-Status: **SOURCE IMPLEMENTED / ALL WORKSPACES COMPILE / 297 DOMAIN TESTS PASS / PROVIDER, STAFF AND CHARGING MUTATIONS DISABLED / DATABASE AND CONCURRENCY RUNTIME NOT YET VERIFIED**
+Status: **SOURCE IMPLEMENTED / ALL WORKSPACES COMPILE / 303 DOMAIN TESTS PASS / API RUNTIME TESTS PASS / PROVIDER AND CHARGING INTEGRATIONS DISABLED / DATABASE AND CONCURRENCY RUNTIME PENDING HOSTED CI**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
+
+- Governed recovery of expired Control Room fatigue-handover ownership, with current-role revalidation, no-current-owner protection, immutable prior scope history, bounded evidence and retained passenger Safety hold.
 
 - All Phase 0.1–0.8 monorepo, Identity, Booking, Dispatch, Journey, Safety, governed-completion, provider-disabled Finance and Driver operating-permission foundations.
 - Guarded active Journey spine: `IN_PROGRESS → ARRIVING → COMPLETED`.

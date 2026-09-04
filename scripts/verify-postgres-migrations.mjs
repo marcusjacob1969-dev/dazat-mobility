@@ -33,8 +33,8 @@ const migrationsDirectory = join(root, 'database/migrations');
 const migrations = readdirSync(migrationsDirectory)
   .filter((name) => /^\d{4}_[a-z0-9_]+\.sql$/.test(name))
   .sort();
-if (migrations.length !== 29 || migrations[0] !== '0001_foundation.sql' || !migrations.at(-1)?.startsWith('0029_')) {
-  fail('migration inventory must be the ordered 0001–0029 chain');
+if (migrations.length !== 30 || migrations[0] !== '0001_foundation.sql' || !migrations.at(-1)?.startsWith('0030_')) {
+  fail('migration inventory must be the ordered 0001–0030 chain');
 }
 
 function psql(args) {
