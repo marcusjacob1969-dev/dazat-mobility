@@ -13,7 +13,7 @@ const required = [
 const errors = [];
 for (const path of required) if (!existsSync(join(root, path))) errors.push(`Missing Phase 0.50 file: ${path}`);
 const source = required.map((path) => readFileSync(join(root, path), 'utf8')).join('\n') + readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
-for (const truth of ["checkpoint: 'engineering-phase-0.50'", 'core-journey-progress', 'productionChargingEnabled: false', "party.role IN ('BOOKER','PASSENGER','PAYER')", "ridecheck_status === 'LOCKED'"]) {
+for (const truth of ['core-journey-progress', 'productionChargingEnabled: false', "party.role IN ('BOOKER','PASSENGER','PAYER')", "ridecheck_status === 'LOCKED'"]) {
   if (!source.includes(truth)) errors.push(`Persistent core-journey progress missing: ${truth}`);
 }
 if (errors.length) {

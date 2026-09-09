@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, CommunicationInboxProjection, CommunicationsClosureCapabilitiesProjection, CommunicationsClosureStatusProjection, CommunicationsLaunchReadinessProjection, CommunicationsOperationsCapabilitiesProjection, CommunicationsOperationsStatusProjection, ContactCaseListProjection, ContactPlanProjection, PaymentStatusProjection, RegistrationContactType, StartRideCheckResult, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection } from '@dazat/contracts';
+import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, CommunicationInboxProjection, CommunicationsClosureCapabilitiesProjection, CommunicationsClosureStatusProjection, CommunicationsLaunchReadinessProjection, CommunicationsOperationsCapabilitiesProjection, CommunicationsOperationsStatusProjection, ContactCaseListProjection, ContactPlanProjection, CoreJourneyProgressProjection, PaymentStatusProjection, RegistrationContactType, StartRideCheckResult, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection } from '@dazat/contracts';
 import {
   confirmRiderContactVerification,
   startRiderContactVerification,
@@ -15,6 +14,7 @@ import { prepareProviderDisabledPaymentIntent, readPaymentStatus } from './src/f
 import { readCommunicationInbox } from './src/communications-api';
 import { readContactPlan, readTelephonyCapabilities, readTelephonyInteractions } from './src/telephony-voice-api';
 import { readCommunicationsClosureCapabilities, readCommunicationsClosureStatus, readCommunicationsLaunchReadiness, readCommunicationsOperationsCapabilities, readCommunicationsOperationsStatus, readContactCases } from './src/communications-operations-api';
+import { readCoreJourneyProgress } from './src/core-journey-api';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'BOOK' | 'QUOTE' | 'READY';
 
@@ -67,6 +67,7 @@ export default function RiderApp() {
   const [changeLon, setChangeLon] = useState('');
   const [journeyNotice, setJourneyNotice] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusProjection | null>(null);
+  const [coreJourneyProgress, setCoreJourneyProgress] = useState<CoreJourneyProgressProjection | null>(null);
   const [communicationInbox, setCommunicationInbox] = useState<CommunicationInboxProjection | null>(null);
   const [telephonyCapabilities, setTelephonyCapabilities] = useState<TelephonyServiceCapabilitiesProjection | null>(null);
   const [contactPlan, setContactPlan] = useState<ContactPlanProjection | null>(null);
@@ -213,6 +214,11 @@ export default function RiderApp() {
     void run(async () => setPaymentStatus(await readPaymentStatus(sessionToken, paymentStatus.paymentIntentId)));
   }
 
+  function refreshCoreJourneyProgress() {
+    if (!booking) return;
+    void run(async () => setCoreJourneyProgress(await readCoreJourneyProgress(sessionToken, booking.bookingId)));
+  }
+
   function refreshCommunications() {
     void run(async () => setCommunicationInbox(await readCommunicationInbox(sessionToken)));
   }
@@ -254,9 +260,9 @@ export default function RiderApp() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
+      <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.16</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.51</Text>
         <Text style={styles.title}>DAZAT Rider journey</Text>
         <Text style={styles.body}>Verified Booking through protected pickup, active Journey visibility, governed changes and persistent Safety controls.</Text>
 
@@ -330,6 +336,18 @@ export default function RiderApp() {
           <View style={styles.notice} accessibilityRole="summary">
             <Text style={styles.noticeTitle}>Booking ready for Dispatch</Text>
             <Text style={styles.status}>{booking.status}</Text>
+            <SecondaryButton label="Refresh complete journey progress" onPress={refreshCoreJourneyProgress} />
+            {coreJourneyProgress ? (
+              <View style={styles.section} accessibilityRole="summary">
+                <Text style={styles.status}>Next: {coreJourneyProgress.nextAction.replaceAll('_', ' ')}</Text>
+                {coreJourneyProgress.milestones.map((item) => (
+                  <Text key={item.name} style={item.status === 'BLOCKED' ? styles.error : styles.body}>
+                    {item.name.replaceAll('_', ' ')} · {item.status.replaceAll('_', ' ')}
+                  </Text>
+                ))}
+                <Text style={styles.devNotice}>PRODUCTION CHARGING DISABLED</Text>
+              </View>
+            ) : null}
             <Text style={styles.body}>No driver has been invented or assigned at booking confirmation. Dispatch now applies compliance, vehicle, availability, location and hard-service filters before offering the work. It never invents a driver or ETA.</Text>
             {!dispatch ? <PrimaryButton label="Start eligible-driver search" busy={busy} onPress={beginDispatch} /> : <PrimaryButton label="Refresh Dispatch status" busy={busy} onPress={refreshDispatch} />}
             {dispatch ? (
