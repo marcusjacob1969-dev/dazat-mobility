@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.67**.
+Current checkpoint: **Engineering Phase 0.68**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -89,6 +89,8 @@ Phase 0.65 connects the same journey progress projection to Control Room through
 Phase 0.66 wires the Control Room web surface to that task-scoped projection and renders canonical disposition, next action and milestones.
 
 Phase 0.67 makes the main check include every current verifier, all application compilations, API runtime tests and the provider-disabled journey demo.
+
+Phase 0.68 restores deterministic source-manifest ordering so hosted disposable-PostGIS validation can reach migration execution.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 
