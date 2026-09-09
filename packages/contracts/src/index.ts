@@ -18,3 +18,4 @@ export * from './organisation-operations.js';
 export * from './institutional-transport.js';
 export * from './organisation-commercial-operations.js';
 export * from './institutional-live-operations.js';
+export * from './core-journey-progress.js';
