@@ -35,3 +35,9 @@ test('locked RideCheck remains an explicit blocker', () => {
   assert.equal(result.nextAction, 'RIDECHECK');
   assert.equal(result.milestones.find((item) => item.name === 'RIDECHECK').status, 'BLOCKED');
 });
+
+test('fully closed canonical journey has no invented follow-up action', () => {
+  const result = projectCoreJourneyProgress(row({ journey_status: 'COMPLETED', booking_status: 'COMPLETED', payment_intent_status: 'CAPTURED' }));
+  assert.equal(result.nextAction, 'JOURNEY_CLOSED');
+  assert.equal(result.milestones.every((item) => item.status === 'COMPLETED'), true);
+});

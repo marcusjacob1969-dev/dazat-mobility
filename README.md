@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.58**.
+Current checkpoint: **Engineering Phase 0.59**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -71,6 +71,8 @@ Phase 0.56 adds executable access-boundary tests proving that Rider Booking-part
 Phase 0.57 proves unauthorized and absent core-journey reads share one non-disclosing outcome and that missing Driver profile authority fails before database projection access.
 
 Phase 0.58 exercises both progress endpoints through the real HTTP application boundary, including bearer authentication, no-store responses and stable non-disclosing 404 behavior.
+
+Phase 0.59 makes the next journey action a closed union and proves fully completed canonical state returns `JOURNEY_CLOSED` without an invented follow-up.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 

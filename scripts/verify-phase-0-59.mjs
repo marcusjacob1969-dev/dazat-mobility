@@ -1,0 +1,4 @@
+import { readFileSync } from 'node:fs'; import { join } from 'node:path'; import { fileURLToPath } from 'node:url';
+const root = fileURLToPath(new URL('..', import.meta.url)); const contract = readFileSync(join(root, 'packages/contracts/src/core-journey-progress.ts'), 'utf8'); const test = readFileSync(join(root, 'tests/api/core-journey-progress-runtime.test.mjs'), 'utf8'); const errors = [];
+for (const truth of ["CoreJourneyMilestone['name'] | 'JOURNEY_CLOSED'", 'CoreJourneyNextAction', "nextAction, 'JOURNEY_CLOSED'", 'every((item) => item.status']) if (!(contract + test).includes(truth)) errors.push(`Typed action contract missing: ${truth}`);
+if (errors.length) { console.error('DAZAT Engineering Phase 0.59 verification FAILED'); for (const error of errors) console.error(`- ${error}`); process.exit(1); } console.log('DAZAT Engineering Phase 0.59 verification PASSED');
