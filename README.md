@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.52**.
+Current checkpoint: **Engineering Phase 0.53**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -59,6 +59,8 @@ Phase 0.50 adds an authenticated, read-only Rider progress endpoint that compose
 Phase 0.51 connects that projection to the Rider application as one refreshable journey-progress surface, including explicit blocked milestones and provider-disabled charging truth.
 
 Phase 0.52 gives the assigned Driver an independently authorised view of the same canonical progress, driven by DriverAssignment truth and without exposing passenger Finance detail or RideCheck secrets.
+
+Phase 0.53 adds a deterministic command-line demonstration of the complete provider-disabled journey and its fatigue, RideCheck and completion-hold failure paths.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 
