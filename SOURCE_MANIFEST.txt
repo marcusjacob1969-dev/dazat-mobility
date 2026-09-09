@@ -150,6 +150,8 @@
 ./docs/engineering/phase-0-46-checklist.md
 ./docs/engineering/phase-0-47-checklist.md
 ./docs/engineering/phase-0-48-checklist.md
+./docs/engineering/current-delivery-direction.md
+./docs/engineering/phase-0-49-checklist.md
 ./docs/engineering/phase-0-5-checklist.md
 ./docs/engineering/phase-0-6-checklist.md
 ./docs/engineering/phase-0-7-checklist.md
@@ -198,6 +200,7 @@
 ./docs/traceability/phase-0-46-fatigue-ownership-recovery.md
 ./docs/traceability/phase-0-47-fatigue-recoverable-queue.md
 ./docs/traceability/phase-0-48-control-room-fatigue-client.md
+./docs/traceability/phase-0-49-core-journey-vertical-slice.md
 ./docs/traceability/phase-0-5-requirements.md
 ./docs/traceability/phase-0-6-requirements.md
 ./docs/traceability/phase-0-7-requirements.md
@@ -249,6 +252,7 @@
 ./packages/domain/src/identity.ts
 ./packages/domain/src/ids.ts
 ./packages/domain/src/index.ts
+./packages/domain/src/core-journey-vertical-slice.ts
 ./packages/domain/src/institutional-live-operations.ts
 ./packages/domain/src/institutional-transport.ts
 ./packages/domain/src/journey.ts
@@ -301,6 +305,7 @@
 ./scripts/verify-phase-0-46.mjs
 ./scripts/verify-phase-0-47.mjs
 ./scripts/verify-phase-0-48.mjs
+./scripts/verify-phase-0-49.mjs
 ./scripts/verify-phase-0-5.mjs
 ./scripts/verify-phase-0-6.mjs
 ./scripts/verify-phase-0-7.mjs
@@ -370,6 +375,7 @@
 ./tests/api/session-auth-runtime.test.mjs
 ./tests/domain/authentication.test.mjs
 ./tests/domain/booking-status.test.mjs
+./tests/domain/core-journey-vertical-slice.test.mjs
 ./tests/domain/communications-closure-source.test.mjs
 ./tests/domain/communications-operations-source.test.mjs
 ./tests/domain/communications-source.test.mjs
