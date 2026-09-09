@@ -178,6 +178,7 @@
 ./docs/engineering/phase-0.64-booking-status-contract.md
 ./docs/engineering/phase-0.65-control-room-journey-read.md
 ./docs/engineering/phase-0.66-control-room-journey-ui.md
+./docs/engineering/phase-0.67-current-verification-aggregate.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -347,6 +348,8 @@
 ./scripts/verify-phase-0-64.mjs
 ./scripts/verify-phase-0-65.mjs
 ./scripts/verify-phase-0-66.mjs
+./scripts/verify-phase-0-67.mjs
+./scripts/verify-current.mjs
 ./scripts/verify-phase-0-7.mjs
 ./scripts/verify-phase-0-8.mjs
 ./scripts/verify-phase-0-9.mjs
