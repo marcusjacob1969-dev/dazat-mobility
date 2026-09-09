@@ -1,0 +1,4 @@
+import { readFileSync } from 'node:fs'; import { join } from 'node:path'; import { fileURLToPath } from 'node:url';
+const root = fileURLToPath(new URL('..', import.meta.url)); const source = readFileSync(join(root, 'tests/api/core-journey-route-runtime.test.mjs'), 'utf8'); const errors = [];
+for (const truth of ['/v1/bookings/${progressRow.booking_id}/core-journey-progress', '/v1/driver/bookings/${progressRow.booking_id}/core-journey-progress', "'cache-control'", 'productionChargingEnabled', 'CORE_JOURNEY_NOT_FOUND']) if (!source.includes(truth)) errors.push(`HTTP contract missing: ${truth}`);
+if (errors.length) { console.error('DAZAT Engineering Phase 0.58 verification FAILED'); for (const error of errors) console.error(`- ${error}`); process.exit(1); } console.log('DAZAT Engineering Phase 0.58 verification PASSED');
