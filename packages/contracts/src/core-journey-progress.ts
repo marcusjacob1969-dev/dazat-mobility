@@ -11,7 +11,7 @@ export type CoreJourneyNextAction = CoreJourneyMilestone['name'] | 'JOURNEY_CLOS
 
 export interface CoreJourneyProgressProjection {
   readonly bookingId: string;
-  readonly bookingStatus: string;
+  readonly bookingStatus: BookingStatus;
   readonly journeyId?: string;
   readonly journeyStatus?: string;
   readonly paymentIntentStatus?: string;
@@ -21,3 +21,4 @@ export interface CoreJourneyProgressProjection {
   readonly milestones: readonly CoreJourneyMilestone[];
   readonly nextAction: CoreJourneyNextAction;
 }
+import type { BookingStatus } from '@dazat/domain';

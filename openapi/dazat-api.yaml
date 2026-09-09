@@ -1163,7 +1163,9 @@ components:
       required: [bookingId, bookingStatus, disposition, productionChargingEnabled, milestones, nextAction]
       properties:
         bookingId: { type: string, format: uuid }
-        bookingStatus: { type: string }
+        bookingStatus:
+          type: string
+          enum: [DRAFT, QUOTE_CREATED, AWAITING_CONFIRMATION, CONFIRMED, SCHEDULED, READY_FOR_DISPATCH, SEARCHING_FOR_DRIVER, DRIVER_ASSIGNED, DRIVER_EN_ROUTE, DRIVER_ARRIVED, AWAITING_RIDECHECK, PASSENGER_VERIFIED, IN_PROGRESS, ARRIVING, COMPLETED, PAYMENT_PROCESSING, PAID, CLOSED, NO_ELIGIBLE_DRIVER, RIDER_CANCELLED, DRIVER_CANCELLED, OPERATIONS_CANCELLED, RIDER_NO_SHOW, DRIVER_NO_SHOW, PAYMENT_FAILED, SAFETY_HOLD, ACTIVE_INCIDENT, BREAKDOWN, REASSIGNMENT_REQUIRED, REPLACEMENT_SEARCHING, REPLACEMENT_ASSIGNED, REFUND_PENDING, REFUNDED]
         journeyId: { type: string, format: uuid }
         journeyStatus: { type: string }
         paymentIntentStatus: { type: string }

@@ -1,4 +1,5 @@
 import type { CoreJourneyMilestone, CoreJourneyProgressProjection } from '@dazat/contracts';
+import type { BookingStatus } from '@dazat/domain';
 import type { DatabasePool } from '../../db.js';
 import type { AuthenticatedPrincipal } from '../identity/session-service.js';
 
@@ -6,7 +7,7 @@ export class CoreJourneyNotFoundError extends Error {}
 
 interface ProgressRow {
   booking_id: string;
-  booking_status: string;
+  booking_status: BookingStatus;
   fare_agreement_id: string | null;
   dispatch_status: string | null;
   assignment_id: string | null;
