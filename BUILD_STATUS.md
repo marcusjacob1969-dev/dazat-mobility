@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.65 — Task-Scoped Control Room Journey Read**
+**Engineering Phase 0.66 — Control Room Journey UI**
 
 Status: **SOURCE IMPLEMENTED / ALL WORKSPACES COMPILE / DOMAIN AND API RUNTIME TESTS PASS / PROVIDER AND CHARGING INTEGRATIONS DISABLED / DATABASE AND CONCURRENCY RUNTIME PENDING HOSTED CI**
 
