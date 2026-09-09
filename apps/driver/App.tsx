@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
 import type { ActiveJourneyProjection, ArrivalCommunicationPlanProjection, CommunicationInboxProjection, CommunicationsClosureCapabilitiesProjection, CommunicationsClosureStatusProjection, CommunicationsLaunchReadinessProjection, CommunicationsOperationsCapabilitiesProjection, CommunicationsOperationsStatusProjection, ContactCaseListProjection, ContactPlanProjection, ConnectivityReconciliationProjection, DriverAppealSubjectType, DriverApplicationProjection, DriverDailyOperationsProjection, DriverEarningsProjection, DriverEligibilitySummary, DriverFairTreatmentProjection, DriverIncentiveProjection, DriverOfferSummary, DriverOperatingEligibilityProjection, DriverSupplyProjection, DriverSupportCaseProjection, DriverSupportCategory, FleetAgreementProjection, FleetMarketplaceOfferProjection, PreShiftCheckProjection, RegistrationContactType, RiderConductCaseProjection, SubmitDriverAppealProjection, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection, VehicleAssignmentValidationProjection, VehicleMaintenanceProjection, VerifiedDriverPerkProjection, VerifyRideCheckResult } from '@dazat/contracts';
 import {
@@ -36,6 +35,8 @@ import { listSupportCases, openSupportCase, readArrivalPlan, readDriverDailyOper
 import { readCommunicationInbox } from './src/communications-api';
 import { readContactPlan, readTelephonyCapabilities, readTelephonyInteractions } from './src/telephony-voice-api';
 import { readCommunicationsClosureCapabilities, readCommunicationsClosureStatus, readCommunicationsLaunchReadiness, readCommunicationsOperationsCapabilities, readCommunicationsOperationsStatus, readContactCases } from './src/communications-operations-api';
+import { readDriverCoreJourneyProgress } from './src/core-journey-api';
+import type { CoreJourneyProgressProjection } from '@dazat/contracts';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'DRIVER_HOME';
 
@@ -48,7 +49,7 @@ function rideCheckOutcomeText(result: VerifyRideCheckResult): string {
 
 function formatMinorUnits(amountMinor: number, currency: string): string {
   const formatter = new Intl.NumberFormat('en-GB', { style: 'currency', currency });
-  const fractionDigits = formatter.resolvedOptions().maximumFractionDigits;
+  const fractionDigits = formatter.resolvedOptions().maximumFractionDigits ?? 2;
   return formatter.format(amountMinor / (10 ** fractionDigits));
 }
 
@@ -84,6 +85,7 @@ export default function DriverApp() {
   const [assignment, setAssignment] = useState('');
   const [assignedBookingId, setAssignedBookingId] = useState('');
   const [journey, setJourney] = useState<ActiveJourneyProjection | null>(null);
+  const [coreJourneyProgress, setCoreJourneyProgress] = useState<CoreJourneyProgressProjection | null>(null);
   const [rideCheckCode, setRideCheckCode] = useState('');
   const [rideCheckOutcome, setRideCheckOutcome] = useState<VerifyRideCheckResult | null>(null);
   const [safetyStatus, setSafetyStatus] = useState('');
@@ -379,6 +381,11 @@ export default function DriverApp() {
     });
   }
 
+  function refreshCoreJourneyProgress() {
+    if (!assignedBookingId) return;
+    void run(async () => setCoreJourneyProgress(await readDriverCoreJourneyProgress(sessionToken, assignedBookingId)));
+  }
+
   function sendLocation() {
     if (!journey) return;
     void run(async () => {
@@ -498,9 +505,9 @@ export default function DriverApp() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
+      <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.16</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.52</Text>
         <Text style={styles.title}>DAZAT Driver journey</Text>
         <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. The complete Driver day keeps secure session, approved vehicle, eligibility, scheduled work, informed offers, pickup, RideCheck, Journey, earnings, break, finishing-soon and end-shift truth separate. Weak-signal recovery replaces speculative state and never pretends queued Safety commands were already processed.</Text>
 
@@ -725,6 +732,15 @@ export default function DriverApp() {
               <View style={styles.notice}>
                 <Text style={styles.noticeTitle}>Atomic assignment confirmed</Text>
                 <Text style={styles.body}>{assignment}</Text>
+                <SecondaryButton label="Refresh complete journey progress" onPress={refreshCoreJourneyProgress} />
+                {coreJourneyProgress ? (
+                  <View style={styles.section} accessibilityRole="summary">
+                    <Text style={styles.status}>Next: {coreJourneyProgress.nextAction.replaceAll('_', ' ')}</Text>
+                    {coreJourneyProgress.milestones.map((item) => <Text key={item.name} style={item.status === 'BLOCKED' ? styles.error : styles.body}>
+                      {item.name.replaceAll('_', ' ')} · {item.status.replaceAll('_', ' ')}
+                    </Text>)}
+                  </View>
+                ) : null}
                 {arrivalPlan ? (
                   <View style={styles.section}>
                     <Text style={styles.noticeTitle}>Chosen Booking pickup — not assumed passenger GPS</Text>
