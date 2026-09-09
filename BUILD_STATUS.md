@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.63 — Completed Assignment History**
+**Engineering Phase 0.64 — Booking Status Contract**
 
 Status: **SOURCE IMPLEMENTED / ALL WORKSPACES COMPILE / DOMAIN AND API RUNTIME TESTS PASS / PROVIDER AND CHARGING INTEGRATIONS DISABLED / DATABASE AND CONCURRENCY RUNTIME PENDING HOSTED CI**
 
