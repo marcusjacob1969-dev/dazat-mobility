@@ -735,7 +735,7 @@ export default function DriverApp() {
                 <SecondaryButton label="Refresh complete journey progress" onPress={refreshCoreJourneyProgress} />
                 {coreJourneyProgress ? (
                   <View style={styles.section} accessibilityRole="summary">
-                    <Text style={styles.status}>Next: {coreJourneyProgress.nextAction.replaceAll('_', ' ')}</Text>
+                    <Text style={styles.status}>{coreJourneyProgress.nextAction === 'JOURNEY_CLOSED' ? 'Journey closed — no further action' : coreJourneyProgress.nextAction === 'SUPPORT_REQUIRED' ? `Journey interrupted — support required (${coreJourneyProgress.interruptionReason?.replaceAll('_', ' ')})` : `Next: ${coreJourneyProgress.nextAction.replaceAll('_', ' ')}`}</Text>
                     {coreJourneyProgress.milestones.map((item) => <Text key={item.name} style={item.status === 'BLOCKED' ? styles.error : styles.body}>
                       {item.name.replaceAll('_', ' ')} · {item.status.replaceAll('_', ' ')}
                     </Text>)}

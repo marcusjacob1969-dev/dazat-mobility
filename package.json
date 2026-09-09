@@ -87,12 +87,16 @@
     "verify:phase-0-51": "node scripts/verify-phase-0-51.mjs",
     "verify:phase-0-52": "node scripts/verify-phase-0-52.mjs",
     "verify:phase-0-53": "node scripts/verify-phase-0-53.mjs",
-    "demo:core-journey": "npm run build:core && node scripts/demo-core-journey.mjs",
+    "demo:core-journey": "npm run build:core && npm run build --workspace @dazat/api && node scripts/demo-core-journey.mjs",
     "verify:phase-0-54": "node scripts/verify-phase-0-54.mjs",
     "verify:phase-0-55": "node scripts/verify-phase-0-55.mjs",
     "verify:phase-0-56": "node scripts/verify-phase-0-56.mjs",
     "verify:phase-0-57": "node scripts/verify-phase-0-57.mjs",
     "verify:phase-0-58": "node scripts/verify-phase-0-58.mjs",
-    "verify:phase-0-59": "node scripts/verify-phase-0-59.mjs"
+    "verify:phase-0-59": "node scripts/verify-phase-0-59.mjs",
+    "verify:phase-0-60": "node scripts/verify-phase-0-60.mjs",
+    "verify:phase-0-61": "node scripts/verify-phase-0-61.mjs",
+    "verify:phase-0-62": "node scripts/verify-phase-0-62.mjs",
+    "verify:phase-0-63": "node scripts/verify-phase-0-63.mjs"
   }
 }

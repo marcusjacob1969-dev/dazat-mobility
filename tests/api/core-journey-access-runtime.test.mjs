@@ -24,6 +24,15 @@ test('Driver progress query scopes access to DriverAssignment rather than Bookin
   assert.doesNotMatch(captured.sql, /party\.person_id/);
 });
 
+test('progress retains the latest assignment after governed completion ends it', async () => {
+  let capturedSql = '';
+  const pool = { query: async (sql) => { capturedSql = sql; return { rowCount: 1, rows: [projectionRow] }; } };
+  await getCoreJourneyProgress(pool, projectionRow.booking_id, actor);
+  assert.match(capturedSql, /LEFT JOIN LATERAL \(SELECT id FROM dispatch\.driver_assignment/);
+  assert.match(capturedSql, /ORDER BY assigned_at DESC LIMIT 1/);
+  assert.doesNotMatch(capturedSql, /assignment\.status = 'ACTIVE'/);
+});
+
 test('unauthorised Rider and Driver reads are indistinguishable from absent Bookings', async () => {
   const pool = { query: async () => ({ rowCount: 0, rows: [] }) };
   await assert.rejects(getCoreJourneyProgress(pool, projectionRow.booking_id, actor), { name: 'Error', message: 'Journey progress is unavailable' });
