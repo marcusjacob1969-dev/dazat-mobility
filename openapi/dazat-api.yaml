@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: DAZAT Mobility API
-  version: 0.0.21
+  version: 0.0.55
   description: Engineering Phase 0.20 API. Organisation live operations are a task-scoped lens over canonical Booking, Dispatch, Journey, Safety, Finance, Rescue and Compliance truth, never a shadow trip system. P0-P3 attention requires ownership, a next action and deadline; resolved exceptions remain distinct from verified outcomes. Manual assignment and partner overflow never bypass current Driver, vehicle, accessibility or safeguarding eligibility. School handover failure blocks ordinary completion, hospital PASSENGER_NOT_READY remains distinct from no-show, authority funding expiry affects future service without creating passenger liability, and live changes return to canonical reauthorisation. Degraded mode forbids spreadsheet or personal-message shadow dispatch. Service health is evidence-backed and never automatically cancels a Booking. A signed agreement alone cannot launch; readiness and pilot gates remain explicit. Exit preserves active passengers, lawful records and open cases. Only public capability and authenticated tenant-scoped minimized reads are exposed. Institutional live mutations, external execution, direct database editing, provider bypass, AI authority invention and contract-exit abandonment remain disabled. Communication intent is separate from delivery and UNKNOWN is not delivery. Personal contact details are never exposed and no external provider execution is enabled. Caller ID is not authentication, confirmed structured fields outrank transcripts, no external telephony or Voice Assistant execution is enabled, and personal numbers are never exposed. Notification/Delivery Policy decisions preserve scope; Cases preserve priority, provider acceptance is not delivery, RECOVERING revalidates current state, metrics exclude sensitive content, and no provider, staff mutation or real-user scenario execution is enabled. Communications transports authoritative domain truth and never invents it. Priority grants no additional data access, provider acceptance is not delivery, stale and duplicate work is suppressed, and thirteen gates and separate accountable approvals are required. An Organisation account is not a second Booking engine and not an owner of passenger identity; the backend enforces active membership and cost centres are not Finance ledger truth.
 servers:
   - url: http://localhost:3001
@@ -219,6 +219,34 @@ paths:
       responses:
         '200': { description: Current Journey projection with telemetry freshness and hold state. }
         '404': { description: Assigned Driver has not yet acknowledged and created the Journey. }
+  /v1/bookings/{bookingId}/core-journey-progress:
+    get:
+      summary: Read canonical journey milestones as an authorised Rider Booking party.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+      responses:
+        '200':
+          description: Server-authoritative Booking-to-Finance progress; production charging remains disabled.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CoreJourneyProgressProjection' }
+        '403': { description: Active Rider session required. }
+        '404': { description: Booking is absent or outside the actor scope. }
+  /v1/driver/bookings/{bookingId}/core-journey-progress:
+    get:
+      summary: Read canonical journey milestones as the assigned Driver.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/BookingId'
+      responses:
+        '200':
+          description: Assignment-scoped progress without RideCheck secret or passenger Finance detail.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CoreJourneyProgressProjection' }
+        '403': { description: Active Driver session required. }
+        '404': { description: Booking is absent or has no assignment for this Driver. }
   /v1/journeys/{journeyId}/location-observations:
     post:
       summary: Ingest an append-only, purpose-scoped Driver location observation with source, time, accuracy and confidence.
@@ -1122,6 +1150,26 @@ components:
       required: true
       schema: { type: string, format: uuid }
   schemas:
+    CoreJourneyMilestone:
+      type: object
+      additionalProperties: false
+      required: [name, status]
+      properties:
+        name: { type: string, enum: [BOOKING, FARE_AGREEMENT, DISPATCH, DRIVER_ASSIGNED, ARRIVAL, RIDECHECK, JOURNEY, FINANCE] }
+        status: { type: string, enum: [NOT_STARTED, IN_PROGRESS, COMPLETED, BLOCKED] }
+    CoreJourneyProgressProjection:
+      type: object
+      additionalProperties: false
+      required: [bookingId, bookingStatus, productionChargingEnabled, milestones, nextAction]
+      properties:
+        bookingId: { type: string, format: uuid }
+        bookingStatus: { type: string }
+        journeyId: { type: string, format: uuid }
+        journeyStatus: { type: string }
+        paymentIntentStatus: { type: string }
+        productionChargingEnabled: { type: boolean, const: false }
+        milestones: { type: array, minItems: 8, maxItems: 8, items: { $ref: '#/components/schemas/CoreJourneyMilestone' } }
+        nextAction: { type: string }
     StartAccountRegistrationRequest:
       type: object
       required: [profileKind, preferredName, contact]
