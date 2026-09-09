@@ -31,7 +31,7 @@ test('liveness and build metadata do not depend on database availability', async
 
   const build = await app.inject({ method: 'GET', url: '/v1/build-info' });
   assert.equal(build.statusCode, 200);
-  assert.equal(build.json().checkpoint, 'engineering-phase-0.55');
+  assert.equal(build.json().checkpoint, 'engineering-phase-0.56');
   assert.equal(build.headers['cache-control'], 'no-store');
   assert.equal(build.headers['x-content-type-options'], 'nosniff');
   assert.equal(build.headers['x-frame-options'], 'DENY');

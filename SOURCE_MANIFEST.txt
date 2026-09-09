@@ -166,6 +166,7 @@
 ./docs/engineering/phase-0.53-reproducible-core-journey-demo.md
 ./docs/engineering/phase-0.54-continuous-vertical-slice-verification.md
 ./docs/engineering/phase-0.55-core-journey-openapi.md
+./docs/engineering/phase-0.56-core-journey-access-contracts.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -323,6 +324,7 @@
 ./scripts/verify-phase-0-53.mjs
 ./scripts/verify-phase-0-54.mjs
 ./scripts/verify-phase-0-55.mjs
+./scripts/verify-phase-0-56.mjs
 ./scripts/verify-phase-0-6.mjs
 ./scripts/verify-phase-0-7.mjs
 ./scripts/verify-phase-0-8.mjs
@@ -389,6 +391,7 @@
 ./services/workers/tsconfig.json
 ./tests/api/bearer-token-runtime.test.mjs
 ./tests/api/config-security.test.mjs
+./tests/api/core-journey-access-runtime.test.mjs
 ./tests/api/core-journey-progress-runtime.test.mjs
 ./tests/api/runtime-contract.test.mjs
 ./tests/api/session-auth-runtime.test.mjs
