@@ -1,0 +1,4 @@
+import { readFileSync } from 'node:fs'; import { join } from 'node:path'; import { fileURLToPath } from 'node:url';
+const root = fileURLToPath(new URL('..', import.meta.url)); const source = readFileSync(join(root, 'tests/api/core-journey-access-runtime.test.mjs'), 'utf8'); const errors = [];
+for (const truth of ['getCoreJourneyProgress', 'getDriverCoreJourneyProgress', 'actor.personId', 'actor.driverProfileId', 'booking\\.booking_party', 'dispatch\\.driver_assignment permitted_assignment']) if (!source.includes(truth)) errors.push(`Access contract missing: ${truth}`);
+if (errors.length) { console.error('DAZAT Engineering Phase 0.56 verification FAILED'); for (const error of errors) console.error(`- ${error}`); process.exit(1); } console.log('DAZAT Engineering Phase 0.56 verification PASSED');
