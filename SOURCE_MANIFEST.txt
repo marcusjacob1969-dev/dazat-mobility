@@ -181,6 +181,7 @@
 ./docs/engineering/phase-0.67-current-verification-aggregate.md
 ./docs/engineering/phase-0.68-hosted-postgis-validation-recovery.md
 ./docs/engineering/phase-0.69-postgres-core-journey-query.md
+./docs/engineering/phase-0.70-database-backed-core-journey-http.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -289,6 +290,7 @@
 ./packages/domain/src/telephony-voice.ts
 ./packages/domain/tsconfig.json
 ./scripts/demo-core-journey.mjs
+./scripts/verify-core-journey-http-postgres.mjs
 ./scripts/verify-core-journey-postgres.mjs
 ./scripts/verify-current.mjs
 ./scripts/verify-foundation.mjs
@@ -356,6 +358,7 @@
 ./scripts/verify-phase-0-68.mjs
 ./scripts/verify-phase-0-69.mjs
 ./scripts/verify-phase-0-7.mjs
+./scripts/verify-phase-0-70.mjs
 ./scripts/verify-phase-0-8.mjs
 ./scripts/verify-phase-0-9.mjs
 ./scripts/verify-postgres-migrations.mjs

@@ -2,13 +2,17 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.69 — PostgreSQL Core-Journey Query Verification**
+**Engineering Phase 0.70 — Database-Backed Authenticated Core-Journey HTTP**
 
-Status: **SOURCE IMPLEMENTED / ALL WORKSPACES COMPILE / DOMAIN AND API RUNTIME TESTS PASS / PROVIDER AND CHARGING INTEGRATIONS DISABLED / DATABASE AND CONCURRENCY RUNTIME PENDING HOSTED CI**
+Status: **SOURCE IMPLEMENTED / LOCAL SOURCE, COMPILE, DOMAIN AND API RUNTIME TESTS PASS / PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED DISPOSABLE-POSTGIS HTTP VERIFICATION PENDING CI**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
+
+- Transaction-scoped PostGIS fixtures now exercise actual authenticated Rider, Driver and task-scoped Control Room HTTP routes through Fastify and the production SQL projection.
+- The hosted journey test covers a shared active-incident projection, completed-and-captured closure, Rider cancellation, cross-party and cross-assignment denial, Control Room scope denial, expired credentials and missing authentication.
+- The fixture is always rolled back, preserving repeatability while respecting append-only production tables.
 
 - Governed recovery of expired Control Room fatigue-handover ownership, with current-role revalidation, no-current-owner protection, immutable prior scope history, bounded evidence and retained passenger Safety hold.
 - Supervisor-only, bounded and privacy-minimised discovery of expired handovers with no current owner, ordered oldest first and explicitly advisory pending command revalidation.
