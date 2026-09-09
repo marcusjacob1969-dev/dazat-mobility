@@ -507,7 +507,7 @@ export default function DriverApp() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.52</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.54 · ENGINEERING PHASE 0.16 CLOSURE BASELINE</Text>
         <Text style={styles.title}>DAZAT Driver journey</Text>
         <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. The complete Driver day keeps secure session, approved vehicle, eligibility, scheduled work, informed offers, pickup, RideCheck, Journey, earnings, break, finishing-soon and end-shift truth separate. Weak-signal recovery replaces speculative state and never pretends queued Safety commands were already processed.</Text>
 

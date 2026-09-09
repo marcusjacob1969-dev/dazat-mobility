@@ -10,8 +10,8 @@
 ./apps/control-room/index.html
 ./apps/control-room/package.json
 ./apps/control-room/src/App.tsx
-./apps/control-room/src/fatigue-handover-api.ts
 ./apps/control-room/src/README.md
+./apps/control-room/src/fatigue-handover-api.ts
 ./apps/control-room/src/main.tsx
 ./apps/control-room/tsconfig.json
 ./apps/control-room/vite.config.ts
@@ -21,6 +21,7 @@
 ./apps/driver/src/README.md
 ./apps/driver/src/communications-api.ts
 ./apps/driver/src/communications-operations-api.ts
+./apps/driver/src/core-journey-api.ts
 ./apps/driver/src/dispatch-api.ts
 ./apps/driver/src/driver-daily-operations-api.ts
 ./apps/driver/src/driver-fair-treatment-api.ts
@@ -46,6 +47,7 @@
 ./apps/rider/src/booking-api.ts
 ./apps/rider/src/communications-api.ts
 ./apps/rider/src/communications-operations-api.ts
+./apps/rider/src/core-journey-api.ts
 ./apps/rider/src/dispatch-api.ts
 ./apps/rider/src/finance-api.ts
 ./apps/rider/src/identity-api.ts
@@ -108,6 +110,7 @@
 ./docs/architecture/ADR-0020-institutional-live-operations-final-closure.md
 ./docs/architecture/ADR-0021-postgres-migration-validation.md
 ./docs/architecture/domain-ownership.md
+./docs/engineering/current-delivery-direction.md
 ./docs/engineering/phase-0-10-checklist.md
 ./docs/engineering/phase-0-11-checklist.md
 ./docs/engineering/phase-0-12-checklist.md
@@ -150,7 +153,6 @@
 ./docs/engineering/phase-0-46-checklist.md
 ./docs/engineering/phase-0-47-checklist.md
 ./docs/engineering/phase-0-48-checklist.md
-./docs/engineering/current-delivery-direction.md
 ./docs/engineering/phase-0-49-checklist.md
 ./docs/engineering/phase-0-5-checklist.md
 ./docs/engineering/phase-0-6-checklist.md
@@ -158,6 +160,11 @@
 ./docs/engineering/phase-0-8-checklist.md
 ./docs/engineering/phase-0-9-checklist.md
 ./docs/engineering/phase-0-checklist.md
+./docs/engineering/phase-0.50-persistent-core-journey-progress.md
+./docs/engineering/phase-0.51-rider-core-journey-progress.md
+./docs/engineering/phase-0.52-driver-core-journey-progress.md
+./docs/engineering/phase-0.53-reproducible-core-journey-demo.md
+./docs/engineering/phase-0.54-continuous-vertical-slice-verification.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -215,6 +222,7 @@
 ./packages/contracts/src/communications-operations.ts
 ./packages/contracts/src/communications.ts
 ./packages/contracts/src/control-room-fatigue.ts
+./packages/contracts/src/core-journey-progress.ts
 ./packages/contracts/src/dispatch.ts
 ./packages/contracts/src/driver-daily-operations.ts
 ./packages/contracts/src/driver-fair-treatment.ts
@@ -242,6 +250,7 @@
 ./packages/domain/src/communications-closure.ts
 ./packages/domain/src/communications-operations.ts
 ./packages/domain/src/communications.ts
+./packages/domain/src/core-journey-vertical-slice.ts
 ./packages/domain/src/dispatch.ts
 ./packages/domain/src/domain-event.ts
 ./packages/domain/src/driver-daily-operations.ts
@@ -252,7 +261,6 @@
 ./packages/domain/src/identity.ts
 ./packages/domain/src/ids.ts
 ./packages/domain/src/index.ts
-./packages/domain/src/core-journey-vertical-slice.ts
 ./packages/domain/src/institutional-live-operations.ts
 ./packages/domain/src/institutional-transport.ts
 ./packages/domain/src/journey.ts
@@ -264,6 +272,7 @@
 ./packages/domain/src/pricing.ts
 ./packages/domain/src/telephony-voice.ts
 ./packages/domain/tsconfig.json
+./scripts/demo-core-journey.mjs
 ./scripts/verify-foundation.mjs
 ./scripts/verify-phase-0-10.mjs
 ./scripts/verify-phase-0-11.mjs
@@ -307,6 +316,11 @@
 ./scripts/verify-phase-0-48.mjs
 ./scripts/verify-phase-0-49.mjs
 ./scripts/verify-phase-0-5.mjs
+./scripts/verify-phase-0-50.mjs
+./scripts/verify-phase-0-51.mjs
+./scripts/verify-phase-0-52.mjs
+./scripts/verify-phase-0-53.mjs
+./scripts/verify-phase-0-54.mjs
 ./scripts/verify-phase-0-6.mjs
 ./scripts/verify-phase-0-7.mjs
 ./scripts/verify-phase-0-8.mjs
@@ -328,6 +342,8 @@
 ./services/api/src/modules/communications/routes.ts
 ./services/api/src/modules/control-room-fatigue/control-room-fatigue-service.ts
 ./services/api/src/modules/control-room-fatigue/routes.ts
+./services/api/src/modules/core-journey/core-journey-service.ts
+./services/api/src/modules/core-journey/routes.ts
 ./services/api/src/modules/dispatch/dispatch-service.ts
 ./services/api/src/modules/dispatch/routes.ts
 ./services/api/src/modules/driver-daily-operations/driver-daily-operations-service.ts
@@ -371,14 +387,15 @@
 ./services/workers/tsconfig.json
 ./tests/api/bearer-token-runtime.test.mjs
 ./tests/api/config-security.test.mjs
+./tests/api/core-journey-progress-runtime.test.mjs
 ./tests/api/runtime-contract.test.mjs
 ./tests/api/session-auth-runtime.test.mjs
 ./tests/domain/authentication.test.mjs
 ./tests/domain/booking-status.test.mjs
-./tests/domain/core-journey-vertical-slice.test.mjs
 ./tests/domain/communications-closure-source.test.mjs
 ./tests/domain/communications-operations-source.test.mjs
 ./tests/domain/communications-source.test.mjs
+./tests/domain/core-journey-vertical-slice.test.mjs
 ./tests/domain/dispatch.test.mjs
 ./tests/domain/driver-daily-operations-source.test.mjs
 ./tests/domain/driver-fair-treatment-source.test.mjs

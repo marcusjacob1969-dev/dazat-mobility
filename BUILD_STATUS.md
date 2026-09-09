@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.53 — Reproducible Core-Journey Demonstration**
+**Engineering Phase 0.54 — Continuous Vertical-Slice Verification**
 
 Status: **SOURCE IMPLEMENTED / ALL WORKSPACES COMPILE / DOMAIN AND API RUNTIME TESTS PASS / PROVIDER AND CHARGING INTEGRATIONS DISABLED / DATABASE AND CONCURRENCY RUNTIME PENDING HOSTED CI**
 
@@ -18,6 +18,7 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Rider application progress surface driven by that server projection, with the next action, explicit blockers and disabled-charging truth.
 - Assignment-authorised Driver progress endpoint and application surface using the same canonical milestones without passenger financial disclosure.
 - Deterministic, assertion-backed demonstration command covering successful completion and three fail-closed safety paths without external actions.
+- Pull-request and main-branch CI now runs every modern phase verifier, API runtime tests and the connected demonstration alongside disposable PostGIS migration verification.
 
 - All Phase 0.1–0.8 monorepo, Identity, Booking, Dispatch, Journey, Safety, governed-completion, provider-disabled Finance and Driver operating-permission foundations.
 - Guarded active Journey spine: `IN_PROGRESS → ARRIVING → COMPLETED`.

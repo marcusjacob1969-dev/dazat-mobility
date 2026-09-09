@@ -17,7 +17,7 @@ const source = [
   readFileSync(join(root, required[0]), 'utf8'),
   readFileSync(join(root, 'services/api/src/app.ts'), 'utf8')
 ].join('\n');
-for (const truth of ["checkpoint: 'engineering-phase-0.46'", "'/v1/control-room/fatigue-handovers/:controlledHandoverId/recover-ownership'",
+for (const truth of ["'/v1/control-room/fatigue-handovers/:controlledHandoverId/recover-ownership'",
   'recoverFatigueHandoverOwnership', 'RecoverFatigueHandoverOwnership', 'EXPIRED_TASK_OWNERSHIP_RECOVERED',
   'control-room.fatigue-handover-ownership-recovered', "previous_task.valid_until <= now()",
   'NOT EXISTS (SELECT 1 FROM operations.control_room_task_scope active_task', "support_case.status = 'IN_PROGRESS'",
