@@ -167,6 +167,7 @@
 ./docs/engineering/phase-0.54-continuous-vertical-slice-verification.md
 ./docs/engineering/phase-0.55-core-journey-openapi.md
 ./docs/engineering/phase-0.56-core-journey-access-contracts.md
+./docs/engineering/phase-0.57-core-journey-nondisclosure.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -325,6 +326,7 @@
 ./scripts/verify-phase-0-54.mjs
 ./scripts/verify-phase-0-55.mjs
 ./scripts/verify-phase-0-56.mjs
+./scripts/verify-phase-0-57.mjs
 ./scripts/verify-phase-0-6.mjs
 ./scripts/verify-phase-0-7.mjs
 ./scripts/verify-phase-0-8.mjs

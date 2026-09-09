@@ -90,6 +90,7 @@
     "demo:core-journey": "npm run build:core && node scripts/demo-core-journey.mjs",
     "verify:phase-0-54": "node scripts/verify-phase-0-54.mjs",
     "verify:phase-0-55": "node scripts/verify-phase-0-55.mjs",
-    "verify:phase-0-56": "node scripts/verify-phase-0-56.mjs"
+    "verify:phase-0-56": "node scripts/verify-phase-0-56.mjs",
+    "verify:phase-0-57": "node scripts/verify-phase-0-57.mjs"
   }
 }
