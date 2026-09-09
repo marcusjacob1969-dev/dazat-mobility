@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { getCoreJourneyProgress, getDriverCoreJourneyProgress } from '../../services/api/dist/modules/core-journey/core-journey-service.js';
+import { getControlRoomCoreJourneyProgress, getCoreJourneyProgress, getDriverCoreJourneyProgress } from '../../services/api/dist/modules/core-journey/core-journey-service.js';
 
 const projectionRow = { booking_id: '10000000-0000-4000-8000-000000000001', booking_status: 'CONFIRMED', fare_agreement_id: null, dispatch_status: null, assignment_id: null, journey_id: null, journey_status: null, arrival_accepted: null, ridecheck_status: null, payment_intent_status: null };
 const actor = { accountId: 'a', personId: 'person-1', accountStatus: 'ACTIVE', sessionId: 's', authStrength: 'VERIFIED_CONTACT', expiresAt: new Date(), riderProfileId: 'rider-1', driverProfileId: 'driver-1' };
@@ -44,4 +44,15 @@ test('Driver projection fails closed before querying when the session has no Dri
   const pool = { query: async () => { queryAttempted = true; return { rowCount: 1, rows: [projectionRow] }; } };
   assert.throws(() => getDriverCoreJourneyProgress(pool, projectionRow.booking_id, { ...actor, driverProfileId: undefined }), { message: 'Driver progress is unavailable' });
   assert.equal(queryAttempted, false);
+});
+
+test('Control Room progress is bound to a current purpose-scoped fatigue handover task', async () => {
+  let captured;
+  const handoverId = '20000000-0000-4000-8000-000000000001';
+  const pool = { query: async (sql, parameters) => { captured = { sql, parameters }; return { rowCount: 1, rows: [projectionRow] }; } };
+  await getControlRoomCoreJourneyProgress(pool, projectionRow.booking_id, handoverId, actor);
+  assert.deepEqual(captured.parameters, [projectionRow.booking_id, actor.personId, handoverId]);
+  assert.match(captured.sql, /control_room_task_scope task/);
+  assert.match(captured.sql, /task\.valid_until > now\(\)/);
+  assert.match(captured.sql, /scoped_journey\.booking_id = b\.id/);
 });

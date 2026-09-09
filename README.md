@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.64**.
+Current checkpoint: **Engineering Phase 0.65**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -83,6 +83,8 @@ Phase 0.62 extends the reproducible vertical-slice demonstration through the API
 Phase 0.63 preserves completed Driver-assignment milestones after governed completion ends the active assignment.
 
 Phase 0.64 makes the vertical-slice Booking status contract use the authoritative domain vocabulary in TypeScript and OpenAPI.
+
+Phase 0.65 connects the same journey progress projection to Control Room through current, purpose-bound fatigue-handover task authority.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 

@@ -12,7 +12,7 @@ function databaseDouble(progressVisible = true) {
   return { queries, database: { query: async (sql) => { queries.push(sql); if (sql.includes('FROM identity.session')) return { rowCount: 1, rows: [sessionRow] }; if (sql.startsWith('UPDATE identity.session')) return { rowCount: 1, rows: [] }; if (sql.includes('FROM booking.booking b')) return { rowCount: progressVisible ? 1 : 0, rows: progressVisible ? [progressRow] : [] }; throw new Error('unexpected query'); }, end: async () => {} } };
 }
 
-for (const [name, path] of [['Rider', `/v1/bookings/${progressRow.booking_id}/core-journey-progress`], ['Driver', `/v1/driver/bookings/${progressRow.booking_id}/core-journey-progress`]]) {
+for (const [name, path] of [['Rider', `/v1/bookings/${progressRow.booking_id}/core-journey-progress`], ['Driver', `/v1/driver/bookings/${progressRow.booking_id}/core-journey-progress`], ['Control Room', `/v1/control-room/fatigue-handovers/20000000-0000-4000-8000-000000000001/bookings/${progressRow.booking_id}/core-journey-progress`]]) {
   test(`${name} route returns the canonical no-store progress contract`, async () => {
     const dependency = databaseDouble(); const app = buildApi(config, { database: dependency.database });
     const response = await app.inject({ method: 'GET', url: path, headers: { authorization: `Bearer dzs_${'a'.repeat(40)}` } });

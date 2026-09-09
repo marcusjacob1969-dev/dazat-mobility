@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { DatabasePool } from '../../db.js';
 import { bearerTokenFromRequest } from '../../security/bearer-token.js';
 import { authenticateBearerSession } from '../identity/session-service.js';
-import { CoreJourneyNotFoundError, getCoreJourneyProgress, getDriverCoreJourneyProgress } from './core-journey-service.js';
+import { CoreJourneyNotFoundError, getControlRoomCoreJourneyProgress, getCoreJourneyProgress, getDriverCoreJourneyProgress } from './core-journey-service.js';
 
 export function registerCoreJourneyRoutes(app: FastifyInstance, pool: DatabasePool): void {
   app.get('/v1/bookings/:bookingId/core-journey-progress', async (request, reply) => {
@@ -34,6 +34,22 @@ export function registerCoreJourneyRoutes(app: FastifyInstance, pool: DatabasePo
     } catch (error) {
       if (error instanceof CoreJourneyNotFoundError) return reply.code(404).send({ code: 'CORE_JOURNEY_NOT_FOUND' });
       request.log.error({ err: error }, 'Driver core Journey progress read failed');
+      return reply.code(500).send({ code: 'CORE_JOURNEY_PROGRESS_UNAVAILABLE' });
+    }
+  });
+
+  app.get('/v1/control-room/fatigue-handovers/:controlledHandoverId/bookings/:bookingId/core-journey-progress', async (request, reply) => {
+    const token = bearerTokenFromRequest(request);
+    if (!token) return reply.code(401).send({ code: 'AUTHENTICATION_REQUIRED' });
+    const principal = await authenticateBearerSession(pool, token, 'SUPPORT');
+    if (!principal) return reply.code(403).send({ code: 'CONTROL_ROOM_SESSION_REQUIRED' });
+    const params = z.object({ controlledHandoverId: z.string().uuid(), bookingId: z.string().uuid() }).strict().safeParse(request.params);
+    if (!params.success) return reply.code(400).send({ code: 'INVALID_CONTROL_ROOM_JOURNEY_SCOPE' });
+    try {
+      return reply.code(200).send(await getControlRoomCoreJourneyProgress(pool, params.data.bookingId, params.data.controlledHandoverId, principal));
+    } catch (error) {
+      if (error instanceof CoreJourneyNotFoundError) return reply.code(404).send({ code: 'CORE_JOURNEY_NOT_FOUND' });
+      request.log.error({ err: error }, 'Control Room core Journey progress read failed');
       return reply.code(500).send({ code: 'CORE_JOURNEY_PROGRESS_UNAVAILABLE' });
     }
   });
