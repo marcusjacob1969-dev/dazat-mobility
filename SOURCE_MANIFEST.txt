@@ -10,8 +10,8 @@
 ./apps/control-room/index.html
 ./apps/control-room/package.json
 ./apps/control-room/src/App.tsx
-./apps/control-room/src/core-journey-api.ts
 ./apps/control-room/src/README.md
+./apps/control-room/src/core-journey-api.ts
 ./apps/control-room/src/fatigue-handover-api.ts
 ./apps/control-room/src/main.tsx
 ./apps/control-room/tsconfig.json
@@ -179,6 +179,7 @@
 ./docs/engineering/phase-0.65-control-room-journey-read.md
 ./docs/engineering/phase-0.66-control-room-journey-ui.md
 ./docs/engineering/phase-0.67-current-verification-aggregate.md
+./docs/engineering/phase-0.68-hosted-postgis-validation-recovery.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -287,6 +288,7 @@
 ./packages/domain/src/telephony-voice.ts
 ./packages/domain/tsconfig.json
 ./scripts/demo-core-journey.mjs
+./scripts/verify-current.mjs
 ./scripts/verify-foundation.mjs
 ./scripts/verify-phase-0-10.mjs
 ./scripts/verify-phase-0-11.mjs
@@ -349,7 +351,7 @@
 ./scripts/verify-phase-0-65.mjs
 ./scripts/verify-phase-0-66.mjs
 ./scripts/verify-phase-0-67.mjs
-./scripts/verify-current.mjs
+./scripts/verify-phase-0-68.mjs
 ./scripts/verify-phase-0-7.mjs
 ./scripts/verify-phase-0-8.mjs
 ./scripts/verify-phase-0-9.mjs
