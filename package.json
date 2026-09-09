@@ -103,6 +103,8 @@
     "verify:phase-0-66": "node scripts/verify-phase-0-66.mjs",
     "verify:current": "node scripts/verify-current.mjs",
     "verify:phase-0-67": "node scripts/verify-phase-0-67.mjs",
-    "verify:phase-0-68": "node scripts/verify-phase-0-68.mjs"
+    "verify:phase-0-68": "node scripts/verify-phase-0-68.mjs",
+    "verify:phase-0-69": "node scripts/verify-phase-0-69.mjs",
+    "verify:core-journey:postgres": "node scripts/verify-core-journey-postgres.mjs"
   }
 }

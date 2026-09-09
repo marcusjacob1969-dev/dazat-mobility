@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.68 — Hosted PostGIS Validation Recovery**
+**Engineering Phase 0.69 — PostgreSQL Core-Journey Query Verification**
 
 Status: **SOURCE IMPLEMENTED / ALL WORKSPACES COMPILE / DOMAIN AND API RUNTIME TESTS PASS / PROVIDER AND CHARGING INTEGRATIONS DISABLED / DATABASE AND CONCURRENCY RUNTIME PENDING HOSTED CI**
 
