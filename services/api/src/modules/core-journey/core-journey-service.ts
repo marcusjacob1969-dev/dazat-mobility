@@ -47,7 +47,7 @@ export function projectCoreJourneyProgress(row: ProgressRow): CoreJourneyProgres
   };
 }
 
-export async function getCoreJourneyProgress(pool: DatabasePool, bookingId: string, actor: AuthenticatedPrincipal): Promise<CoreJourneyProgressProjection> {
+async function readProgress(pool: DatabasePool, bookingId: string, actorId: string, accessPredicate: string): Promise<CoreJourneyProgressProjection> {
   const result = await pool.query<ProgressRow>(
     `SELECT b.id AS booking_id, b.status AS booking_status, fa.id AS fare_agreement_id,
             attempt.status AS dispatch_status, assignment.id AS assignment_id,
@@ -62,10 +62,20 @@ export async function getCoreJourneyProgress(pool: DatabasePool, bookingId: stri
        LEFT JOIN LATERAL (SELECT accepted FROM journey.arrival_evidence WHERE journey_id = j.id ORDER BY evaluated_at DESC LIMIT 1) arrival ON true
        LEFT JOIN LATERAL (SELECT status FROM journey.ridecheck_session WHERE journey_id = j.id ORDER BY created_at DESC LIMIT 1) ridecheck ON true
        LEFT JOIN LATERAL (SELECT status FROM finance.payment_intent WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) payment_intent ON true
-      WHERE b.id = $1
-        AND EXISTS (SELECT 1 FROM booking.booking_party party WHERE party.booking_id = b.id AND party.person_id = $2 AND party.role IN ('BOOKER','PASSENGER','PAYER'))`,
-    [bookingId, actor.personId]
+      WHERE b.id = $1 AND ${accessPredicate}`,
+    [bookingId, actorId]
   );
   if (!result.rowCount) throw new CoreJourneyNotFoundError('Journey progress is unavailable');
   return projectCoreJourneyProgress(result.rows[0]!);
+}
+
+export function getCoreJourneyProgress(pool: DatabasePool, bookingId: string, actor: AuthenticatedPrincipal): Promise<CoreJourneyProgressProjection> {
+  return readProgress(pool, bookingId, actor.personId,
+    "EXISTS (SELECT 1 FROM booking.booking_party party WHERE party.booking_id = b.id AND party.person_id = $2 AND party.role IN ('BOOKER','PASSENGER','PAYER'))");
+}
+
+export function getDriverCoreJourneyProgress(pool: DatabasePool, bookingId: string, actor: AuthenticatedPrincipal): Promise<CoreJourneyProgressProjection> {
+  if (!actor.driverProfileId) throw new CoreJourneyNotFoundError('Driver progress is unavailable');
+  return readProgress(pool, bookingId, actor.driverProfileId,
+    "EXISTS (SELECT 1 FROM dispatch.driver_assignment permitted_assignment WHERE permitted_assignment.booking_id = b.id AND permitted_assignment.driver_profile_id = $2)");
 }

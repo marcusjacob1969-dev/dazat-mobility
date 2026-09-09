@@ -84,6 +84,7 @@
     "verify:phase-0-48": "node scripts/verify-phase-0-48.mjs",
     "verify:phase-0-49": "node scripts/verify-phase-0-49.mjs",
     "verify:phase-0-50": "node scripts/verify-phase-0-50.mjs",
-    "verify:phase-0-51": "node scripts/verify-phase-0-51.mjs"
+    "verify:phase-0-51": "node scripts/verify-phase-0-51.mjs",
+    "verify:phase-0-52": "node scripts/verify-phase-0-52.mjs"
   }
 }

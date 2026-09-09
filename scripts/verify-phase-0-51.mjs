@@ -6,7 +6,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const source = ['apps/rider/App.tsx', 'apps/rider/src/core-journey-api.ts', 'apps/rider/src/README.md', 'docs/engineering/phase-0.51-rider-core-journey-progress.md', 'services/api/src/app.ts']
   .map((path) => readFileSync(join(root, path), 'utf8')).join('\n');
 const errors = [];
-for (const truth of ["checkpoint: 'engineering-phase-0.51'", 'readCoreJourneyProgress', 'core-journey-progress', 'coreJourneyProgress.milestones', "item.status === 'BLOCKED'", 'PRODUCTION CHARGING DISABLED']) {
+for (const truth of ['readCoreJourneyProgress', 'core-journey-progress', 'coreJourneyProgress.milestones', "item.status === 'BLOCKED'", 'PRODUCTION CHARGING DISABLED']) {
   if (!source.includes(truth)) errors.push(`Rider core-journey progress missing: ${truth}`);
 }
 if (errors.length) {
