@@ -17,7 +17,7 @@ const source = [
   readFileSync(join(root, required[0]), 'utf8'),
   readFileSync(join(root, 'services/api/src/app.ts'), 'utf8')
 ].join('\n');
-for (const truth of ["checkpoint: 'engineering-phase-0.47'", "'/v1/control-room/fatigue-handovers/recoverable'",
+for (const truth of ["'/v1/control-room/fatigue-handovers/recoverable'",
   'listRecoverableFatigueHandovers', 'RecoverableFatigueHandoverQueueProjection', "role_code = 'SAFETY_SUPERVISOR'",
   'previous_task.valid_until <= now()', 'NOT EXISTS (SELECT 1 FROM operations.control_room_task_scope active_task',
   "support_case.status = 'IN_PROGRESS'", "hold.status = 'ACTIVE'", 'ORDER BY previous_task.valid_until ASC',

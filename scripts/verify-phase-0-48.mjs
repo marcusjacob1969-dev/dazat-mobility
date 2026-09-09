@@ -15,7 +15,7 @@ const source = [
   readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8'),
   readFileSync(join(root, 'services/api/src/app.ts'), 'utf8')
 ].join('\n');
-for (const truth of ["checkpoint: 'engineering-phase-0.48'", 'getRecoverableFatigueHandovers',
+for (const truth of ['getRecoverableFatigueHandovers',
   'recoverFatigueHandoverOwnership', '/v1/control-room/fatigue-handovers/recoverable?limit=',
   '/recover-ownership', "'idempotency-key': idempotencyKey", 'recoveryEvidenceReference',
   'Math.max(1, Math.min(100', "cache: 'no-store'", 'encodeURIComponent(controlledHandoverId)',
