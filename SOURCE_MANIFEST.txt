@@ -10,6 +10,7 @@
 ./apps/control-room/index.html
 ./apps/control-room/package.json
 ./apps/control-room/src/App.tsx
+./apps/control-room/src/core-journey-api.ts
 ./apps/control-room/src/README.md
 ./apps/control-room/src/fatigue-handover-api.ts
 ./apps/control-room/src/main.tsx
@@ -176,6 +177,7 @@
 ./docs/engineering/phase-0.63-completed-assignment-history.md
 ./docs/engineering/phase-0.64-booking-status-contract.md
 ./docs/engineering/phase-0.65-control-room-journey-read.md
+./docs/engineering/phase-0.66-control-room-journey-ui.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -344,6 +346,7 @@
 ./scripts/verify-phase-0-63.mjs
 ./scripts/verify-phase-0-64.mjs
 ./scripts/verify-phase-0-65.mjs
+./scripts/verify-phase-0-66.mjs
 ./scripts/verify-phase-0-7.mjs
 ./scripts/verify-phase-0-8.mjs
 ./scripts/verify-phase-0-9.mjs

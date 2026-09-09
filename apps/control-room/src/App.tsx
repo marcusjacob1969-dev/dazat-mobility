@@ -1,6 +1,24 @@
+import { useState } from 'react';
 import { dazatTokens } from '@dazat/design-system';
+import type { CoreJourneyProgressProjection } from '@dazat/contracts';
+import { readTaskScopedCoreJourneyProgress } from './core-journey-api.js';
 
 export function App() {
+  const [apiBaseUrl, setApiBaseUrl] = useState('http://localhost:3001');
+  const [bearerToken, setBearerToken] = useState('');
+  const [controlledHandoverId, setControlledHandoverId] = useState('');
+  const [bookingId, setBookingId] = useState('');
+  const [journeyProgress, setJourneyProgress] = useState<CoreJourneyProgressProjection | null>(null);
+  const [journeyError, setJourneyError] = useState<string | null>(null);
+  const [journeyLoading, setJourneyLoading] = useState(false);
+
+  async function loadJourneyProgress() {
+    setJourneyLoading(true); setJourneyError(null);
+    try { setJourneyProgress(await readTaskScopedCoreJourneyProgress(apiBaseUrl, bearerToken, controlledHandoverId, bookingId)); }
+    catch (error) { setJourneyProgress(null); setJourneyError(error instanceof Error ? error.message : 'CONTROL_ROOM_JOURNEY_PROGRESS_FAILED'); }
+    finally { setJourneyLoading(false); }
+  }
+
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
       <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.54 · ENGINEERING PHASE 0.20 INSTITUTIONAL BASELINE</p>
@@ -8,6 +26,17 @@ export function App() {
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.
       </p>
+      <section aria-label="Task-scoped core journey progress" style={{ maxWidth: 720, marginTop: 24, padding: 24, background: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card }}>
+        <h2 style={{ marginTop: 0 }}>Task-scoped journey progress</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>Loads only through a current fatigue-handover task. An ID alone grants no access.</p>
+        <label style={{ display: 'block', marginTop: 12 }}>API base URL<input aria-label="API base URL" type="url" value={apiBaseUrl} onChange={(event) => setApiBaseUrl(event.target.value)} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 4, padding: 10 }} /></label>
+        <label style={{ display: 'block', marginTop: 12 }}>Session token<input aria-label="Session token" type="password" value={bearerToken} onChange={(event) => setBearerToken(event.target.value)} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 4, padding: 10 }} /></label>
+        <label style={{ display: 'block', marginTop: 12 }}>Controlled handover ID<input aria-label="Controlled handover ID" value={controlledHandoverId} onChange={(event) => setControlledHandoverId(event.target.value)} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 4, padding: 10 }} /></label>
+        <label style={{ display: 'block', marginTop: 12 }}>Booking ID<input aria-label="Booking ID" value={bookingId} onChange={(event) => setBookingId(event.target.value)} style={{ display: 'block', width: '100%', boxSizing: 'border-box', marginTop: 4, padding: 10 }} /></label>
+        <button type="button" disabled={journeyLoading || !bearerToken || !controlledHandoverId || !bookingId} onClick={() => void loadJourneyProgress()} style={{ marginTop: 16, padding: '10px 16px' }}>{journeyLoading ? 'Loading…' : 'Load journey progress'}</button>
+        {journeyError ? <p role="alert">{journeyError}</p> : null}
+        {journeyProgress ? <div aria-live="polite" style={{ marginTop: 16 }}><strong>{journeyProgress.disposition.replaceAll('_', ' ')}</strong><p>Next: {journeyProgress.nextAction.replaceAll('_', ' ')}</p><ul>{journeyProgress.milestones.map((item) => <li key={item.name}>{item.name.replaceAll('_', ' ')} — {item.status.replaceAll('_', ' ')}</li>)}</ul></div> : null}
+      </section>
       <section aria-label="Fatigue handover recovery boundary" style={{ maxWidth: 720, marginTop: 24, padding: 24, background: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card }}>
         <h2 style={{ marginTop: 0 }}>Expired passenger-protection work stays owned</h2>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>

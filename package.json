@@ -99,6 +99,7 @@
     "verify:phase-0-62": "node scripts/verify-phase-0-62.mjs",
     "verify:phase-0-63": "node scripts/verify-phase-0-63.mjs",
     "verify:phase-0-64": "node scripts/verify-phase-0-64.mjs",
-    "verify:phase-0-65": "node scripts/verify-phase-0-65.mjs"
+    "verify:phase-0-65": "node scripts/verify-phase-0-65.mjs",
+    "verify:phase-0-66": "node scripts/verify-phase-0-66.mjs"
   }
 }
