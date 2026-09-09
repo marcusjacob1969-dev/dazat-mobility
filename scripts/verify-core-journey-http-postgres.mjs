@@ -71,10 +71,10 @@ try {
     INSERT INTO driver.driver_profile (id, person_id, onboarding_status, operating_status)
       VALUES ('${ids.driverProfile}', '${ids.actorPerson}', 'APPROVED', 'ONLINE');
     INSERT INTO identity.session (user_account_id, status, auth_strength, session_token_hash, issued_at, expires_at) VALUES
-      ('${ids.actorAccount}', 'ACTIVE', 'VERIFIED_CONTACT', $1, now(), now() + interval '1 hour'),
-      ('${ids.operatorAccount}', 'ACTIVE', 'VERIFIED_CONTACT', $2, now(), now() + interval '1 hour'),
-      ('${ids.outsiderAccount}', 'ACTIVE', 'VERIFIED_CONTACT', $3, now(), now() + interval '1 hour'),
-      ('${ids.actorAccount}', 'ACTIVE', 'VERIFIED_CONTACT', $4, now() - interval '2 hours', now() - interval '1 hour');
+      ('${ids.actorAccount}', 'ACTIVE', 'VERIFIED_CONTACT', '${hash(tokens.actor)}', now(), now() + interval '1 hour'),
+      ('${ids.operatorAccount}', 'ACTIVE', 'VERIFIED_CONTACT', '${hash(tokens.operator)}', now(), now() + interval '1 hour'),
+      ('${ids.outsiderAccount}', 'ACTIVE', 'VERIFIED_CONTACT', '${hash(tokens.outsider)}', now(), now() + interval '1 hour'),
+      ('${ids.actorAccount}', 'ACTIVE', 'VERIFIED_CONTACT', '${hash(tokens.expired)}', now() - interval '2 hours', now() - interval '1 hour');
     INSERT INTO booking.location_snapshot (id, point, display_label) VALUES
       ('${ids.pickup}', ST_SetSRID(ST_MakePoint(-0.1276, 51.5072), 4326)::geography, 'Phase 0.70 pickup'),
       ('${ids.dropoff}', ST_SetSRID(ST_MakePoint(-0.0877, 51.5074), 4326)::geography, 'Phase 0.70 dropoff');
@@ -139,7 +139,7 @@ try {
       ('${ids.role}', '${ids.operatorPerson}', 'FATIGUE_HANDOVER_OPERATOR', now() - interval '1 minute', now() + interval '1 hour', '${ids.operatorPerson}', 'phase-0.70-role');
     INSERT INTO operations.control_room_task_scope (id, operator_person_id, role_assignment_id, purpose, subject_type, subject_id, valid_from, valid_until) VALUES
       ('${ids.task}', '${ids.operatorPerson}', '${ids.role}', 'DRIVER_FATIGUE_HANDOVER', 'DRIVER_FATIGUE_HANDOVER', '${ids.handover}', now() - interval '1 minute', now() + interval '1 hour');
-  `, [hash(tokens.actor), hash(tokens.operator), hash(tokens.outsider), hash(tokens.expired)]);
+  `);
 
   const config = loadConfig({
     DATABASE_URL: connectionString, REDIS_URL: 'redis://disabled.invalid:6379', LOG_LEVEL: 'silent',
