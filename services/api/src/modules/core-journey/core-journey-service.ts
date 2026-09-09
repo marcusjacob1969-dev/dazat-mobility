@@ -17,12 +17,26 @@ interface ProgressRow {
   payment_intent_status: string | null;
 }
 
+const CLOSED_EXCEPTION_STATUSES = new Set([
+  'RIDER_CANCELLED', 'DRIVER_CANCELLED', 'OPERATIONS_CANCELLED',
+  'RIDER_NO_SHOW', 'DRIVER_NO_SHOW', 'REFUNDED'
+]);
+
+const SUPPORT_EXCEPTION_STATUSES = new Set([
+  'NO_ELIGIBLE_DRIVER', 'PAYMENT_FAILED', 'SAFETY_HOLD', 'ACTIVE_INCIDENT',
+  'BREAKDOWN', 'REASSIGNMENT_REQUIRED', 'REPLACEMENT_SEARCHING',
+  'REPLACEMENT_ASSIGNED', 'REFUND_PENDING'
+]);
+
 function milestone(name: CoreJourneyMilestone['name'], status: CoreJourneyMilestone['status']): CoreJourneyMilestone {
   return { name, status };
 }
 
 export function projectCoreJourneyProgress(row: ProgressRow): CoreJourneyProgressProjection {
-  const bookingConfirmed = !['DRAFT', 'QUOTED'].includes(row.booking_status);
+  const closedException = CLOSED_EXCEPTION_STATUSES.has(row.booking_status);
+  const supportException = SUPPORT_EXCEPTION_STATUSES.has(row.booking_status);
+  const interrupted = closedException || supportException;
+  const bookingConfirmed = !['DRAFT', 'QUOTE_CREATED', 'AWAITING_CONFIRMATION'].includes(row.booking_status);
   const journeyComplete = row.journey_status === 'COMPLETED';
   const milestones: CoreJourneyMilestone[] = [
     milestone('BOOKING', bookingConfirmed ? 'COMPLETED' : 'IN_PROGRESS'),
@@ -34,16 +48,21 @@ export function projectCoreJourneyProgress(row: ProgressRow): CoreJourneyProgres
     milestone('JOURNEY', journeyComplete ? 'COMPLETED' : row.journey_id ? 'IN_PROGRESS' : 'NOT_STARTED'),
     milestone('FINANCE', row.payment_intent_status ? (row.payment_intent_status === 'CAPTURED' ? 'COMPLETED' : 'IN_PROGRESS') : journeyComplete ? 'NOT_STARTED' : 'BLOCKED')
   ];
-  const next = milestones.find((item) => item.status !== 'COMPLETED');
+  const safeMilestones = interrupted
+    ? milestones.map((item, index) => index === 0 ? item : milestone(item.name, item.status === 'COMPLETED' ? 'COMPLETED' : 'BLOCKED'))
+    : milestones;
+  const next = safeMilestones.find((item) => item.status !== 'COMPLETED');
   return {
     bookingId: row.booking_id,
     bookingStatus: row.booking_status,
     ...(row.journey_id ? { journeyId: row.journey_id } : {}),
     ...(row.journey_status ? { journeyStatus: row.journey_status } : {}),
     ...(row.payment_intent_status ? { paymentIntentStatus: row.payment_intent_status } : {}),
+    disposition: closedException ? 'CLOSED' : supportException ? 'SUPPORT_REQUIRED' : journeyComplete && row.payment_intent_status === 'CAPTURED' ? 'CLOSED' : 'ACTIVE',
+    ...(interrupted ? { interruptionReason: row.booking_status } : {}),
     productionChargingEnabled: false,
-    milestones,
-    nextAction: next?.name ?? 'JOURNEY_CLOSED'
+    milestones: safeMilestones,
+    nextAction: closedException ? 'JOURNEY_CLOSED' : supportException ? 'SUPPORT_REQUIRED' : next?.name ?? 'JOURNEY_CLOSED'
   };
 }
 
@@ -57,7 +76,7 @@ async function readProgress(pool: DatabasePool, bookingId: string, actorId: stri
        FROM booking.booking b
        LEFT JOIN pricing.fare_agreement fa ON fa.booking_id = b.id
        LEFT JOIN LATERAL (SELECT id, status FROM dispatch.dispatch_attempt WHERE booking_id = b.id ORDER BY attempt_number DESC LIMIT 1) attempt ON true
-       LEFT JOIN dispatch.driver_assignment assignment ON assignment.dispatch_attempt_id = attempt.id AND assignment.status = 'ACTIVE'
+       LEFT JOIN LATERAL (SELECT id FROM dispatch.driver_assignment WHERE dispatch_attempt_id = attempt.id ORDER BY assigned_at DESC LIMIT 1) assignment ON true
        LEFT JOIN journey.journey j ON j.booking_id = b.id
        LEFT JOIN LATERAL (SELECT accepted FROM journey.arrival_evidence WHERE journey_id = j.id ORDER BY evaluated_at DESC LIMIT 1) arrival ON true
        LEFT JOIN LATERAL (SELECT status FROM journey.ridecheck_session WHERE journey_id = j.id ORDER BY created_at DESC LIMIT 1) ridecheck ON true

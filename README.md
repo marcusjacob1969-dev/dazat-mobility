@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.59**.
+Current checkpoint: **Engineering Phase 0.63**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -73,6 +73,14 @@ Phase 0.57 proves unauthorized and absent core-journey reads share one non-discl
 Phase 0.58 exercises both progress endpoints through the real HTTP application boundary, including bearer authentication, no-store responses and stable non-disclosing 404 behavior.
 
 Phase 0.59 makes the next journey action a closed union and proves fully completed canonical state returns `JOURNEY_CLOSED` without an invented follow-up.
+
+Phase 0.60 aligns OpenAPI and both mobile surfaces with the terminal action, presenting it as closure rather than another task.
+
+Phase 0.61 makes exception journeys truthful end to end: cancellations close without invented work, while safety, incident, breakdown, reassignment and payment exceptions explicitly require support and block unfinished milestones.
+
+Phase 0.62 extends the reproducible vertical-slice demonstration through the API progress projector, including an active-incident support path.
+
+Phase 0.63 preserves completed Driver-assignment milestones after governed completion ends the active assignment.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 

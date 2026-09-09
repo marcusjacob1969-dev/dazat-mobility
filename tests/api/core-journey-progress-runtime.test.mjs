@@ -19,6 +19,7 @@ const row = (overrides = {}) => ({
 test('connected projection identifies the first unfinished milestone', () => {
   const result = projectCoreJourneyProgress(row());
   assert.equal(result.nextAction, 'JOURNEY');
+  assert.equal(result.disposition, 'ACTIVE');
   assert.equal(result.productionChargingEnabled, false);
   assert.equal(result.milestones.find((item) => item.name === 'RIDECHECK').status, 'COMPLETED');
   assert.equal(result.milestones.find((item) => item.name === 'FINANCE').status, 'BLOCKED');
@@ -40,4 +41,21 @@ test('fully closed canonical journey has no invented follow-up action', () => {
   const result = projectCoreJourneyProgress(row({ journey_status: 'COMPLETED', booking_status: 'COMPLETED', payment_intent_status: 'CAPTURED' }));
   assert.equal(result.nextAction, 'JOURNEY_CLOSED');
   assert.equal(result.milestones.every((item) => item.status === 'COMPLETED'), true);
+  assert.equal(result.disposition, 'CLOSED');
+});
+
+test('safety and operational exceptions stop forward progress and require support', () => {
+  const result = projectCoreJourneyProgress(row({ booking_status: 'ACTIVE_INCIDENT', journey_status: 'IN_PROGRESS', ridecheck_status: null }));
+  assert.equal(result.disposition, 'SUPPORT_REQUIRED');
+  assert.equal(result.interruptionReason, 'ACTIVE_INCIDENT');
+  assert.equal(result.nextAction, 'SUPPORT_REQUIRED');
+  assert.equal(result.milestones.find((item) => item.name === 'RIDECHECK').status, 'BLOCKED');
+  assert.equal(result.milestones.find((item) => item.name === 'JOURNEY').status, 'BLOCKED');
+});
+
+test('cancelled journeys close without inventing another milestone action', () => {
+  const result = projectCoreJourneyProgress(row({ booking_status: 'RIDER_CANCELLED', journey_id: null, journey_status: null, arrival_accepted: null, ridecheck_status: null }));
+  assert.equal(result.disposition, 'CLOSED');
+  assert.equal(result.interruptionReason, 'RIDER_CANCELLED');
+  assert.equal(result.nextAction, 'JOURNEY_CLOSED');
 });

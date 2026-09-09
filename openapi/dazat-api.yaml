@@ -1160,16 +1160,18 @@ components:
     CoreJourneyProgressProjection:
       type: object
       additionalProperties: false
-      required: [bookingId, bookingStatus, productionChargingEnabled, milestones, nextAction]
+      required: [bookingId, bookingStatus, disposition, productionChargingEnabled, milestones, nextAction]
       properties:
         bookingId: { type: string, format: uuid }
         bookingStatus: { type: string }
         journeyId: { type: string, format: uuid }
         journeyStatus: { type: string }
         paymentIntentStatus: { type: string }
+        disposition: { type: string, enum: [ACTIVE, CLOSED, SUPPORT_REQUIRED] }
+        interruptionReason: { type: string }
         productionChargingEnabled: { type: boolean, const: false }
         milestones: { type: array, minItems: 8, maxItems: 8, items: { $ref: '#/components/schemas/CoreJourneyMilestone' } }
-        nextAction: { type: string }
+        nextAction: { type: string, enum: [BOOKING, FARE_AGREEMENT, DISPATCH, DRIVER_ASSIGNED, ARRIVAL, RIDECHECK, JOURNEY, FINANCE, JOURNEY_CLOSED, SUPPORT_REQUIRED] }
     StartAccountRegistrationRequest:
       type: object
       required: [profileKind, preferredName, contact]

@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.59 — Typed Core-Journey Actions**
+**Engineering Phase 0.63 — Completed Assignment History**
 
 Status: **SOURCE IMPLEMENTED / ALL WORKSPACES COMPILE / DOMAIN AND API RUNTIME TESTS PASS / PROVIDER AND CHARGING INTEGRATIONS DISABLED / DATABASE AND CONCURRENCY RUNTIME PENDING HOSTED CI**
 
@@ -24,6 +24,7 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 - Negative runtime contracts prevent Booking identifier probing and Driver-profile authority fallback.
 - Fastify-level Rider and Driver route tests verify bearer authentication, canonical output, no-store caching and stable non-disclosing failures.
 - Next-action output is now a closed canonical union with explicit `JOURNEY_CLOSED` terminal truth.
+- Rider, Driver and OpenAPI surfaces consistently represent terminal closure without inventing another action.
 
 - All Phase 0.1–0.8 monorepo, Identity, Booking, Dispatch, Journey, Safety, governed-completion, provider-disabled Finance and Driver operating-permission foundations.
 - Guarded active Journey spine: `IN_PROGRESS → ARRIVING → COMPLETED`.
