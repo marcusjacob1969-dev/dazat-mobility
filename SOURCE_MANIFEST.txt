@@ -169,6 +169,7 @@
 ./docs/engineering/phase-0.56-core-journey-access-contracts.md
 ./docs/engineering/phase-0.57-core-journey-nondisclosure.md
 ./docs/engineering/phase-0.58-core-journey-http-contracts.md
+./docs/engineering/phase-0.59-typed-core-journey-actions.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -329,6 +330,7 @@
 ./scripts/verify-phase-0-56.mjs
 ./scripts/verify-phase-0-57.mjs
 ./scripts/verify-phase-0-58.mjs
+./scripts/verify-phase-0-59.mjs
 ./scripts/verify-phase-0-6.mjs
 ./scripts/verify-phase-0-7.mjs
 ./scripts/verify-phase-0-8.mjs

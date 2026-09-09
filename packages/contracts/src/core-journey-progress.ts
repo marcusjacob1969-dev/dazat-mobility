@@ -5,6 +5,8 @@ export interface CoreJourneyMilestone {
   readonly status: CoreJourneyMilestoneStatus;
 }
 
+export type CoreJourneyNextAction = CoreJourneyMilestone['name'] | 'JOURNEY_CLOSED';
+
 export interface CoreJourneyProgressProjection {
   readonly bookingId: string;
   readonly bookingStatus: string;
@@ -13,5 +15,5 @@ export interface CoreJourneyProgressProjection {
   readonly paymentIntentStatus?: string;
   readonly productionChargingEnabled: false;
   readonly milestones: readonly CoreJourneyMilestone[];
-  readonly nextAction: string;
+  readonly nextAction: CoreJourneyNextAction;
 }
