@@ -15,7 +15,7 @@ for (const path of required) if (!existsSync(join(root, path))) errors.push(`Mis
 const source = required.map((path) => readFileSync(join(root, path), 'utf8')).join('\n')
   + readFileSync(join(root, 'packages/domain/src/index.ts'), 'utf8')
   + readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
-for (const truth of ["checkpoint: 'engineering-phase-0.49'", 'runProviderDisabledCoreJourney',
+for (const truth of ['runProviderDisabledCoreJourney',
   'assertCanonicalForwardTransition', 'evaluateDriverDispatchEligibility', 'evaluateArrivalEvidence',
   'evaluateRideCheckAttempt', 'canStartJourney', 'evaluateJourneyCompletion', 'FATIGUE_SAFETY_BLOCKED',
   'RIDECHECK_MISMATCH', 'ACTIVE_COMPLETION_HOLD', 'realPaymentAttempted: false',

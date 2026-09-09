@@ -23,6 +23,7 @@ import { registerInstitutionalTransportRoutes } from './modules/institutional-tr
 import { registerOrganisationCommercialOperationsRoutes } from './modules/organisation-commercial-operations/routes.js';
 import { registerInstitutionalLiveOperationsRoutes } from './modules/institutional-live-operations/routes.js';
 import { registerControlRoomFatigueRoutes } from './modules/control-room-fatigue/routes.js';
+import { registerCoreJourneyRoutes } from './modules/core-journey/routes.js';
 
 export interface ApiDependencies {
   readonly database: DatabasePool;
@@ -174,7 +175,7 @@ export function buildApi(config: ApiConfig, dependencies: ApiDependencies): Fast
 
   app.get('/v1/build-info', async () => ({
     product: 'DAZAT Mobility',
-    checkpoint: 'engineering-phase-0.49',
+    checkpoint: 'engineering-phase-0.50',
     implementationStatus: 'API_RUNTIME_CONFIGURATION_HTTP_ERROR_LOG_NETWORK_SESSION_AND_SHARED_BEARER_CONTRACTS_VERIFIED_PROVIDER_AND_OPERATIONAL_MUTATIONS_DISABLED'
   }));
 
@@ -198,6 +199,7 @@ export function buildApi(config: ApiConfig, dependencies: ApiDependencies): Fast
   registerOrganisationCommercialOperationsRoutes(app, database);
   registerInstitutionalLiveOperationsRoutes(app, database);
   registerControlRoomFatigueRoutes(app, database);
+  registerCoreJourneyRoutes(app, database);
 
   app.addHook('onClose', async () => {
     await database.end();
