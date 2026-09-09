@@ -23,3 +23,16 @@ test('Driver progress query scopes access to DriverAssignment rather than Bookin
   assert.match(captured.sql, /dispatch\.driver_assignment permitted_assignment/);
   assert.doesNotMatch(captured.sql, /party\.person_id/);
 });
+
+test('unauthorised Rider and Driver reads are indistinguishable from absent Bookings', async () => {
+  const pool = { query: async () => ({ rowCount: 0, rows: [] }) };
+  await assert.rejects(getCoreJourneyProgress(pool, projectionRow.booking_id, actor), { name: 'Error', message: 'Journey progress is unavailable' });
+  await assert.rejects(getDriverCoreJourneyProgress(pool, projectionRow.booking_id, actor), { name: 'Error', message: 'Journey progress is unavailable' });
+});
+
+test('Driver projection fails closed before querying when the session has no Driver profile', () => {
+  let queryAttempted = false;
+  const pool = { query: async () => { queryAttempted = true; return { rowCount: 1, rows: [projectionRow] }; } };
+  assert.throws(() => getDriverCoreJourneyProgress(pool, projectionRow.booking_id, { ...actor, driverProfileId: undefined }), { message: 'Driver progress is unavailable' });
+  assert.equal(queryAttempted, false);
+});
