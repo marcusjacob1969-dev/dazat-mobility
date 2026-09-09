@@ -247,6 +247,24 @@ paths:
               schema: { $ref: '#/components/schemas/CoreJourneyProgressProjection' }
         '403': { description: Active Driver session required. }
         '404': { description: Booking is absent or has no assignment for this Driver. }
+  /v1/control-room/fatigue-handovers/{controlledHandoverId}/bookings/{bookingId}/core-journey-progress:
+    get:
+      summary: Read canonical journey milestones within a current fatigue-handover task scope.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: controlledHandoverId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/BookingId'
+      responses:
+        '200':
+          description: Purpose-scoped operational progress; restricted Safety narrative and passenger details remain excluded.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CoreJourneyProgressProjection' }
+        '403': { description: Active Support-capable session required. }
+        '404': { description: Booking is absent or outside the operator's current task scope. }
   /v1/journeys/{journeyId}/location-observations:
     post:
       summary: Ingest an append-only, purpose-scoped Driver location observation with source, time, accuracy and confidence.

@@ -67,7 +67,7 @@ export function projectCoreJourneyProgress(row: ProgressRow): CoreJourneyProgres
   };
 }
 
-async function readProgress(pool: DatabasePool, bookingId: string, actorId: string, accessPredicate: string): Promise<CoreJourneyProgressProjection> {
+async function readProgress(pool: DatabasePool, bookingId: string, actorId: string, accessPredicate: string, scopeParameters: readonly string[] = []): Promise<CoreJourneyProgressProjection> {
   const result = await pool.query<ProgressRow>(
     `SELECT b.id AS booking_id, b.status AS booking_status, fa.id AS fare_agreement_id,
             attempt.status AS dispatch_status, assignment.id AS assignment_id,
@@ -83,7 +83,7 @@ async function readProgress(pool: DatabasePool, bookingId: string, actorId: stri
        LEFT JOIN LATERAL (SELECT status FROM journey.ridecheck_session WHERE journey_id = j.id ORDER BY created_at DESC LIMIT 1) ridecheck ON true
        LEFT JOIN LATERAL (SELECT status FROM finance.payment_intent WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) payment_intent ON true
       WHERE b.id = $1 AND ${accessPredicate}`,
-    [bookingId, actorId]
+    [bookingId, actorId, ...scopeParameters]
   );
   if (!result.rowCount) throw new CoreJourneyNotFoundError('Journey progress is unavailable');
   return projectCoreJourneyProgress(result.rows[0]!);
@@ -98,4 +98,20 @@ export function getDriverCoreJourneyProgress(pool: DatabasePool, bookingId: stri
   if (!actor.driverProfileId) throw new CoreJourneyNotFoundError('Driver progress is unavailable');
   return readProgress(pool, bookingId, actor.driverProfileId,
     "EXISTS (SELECT 1 FROM dispatch.driver_assignment permitted_assignment WHERE permitted_assignment.booking_id = b.id AND permitted_assignment.driver_profile_id = $2)");
+}
+
+export function getControlRoomCoreJourneyProgress(pool: DatabasePool, bookingId: string, controlledHandoverId: string, actor: AuthenticatedPrincipal): Promise<CoreJourneyProgressProjection> {
+  return readProgress(pool, bookingId, actor.personId,
+    `EXISTS (
+       SELECT 1 FROM operations.control_room_task_scope task
+       JOIN operations.control_room_role_assignment role_assignment ON role_assignment.id = task.role_assignment_id
+       JOIN operations.driver_fatigue_handover handover ON handover.id = task.subject_id
+       JOIN journey.journey scoped_journey ON scoped_journey.id = handover.journey_id
+       WHERE task.operator_person_id = $2 AND task.subject_id = $3
+         AND task.purpose = 'DRIVER_FATIGUE_HANDOVER'
+         AND task.valid_from <= now() AND task.valid_until > now()
+         AND role_assignment.operator_person_id = $2
+         AND role_assignment.valid_from <= now() AND role_assignment.valid_until > now()
+         AND scoped_journey.booking_id = b.id
+     )`, [controlledHandoverId]);
 }
