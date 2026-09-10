@@ -128,6 +128,7 @@
     "verify:phase-0-87": "node scripts/verify-phase-0-87.mjs",
     "validate:audit:api": "node scripts/validate-api-audit.mjs artifacts/sbom/dazat-api-audit.json",
     "verify:phase-0-88": "node scripts/verify-phase-0-88.mjs",
-    "verify:phase-0-89": "node scripts/verify-phase-0-89.mjs"
+    "verify:phase-0-89": "node scripts/verify-phase-0-89.mjs",
+    "verify:phase-0-90": "node scripts/verify-phase-0-90.mjs"
   }
 }
