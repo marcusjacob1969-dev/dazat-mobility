@@ -194,6 +194,7 @@
 ./docs/engineering/phase-0.79-rider-finance-boundary-ui.md
 ./docs/engineering/phase-0.80-provider-disabled-finance-demo.md
 ./docs/engineering/phase-0.81-api-container.md
+./docs/engineering/phase-0.82-api-container-runtime-smoke.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -383,6 +384,7 @@
 ./scripts/verify-phase-0-8.mjs
 ./scripts/verify-phase-0-80.mjs
 ./scripts/verify-phase-0-81.mjs
+./scripts/verify-phase-0-82.mjs
 ./scripts/verify-phase-0-9.mjs
 ./scripts/verify-postgres-migrations.mjs
 ./services/api/Dockerfile

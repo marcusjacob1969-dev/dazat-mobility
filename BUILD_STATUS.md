@@ -2,13 +2,17 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.81 — Reproducible Non-Root API Container**
+**Engineering Phase 0.82 — Hosted API Container Runtime Smoke Test**
 
-Status: **SOURCE IMPLEMENTED / FULL LOCAL CURRENT-CHECKPOINT VERIFICATION PASSES / HOSTED CONTAINER BUILD PENDING / PRODUCTION PROVIDERS AND OPERATIONAL MUTATIONS DISABLED**
+Status: **SOURCE IMPLEMENTED / FULL LOCAL CURRENT-CHECKPOINT VERIFICATION PASSES / HOSTED CONTAINER RUNTIME VERIFICATION PENDING / PRODUCTION PROVIDERS AND OPERATIONAL MUTATIONS DISABLED**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
+
+- Hosted CI starts the exact API image built for the commit and cleans it up regardless of test outcome.
+- The gate verifies Docker's configured runtime user is `node`.
+- The running image must answer `/health/live` and expose the exact Phase 0.82 build checkpoint.
 
 - Multi-stage Node 24 API image with compiled workspace packages and production dependencies.
 - Runtime executes as the unprivileged `node` user and exposes only port 3001.
