@@ -124,6 +124,8 @@
     "verify:phase-0-84": "node scripts/verify-phase-0-84.mjs",
     "verify:phase-0-85": "node scripts/verify-phase-0-85.mjs",
     "verify:phase-0-86": "node scripts/verify-phase-0-86.mjs",
-    "validate:sbom:api": "node scripts/validate-api-sbom.mjs artifacts/sbom/dazat-api.cdx.json"
+    "validate:sbom:api": "node scripts/validate-api-sbom.mjs artifacts/sbom/dazat-api.cdx.json",
+    "verify:phase-0-87": "node scripts/verify-phase-0-87.mjs",
+    "validate:audit:api": "node scripts/validate-api-audit.mjs artifacts/sbom/dazat-api-audit.json"
   }
 }
