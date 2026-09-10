@@ -7,7 +7,7 @@ export interface CoreJourneyMilestone {
 
 export type CoreJourneyDisposition = 'ACTIVE' | 'CLOSED' | 'SUPPORT_REQUIRED';
 
-export type CoreJourneyNextAction = CoreJourneyMilestone['name'] | 'JOURNEY_CLOSED' | 'SUPPORT_REQUIRED';
+export type CoreJourneyNextAction = CoreJourneyMilestone['name'] | 'JOURNEY_CLOSED' | 'SUPPORT_REQUIRED' | 'PAYMENT_PROVIDER_UNAVAILABLE';
 
 export interface CoreJourneyProgressProjection {
   readonly bookingId: string;
