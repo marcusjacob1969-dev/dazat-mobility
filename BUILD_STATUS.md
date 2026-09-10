@@ -2,13 +2,18 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.80 — Demonstrable Provider-Disabled Finance Closure**
+**Engineering Phase 0.81 — Reproducible Non-Root API Container**
 
-Status: **SOURCE IMPLEMENTED / DEMO, COMPILE AND CHECKPOINT VERIFICATION PASS / PRODUCTION PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED CI PENDING**
+Status: **SOURCE IMPLEMENTED / FULL LOCAL CURRENT-CHECKPOINT VERIFICATION PASSES / HOSTED CONTAINER BUILD PENDING / PRODUCTION PROVIDERS AND OPERATIONAL MUTATIONS DISABLED**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
+
+- Multi-stage Node 24 API image with compiled workspace packages and production dependencies.
+- Runtime executes as the unprivileged `node` user and exposes only port 3001.
+- Container liveness checks the dependency-independent `/health/live` endpoint.
+- Pull requests and `main` must build the production image in CI; no registry push or deployment occurs.
 
 - The production-safe executable demo now carries the successful vertical slice into created PaymentIntent truth.
 - It asserts the blocked Finance milestone, disabled charging, and `PAYMENT_PROVIDER_UNAVAILABLE` next action before printing evidence.

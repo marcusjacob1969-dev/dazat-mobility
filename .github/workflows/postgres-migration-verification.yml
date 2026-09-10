@@ -9,6 +9,14 @@ permissions:
   contents: read
 
 jobs:
+  api-container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build production API image
+        run: docker build --file services/api/Dockerfile --tag dazat-api:${{ github.sha }} .
+
   workspace-check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
