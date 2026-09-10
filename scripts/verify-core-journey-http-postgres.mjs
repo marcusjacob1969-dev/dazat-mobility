@@ -81,6 +81,9 @@ async function post(path, token, body, idempotencyKey) {
     ...(body === undefined ? {} : { payload: body })
   });
 }
+async function del(path, token) {
+  return app.inject({ method: 'DELETE', url: path, headers: auth(token) });
+}
 function expectCode(response, statusCode, code) {
   assert.equal(response.statusCode, statusCode, response.body);
   if (code) assert.equal(response.json().code, code);
@@ -173,42 +176,72 @@ try {
   const config = loadConfig({
     DATABASE_URL: connectionString, REDIS_URL: 'redis://disabled.invalid:6379', LOG_LEVEL: 'silent',
     CONTACT_VERIFICATION_PEPPER: 'phase-070-contact-verification-pepper', RIDECHECK_PEPPER: 'phase-070-ridecheck-verifier-pepper',
+    VERIFICATION_DELIVERY_MODE: 'development_console', DAZAT_DEV_EXPOSE_VERIFICATION_CODE: 'true',
     PRICING_MODE: 'development_fixture', DEVELOPMENT_QUOTE_AMOUNT_MINOR: '1800', DEVELOPMENT_QUOTE_CURRENCY: 'GBP'
   });
   app = buildApi(config, { database });
   await app.ready();
+
+  const registrationInput = {
+    profileKind: 'RIDER', preferredName: 'Phase 0.72 Rider',
+    contact: { type: 'EMAIL', value: 'phase-072-rider@example.invalid' }
+  };
+  const registration = await post('/v1/identity/registrations', undefined, registrationInput, 'phase-072-register-rider');
+  expectCode(registration, 202);
+  assert.equal(registration.json().accountStatus, 'PENDING');
+  const registrationReplay = await post('/v1/identity/registrations', undefined, registrationInput, 'phase-072-register-rider');
+  expectCode(registrationReplay, 202);
+  assert.deepEqual(registrationReplay.json(), registration.json());
+  const verification = await post('/v1/identity/verifications/contact', undefined, {
+    accountId: registration.json().accountId, contactPointId: registration.json().contact.id
+  });
+  expectCode(verification, 202);
+  assert.equal(verification.json().deliveryState, 'DELIVERED');
+  assert.match(verification.json().developmentCode, /^\d{6}$/);
+  const authenticated = await post('/v1/identity/verifications/contact/confirm', undefined, {
+    verificationId: verification.json().verificationId,
+    code: verification.json().developmentCode,
+    device: { deviceInstanceId: 'phase-072-ci-device', platform: 'CI' }
+  });
+  expectCode(authenticated, 200);
+  assert.equal(authenticated.json().accountStatus, 'ACTIVE');
+  const registeredToken = authenticated.json().session.bearerToken;
+  const session = await get('/v1/identity/session', registeredToken);
+  expectCode(session, 200);
+  assert.equal(session.json().accountId, registration.json().accountId);
+  assert.equal(session.json().riderProfileId, registration.json().riderProfileId);
 
   const createInput = {
     regionCode: 'GB-LON',
     pickup: { latitude: 51.5072, longitude: -0.1276, displayLabel: 'Phase 0.71 HTTP pickup' },
     dropoff: { latitude: 51.5074, longitude: -0.0877, displayLabel: 'Phase 0.71 HTTP destination' }
   };
-  const created = await post('/v1/bookings', tokens.actor, createInput, 'phase-071-create-booking');
+  const created = await post('/v1/bookings', registeredToken, createInput, 'phase-071-create-booking');
   expectCode(created, 201);
   const createdBooking = created.json();
   assert.equal(createdBooking.status, 'DRAFT');
-  const replayedCreate = await post('/v1/bookings', tokens.actor, createInput, 'phase-071-create-booking');
+  const replayedCreate = await post('/v1/bookings', registeredToken, createInput, 'phase-071-create-booking');
   expectCode(replayedCreate, 201);
   assert.deepEqual(replayedCreate.json(), createdBooking);
 
-  const quoted = await post(`/v1/bookings/${createdBooking.bookingId}/quote`, tokens.actor, undefined, 'phase-071-create-quote');
+  const quoted = await post(`/v1/bookings/${createdBooking.bookingId}/quote`, registeredToken, undefined, 'phase-071-create-quote');
   expectCode(quoted, 201);
   assert.equal(quoted.json().quote.amountMinor, 1800);
   assert.equal(quoted.json().quote.currency, 'GBP');
-  const confirmed = await post(`/v1/bookings/${createdBooking.bookingId}/confirm`, tokens.actor, { quoteId: quoted.json().quote.quoteId }, 'phase-071-confirm-booking');
+  const confirmed = await post(`/v1/bookings/${createdBooking.bookingId}/confirm`, registeredToken, { quoteId: quoted.json().quote.quoteId }, 'phase-071-confirm-booking');
   expectCode(confirmed, 200);
   assert.equal(confirmed.json().booking.status, 'READY_FOR_DISPATCH');
-  const confirmedReplay = await post(`/v1/bookings/${createdBooking.bookingId}/confirm`, tokens.actor, { quoteId: quoted.json().quote.quoteId }, 'phase-071-confirm-booking');
+  const confirmedReplay = await post(`/v1/bookings/${createdBooking.bookingId}/confirm`, registeredToken, { quoteId: quoted.json().quote.quoteId }, 'phase-071-confirm-booking');
   expectCode(confirmedReplay, 200);
   assert.deepEqual(confirmedReplay.json(), confirmed.json());
 
-  const createdProgress = await get(`/v1/bookings/${createdBooking.bookingId}/core-journey-progress`, tokens.actor);
+  const createdProgress = await get(`/v1/bookings/${createdBooking.bookingId}/core-journey-progress`, registeredToken);
   expectCode(createdProgress, 200);
   assert.equal(createdProgress.json().bookingStatus, 'READY_FOR_DISPATCH');
   assert.equal(createdProgress.json().nextAction, 'DISPATCH');
   assert.equal(createdProgress.json().productionChargingEnabled, false);
   expectCode(await get(`/v1/bookings/${createdBooking.bookingId}/core-journey-progress`, tokens.outsider), 404, 'CORE_JOURNEY_NOT_FOUND');
-  expectCode(await post('/v1/bookings', tokens.actor, createInput), 400, 'IDEMPOTENCY_KEY_REQUIRED');
+  expectCode(await post('/v1/bookings', registeredToken, createInput), 400, 'IDEMPOTENCY_KEY_REQUIRED');
 
   const riderIncident = await get(`/v1/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.actor);
   expectCode(riderIncident, 200);
@@ -241,6 +274,8 @@ try {
   expectCode(await get(`/v1/control-room/fatigue-handovers/${ids.handover}/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.outsider), 404, 'CORE_JOURNEY_NOT_FOUND');
   expectCode(await get(`/v1/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.expired), 403, 'RIDER_SESSION_REQUIRED');
   expectCode(await get(`/v1/bookings/${ids.incidentBooking}/core-journey-progress`), 401, 'AUTHENTICATION_REQUIRED');
+  expectCode(await del('/v1/identity/session', registeredToken), 204);
+  expectCode(await get('/v1/identity/session', registeredToken), 401, 'SESSION_INVALID');
 
   console.log('DAZAT core-journey database-backed HTTP verification PASSED');
 } finally {

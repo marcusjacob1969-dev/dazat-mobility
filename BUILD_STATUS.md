@@ -2,13 +2,17 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.71 — Authenticated Rider Booking-to-Confirmation HTTP**
+**Engineering Phase 0.72 — Registration-to-Confirmed-Booking HTTP**
 
-Status: **SOURCE IMPLEMENTED / LOCAL SOURCE, COMPILE, DOMAIN AND API RUNTIME TESTS PASS / PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED DISPOSABLE-POSTGIS WRITE-FLOW VERIFICATION PENDING CI**
+Status: **SOURCE IMPLEMENTED / LOCAL SOURCE, COMPILE, DOMAIN AND API RUNTIME TESTS PASS / PRODUCTION PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED DISPOSABLE-POSTGIS REGISTRATION-TO-BOOKING VERIFICATION PENDING CI**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
+
+- The hosted Rider journey now starts with real idempotent account registration, synthetic development-only contact-code delivery, contact confirmation and issuance of a hashed bearer session.
+- The issued session is read through the authenticated session route, drives the real Booking-to-confirmation HTTP flow, and is explicitly revoked and proven unusable afterward.
+- Verification codes are exposed only under the explicit hosted development flag; no production identity or messaging provider is selected or contacted.
 
 - Authenticated Rider HTTP now creates a real persisted Booking, requests the explicitly configured development quote, confirms it and reads the resulting canonical journey progress within hosted disposable PostGIS verification.
 - Booking creation and confirmation are replayed with the same idempotency keys and must return the original results without duplicate authoritative state.
