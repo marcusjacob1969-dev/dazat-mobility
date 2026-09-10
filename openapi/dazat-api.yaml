@@ -1191,7 +1191,7 @@ components:
         interruptionReason: { type: string }
         productionChargingEnabled: { type: boolean, const: false }
         milestones: { type: array, minItems: 8, maxItems: 8, items: { $ref: '#/components/schemas/CoreJourneyMilestone' } }
-        nextAction: { type: string, enum: [BOOKING, FARE_AGREEMENT, DISPATCH, DRIVER_ASSIGNED, ARRIVAL, RIDECHECK, JOURNEY, FINANCE, JOURNEY_CLOSED, SUPPORT_REQUIRED] }
+        nextAction: { type: string, enum: [BOOKING, FARE_AGREEMENT, DISPATCH, DRIVER_ASSIGNED, ARRIVAL, RIDECHECK, JOURNEY, FINANCE, JOURNEY_CLOSED, SUPPORT_REQUIRED, PAYMENT_PROVIDER_UNAVAILABLE] }
     StartAccountRegistrationRequest:
       type: object
       required: [profileKind, preferredName, contact]

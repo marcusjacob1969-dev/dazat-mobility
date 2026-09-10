@@ -2,13 +2,17 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.78 — Provider-Disabled Finance Handoff HTTP**
+**Engineering Phase 0.79 — Rider Finance Boundary Contract and UI**
 
-Status: **SOURCE IMPLEMENTED / LOCAL SOURCE, COMPILE, DOMAIN AND API RUNTIME TESTS PASS / PRODUCTION PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED DISPOSABLE-POSTGIS ACCEPTANCE VERIFICATION PENDING CI**
+Status: **SOURCE IMPLEMENTED / FULL LOCAL CURRENT-CHECKPOINT VERIFICATION PASSES / PRODUCTION PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED CI PENDING**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
+
+- OpenAPI now exposes `PAYMENT_PROVIDER_UNAVAILABLE` as canonical progress truth.
+- Rider payment preparation refreshes both Payment status and journey progress, preventing stale Finance UI after the intent is created.
+- The Rider surface explicitly states that the provider is unavailable and no charge was attempted.
 
 - The completed Rider Booking now prepares a provider-neutral PaymentIntent from immutable FareAgreement truth through the real HTTP route.
 - Preparation replays idempotently; status remains `CREATED` / `NOT_ELIGIBLE` with no provider action and no blind retry.
