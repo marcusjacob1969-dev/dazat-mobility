@@ -205,7 +205,12 @@ export default function RiderApp() {
     if (!booking) return;
     void run(async () => {
       const intent = await prepareProviderDisabledPaymentIntent(sessionToken, booking.bookingId);
-      setPaymentStatus(await readPaymentStatus(sessionToken, intent.paymentIntentId));
+      const [status, progress] = await Promise.all([
+        readPaymentStatus(sessionToken, intent.paymentIntentId),
+        readCoreJourneyProgress(sessionToken, booking.bookingId)
+      ]);
+      setPaymentStatus(status);
+      setCoreJourneyProgress(progress);
     });
   }
 
@@ -339,7 +344,7 @@ export default function RiderApp() {
             <SecondaryButton label="Refresh complete journey progress" onPress={refreshCoreJourneyProgress} />
             {coreJourneyProgress ? (
               <View style={styles.section} accessibilityRole="summary">
-                <Text style={styles.status}>{coreJourneyProgress.nextAction === 'JOURNEY_CLOSED' ? 'Journey closed — no further action' : coreJourneyProgress.nextAction === 'SUPPORT_REQUIRED' ? `Journey interrupted — support required (${coreJourneyProgress.interruptionReason?.replaceAll('_', ' ')})` : `Next: ${coreJourneyProgress.nextAction.replaceAll('_', ' ')}`}</Text>
+                <Text style={styles.status}>{coreJourneyProgress.nextAction === 'JOURNEY_CLOSED' ? 'Journey closed — no further action' : coreJourneyProgress.nextAction === 'SUPPORT_REQUIRED' ? `Journey interrupted — support required (${coreJourneyProgress.interruptionReason?.replaceAll('_', ' ')})` : coreJourneyProgress.nextAction === 'PAYMENT_PROVIDER_UNAVAILABLE' ? 'Payment provider unavailable — no charge attempted' : `Next: ${coreJourneyProgress.nextAction.replaceAll('_', ' ')}`}</Text>
                 {coreJourneyProgress.milestones.map((item) => (
                   <Text key={item.name} style={item.status === 'BLOCKED' ? styles.error : styles.body}>
                     {item.name.replaceAll('_', ' ')} · {item.status.replaceAll('_', ' ')}
