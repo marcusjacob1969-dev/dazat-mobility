@@ -39,6 +39,7 @@ export function projectCoreJourneyProgress(row: ProgressRow): CoreJourneyProgres
   const interrupted = closedException || supportException;
   const bookingConfirmed = !['DRAFT', 'QUOTE_CREATED', 'AWAITING_CONFIRMATION'].includes(row.booking_status);
   const journeyComplete = row.journey_status === 'COMPLETED';
+  const financeBlockedByProvider = Boolean(row.payment_intent_status && row.payment_intent_status !== 'CAPTURED');
   const milestones: CoreJourneyMilestone[] = [
     milestone('BOOKING', bookingConfirmed ? 'COMPLETED' : 'IN_PROGRESS'),
     milestone('FARE_AGREEMENT', row.fare_agreement_id ? 'COMPLETED' : 'NOT_STARTED'),
@@ -47,7 +48,7 @@ export function projectCoreJourneyProgress(row: ProgressRow): CoreJourneyProgres
     milestone('ARRIVAL', row.arrival_accepted ? 'COMPLETED' : row.journey_id ? 'IN_PROGRESS' : 'NOT_STARTED'),
     milestone('RIDECHECK', row.ridecheck_status === 'VERIFIED' ? 'COMPLETED' : row.ridecheck_status === 'LOCKED' ? 'BLOCKED' : row.ridecheck_status ? 'IN_PROGRESS' : 'NOT_STARTED'),
     milestone('JOURNEY', journeyComplete ? 'COMPLETED' : row.journey_id ? 'IN_PROGRESS' : 'NOT_STARTED'),
-    milestone('FINANCE', row.payment_intent_status ? (row.payment_intent_status === 'CAPTURED' ? 'COMPLETED' : 'IN_PROGRESS') : journeyComplete ? 'NOT_STARTED' : 'BLOCKED')
+    milestone('FINANCE', row.payment_intent_status === 'CAPTURED' ? 'COMPLETED' : financeBlockedByProvider ? 'BLOCKED' : journeyComplete ? 'NOT_STARTED' : 'BLOCKED')
   ];
   const safeMilestones = interrupted
     ? milestones.map((item, index) => index === 0 ? item : milestone(item.name, item.status === 'COMPLETED' ? 'COMPLETED' : 'BLOCKED'))
@@ -63,7 +64,8 @@ export function projectCoreJourneyProgress(row: ProgressRow): CoreJourneyProgres
     ...(interrupted ? { interruptionReason: row.booking_status } : {}),
     productionChargingEnabled: false,
     milestones: safeMilestones,
-    nextAction: closedException ? 'JOURNEY_CLOSED' : supportException ? 'SUPPORT_REQUIRED' : next?.name ?? 'JOURNEY_CLOSED'
+    nextAction: closedException ? 'JOURNEY_CLOSED' : supportException ? 'SUPPORT_REQUIRED'
+      : financeBlockedByProvider ? 'PAYMENT_PROVIDER_UNAVAILABLE' : next?.name ?? 'JOURNEY_CLOSED'
   };
 }
 

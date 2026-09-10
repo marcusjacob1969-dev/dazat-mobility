@@ -2,13 +2,17 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.77 — Live-Journey Governed Completion HTTP**
+**Engineering Phase 0.78 — Provider-Disabled Finance Handoff HTTP**
 
 Status: **SOURCE IMPLEMENTED / LOCAL SOURCE, COMPILE, DOMAIN AND API RUNTIME TESTS PASS / PRODUCTION PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED DISPOSABLE-POSTGIS ACCEPTANCE VERIFICATION PENDING CI**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
+
+- The completed Rider Booking now prepares a provider-neutral PaymentIntent from immutable FareAgreement truth through the real HTTP route.
+- Preparation replays idempotently; status remains `CREATED` / `NOT_ELIGIBLE` with no provider action and no blind retry.
+- Payer scoping is enforced, receipts remain unavailable without captured money, and canonical progress explicitly reports `PAYMENT_PROVIDER_UNAVAILABLE`.
 
 - Plausible active-Journey telemetry at the canonical destination now drives the real `ARRIVING` boundary.
 - Governed completion verifies destination approach, final location, completion requirements, holds and continuity before closing Journey, Booking and assignment atomically.

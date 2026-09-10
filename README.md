@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.77**.
+Current checkpoint: **Engineering Phase 0.78**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -109,6 +109,8 @@ Phase 0.75 continues the same persisted assignment through Driver acknowledgemen
 Phase 0.76 completes the protected pickup boundary: the self-booking Rider initiates a one-time PIN RideCheck, the assigned Driver verifies the pairing, and only then can the real Journey-start command advance canonical Booking and Journey truth to `IN_PROGRESS`.
 
 Phase 0.77 completes the authenticated persisted journey: plausible live destination telemetry authorises `ARRIVING`, governed completion closes the Journey and assignment, releases the Driver to `AVAILABLE`, and converged Rider/Driver progress truthfully requests the still-unprepared Finance step.
+
+Phase 0.78 connects governed completion to provider-disabled Finance through real Rider HTTP routes. It prepares one immutable-fare PaymentIntent idempotently, exposes truthful `CREATED` status, proves no provider action or blind retry, rejects a receipt without captured funds, enforces payer scope and moves canonical progress to `PAYMENT_PROVIDER_UNAVAILABLE`.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 
