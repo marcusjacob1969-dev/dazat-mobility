@@ -18,16 +18,31 @@ jobs:
         run: docker build --file services/api/Dockerfile --tag dazat-api:${{ github.sha }} .
       - name: Smoke-test production API image
         run: |
-          trap 'docker logs dazat-api-smoke || true; docker rm --force dazat-api-smoke || true' EXIT
+          trap 'docker logs dazat-api-smoke || true; docker logs dazat-postgres-smoke || true; docker rm --force dazat-api-smoke dazat-postgres-smoke || true; docker network rm dazat-smoke || true' EXIT
           test "$(docker image inspect --format '{{.Config.User}}' dazat-api:${{ github.sha }})" = "node"
-          docker run --detach --name dazat-api-smoke --publish 3001:3001 \
-            --env DATABASE_URL=postgresql://unused:unused@127.0.0.1:5432/unused \
+          docker network create dazat-smoke
+          docker run --detach --name dazat-postgres-smoke --network dazat-smoke \
+            --env POSTGRES_DB=dazat_container_verify \
+            --env POSTGRES_USER=dazat_ci \
+            --env POSTGRES_PASSWORD=dazat_ci_container_only \
+            --volume "$PWD/database/migrations:/docker-entrypoint-initdb.d:ro" \
+            --health-cmd "pg_isready -U dazat_ci -d dazat_container_verify" \
+            --health-interval 2s --health-timeout 3s --health-retries 30 \
+            postgis/postgis:16-3.4
+          for attempt in $(seq 1 45); do
+            test "$(docker inspect --format '{{.State.Health.Status}}' dazat-postgres-smoke)" = "healthy" && break
+            test "$attempt" -lt 45
+            sleep 2
+          done
+          docker run --detach --name dazat-api-smoke --network dazat-smoke --publish 3001:3001 \
+            --env DATABASE_URL=postgresql://dazat_ci:dazat_ci_container_only@dazat-postgres-smoke:5432/dazat_container_verify \
             --env REDIS_URL=redis://127.0.0.1:6379 \
             --env CONTACT_VERIFICATION_PEPPER=ci-only-contact-pepper-000000000000 \
             --env RIDECHECK_PEPPER=ci-only-ridecheck-pepper-0000000000 \
             dazat-api:${{ github.sha }}
           curl --fail --retry 15 --retry-all-errors --retry-delay 1 http://127.0.0.1:3001/health/live
-          curl --fail --retry 5 --retry-all-errors --retry-delay 1 http://127.0.0.1:3001/v1/build-info | grep --fixed-strings '"checkpoint":"engineering-phase-0.82"'
+          curl --fail --retry 10 --retry-all-errors --retry-delay 1 http://127.0.0.1:3001/health/ready | grep --fixed-strings '"database":"READY"'
+          curl --fail --retry 5 --retry-all-errors --retry-delay 1 http://127.0.0.1:3001/v1/build-info | grep --fixed-strings '"checkpoint":"engineering-phase-0.83"'
 
   workspace-check:
     runs-on: ubuntu-latest

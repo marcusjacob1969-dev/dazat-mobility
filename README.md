@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.82**.
+Current checkpoint: **Engineering Phase 0.83**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -119,6 +119,8 @@ Phase 0.80 updates the production-safe executable demonstration to include the c
 Phase 0.81 packages the API as a reproducible Node 24 container. The runtime image uses a non-root user, contains compiled production dependencies, exposes only the API port, includes a liveness health check and is built on every pull request before merge.
 
 Phase 0.82 starts the built image in hosted CI and verifies its configured runtime user, dependency-independent liveness response and exact build checkpoint. The smoke test supplies only disposable CI configuration and contacts no external service.
+
+Phase 0.83 connects that packaged API to an isolated, automatically migrated PostGIS container over a private Docker network. The hosted gate requires both liveness and dependency-aware readiness before the image can merge.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 

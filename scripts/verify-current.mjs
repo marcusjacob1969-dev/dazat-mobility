@@ -9,7 +9,7 @@ function run(command, args) {
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
-for (let phase = 25; phase <= 82; phase += 1) {
+for (let phase = 25; phase <= 83; phase += 1) {
   const verifier = join(root, `scripts/verify-phase-0-${phase}.mjs`);
   if (!existsSync(verifier)) throw new Error(`Missing current checkpoint verifier: ${verifier}`);
   run(process.execPath, [verifier]);
