@@ -1,4 +1,4 @@
-FROM node:24-bookworm-slim AS build
+FROM node:24-bookworm-slim@sha256:2fe369e969550cde8e867afc3fe370b260140cab4a23d467074295b42163d553 AS build
 
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -16,7 +16,7 @@ COPY services/api services/api
 RUN npm run build:core && npm run build --workspace @dazat/api
 RUN npm prune --omit=dev --workspaces --include-workspace-root
 
-FROM node:24-bookworm-slim AS runtime
+FROM node:24-bookworm-slim@sha256:2fe369e969550cde8e867afc3fe370b260140cab4a23d467074295b42163d553 AS runtime
 
 ENV NODE_ENV=production
 WORKDIR /app

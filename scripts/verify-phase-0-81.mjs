@@ -7,8 +7,11 @@ const dockerfile = readFileSync(join(root, 'services/api/Dockerfile'), 'utf8');
 const workflow = readFileSync(join(root, '.github/workflows/postgres-migration-verification.yml'), 'utf8');
 const ignore = readFileSync(join(root, '.dockerignore'), 'utf8');
 const errors = [];
-for (const truth of ['FROM node:24-bookworm-slim AS build', 'npm ci --ignore-scripts', 'npm run build:core', 'npm prune --omit=dev', 'FROM node:24-bookworm-slim AS runtime', 'USER node', 'HEALTHCHECK', '/health/live', 'CMD ["node", "services/api/dist/main.js"]']) {
+for (const truth of ['npm ci --ignore-scripts', 'npm run build:core', 'npm prune --omit=dev', 'USER node', 'HEALTHCHECK', '/health/live', 'CMD ["node", "services/api/dist/main.js"]']) {
   if (!dockerfile.includes(truth)) errors.push(`API container boundary missing: ${truth}`);
+}
+for (const stage of ['build', 'runtime']) {
+  if (!new RegExp(`^FROM node:24-bookworm-slim(?:@sha256:[a-f0-9]{64})? AS ${stage}$`, 'm').test(dockerfile)) errors.push(`API container stage missing: ${stage}`);
 }
 for (const truth of ['api-container:', 'docker build --file services/api/Dockerfile']) {
   if (!workflow.includes(truth)) errors.push(`Hosted container gate missing: ${truth}`);
