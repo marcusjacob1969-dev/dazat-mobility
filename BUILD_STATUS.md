@@ -2,13 +2,18 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.83 — Containerised API-to-PostGIS Readiness**
+**Engineering Phase 0.84 — Graceful API Runtime Shutdown**
 
-Status: **SOURCE IMPLEMENTED / FULL LOCAL CURRENT-CHECKPOINT VERIFICATION PASSES / HOSTED CONTAINER-DEPENDENCY VERIFICATION PENDING / PRODUCTION PROVIDERS AND OPERATIONAL MUTATIONS DISABLED**
+Status: **SOURCE IMPLEMENTED / FULL LOCAL CURRENT-CHECKPOINT AND 44 API RUNTIME TESTS PASS / HOSTED CONTAINER SHUTDOWN VERIFICATION PENDING / PRODUCTION PROVIDERS AND OPERATIONAL MUTATIONS DISABLED**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
+
+- API startup installs one idempotent shutdown path for both `SIGTERM` and `SIGINT`.
+- Graceful close drains Fastify and triggers the existing database-pool close hook.
+- Close failure is logged and marks the process exit as failed.
+- Hosted CI sends the real container `SIGTERM` and requires exit code zero.
 
 - The hosted container gate provisions isolated PostGIS 16 with the repository migration chain.
 - API and database run on a dedicated per-job Docker network with disposable CI-only credentials.

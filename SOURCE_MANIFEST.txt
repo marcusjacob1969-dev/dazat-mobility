@@ -196,6 +196,7 @@
 ./docs/engineering/phase-0.81-api-container.md
 ./docs/engineering/phase-0.82-api-container-runtime-smoke.md
 ./docs/engineering/phase-0.83-container-postgis-readiness.md
+./docs/engineering/phase-0.84-graceful-runtime-shutdown.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -387,6 +388,7 @@
 ./scripts/verify-phase-0-81.mjs
 ./scripts/verify-phase-0-82.mjs
 ./scripts/verify-phase-0-83.mjs
+./scripts/verify-phase-0-84.mjs
 ./scripts/verify-phase-0-9.mjs
 ./scripts/verify-postgres-migrations.mjs
 ./services/api/Dockerfile
@@ -443,6 +445,7 @@
 ./services/api/src/modules/safety/safety-service.ts
 ./services/api/src/modules/telephony-voice/routes.ts
 ./services/api/src/modules/telephony-voice/telephony-voice-service.ts
+./services/api/src/runtime-lifecycle.ts
 ./services/api/src/security/bearer-token.ts
 ./services/api/src/security/secret-utils.ts
 ./services/api/tsconfig.json
@@ -455,6 +458,7 @@
 ./tests/api/core-journey-progress-runtime.test.mjs
 ./tests/api/core-journey-route-runtime.test.mjs
 ./tests/api/runtime-contract.test.mjs
+./tests/api/runtime-lifecycle.test.mjs
 ./tests/api/session-auth-runtime.test.mjs
 ./tests/domain/authentication.test.mjs
 ./tests/domain/booking-status.test.mjs
