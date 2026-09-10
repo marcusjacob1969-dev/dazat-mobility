@@ -77,7 +77,7 @@ async function get(path, token) {
 async function post(path, token, body, idempotencyKey) {
   return app.inject({
     method: 'POST', url: path,
-    headers: { ...auth(token), 'content-type': 'application/json', ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) },
+    headers: { ...auth(token), ...(body === undefined ? {} : { 'content-type': 'application/json' }), ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) },
     ...(body === undefined ? {} : { payload: body })
   });
 }
@@ -193,18 +193,18 @@ try {
 
   const quoted = await post(`/v1/bookings/${createdBooking.bookingId}/quote`, tokens.actor, undefined, 'phase-071-create-quote');
   expectCode(quoted, 201);
-  assert.equal(quoted.json().amountMinor, 1800);
-  assert.equal(quoted.json().currency, 'GBP');
-  const confirmed = await post(`/v1/bookings/${createdBooking.bookingId}/confirm`, tokens.actor, { quoteId: quoted.json().quoteId }, 'phase-071-confirm-booking');
+  assert.equal(quoted.json().quote.amountMinor, 1800);
+  assert.equal(quoted.json().quote.currency, 'GBP');
+  const confirmed = await post(`/v1/bookings/${createdBooking.bookingId}/confirm`, tokens.actor, { quoteId: quoted.json().quote.quoteId }, 'phase-071-confirm-booking');
   expectCode(confirmed, 200);
-  assert.equal(confirmed.json().status, 'CONFIRMED');
-  const confirmedReplay = await post(`/v1/bookings/${createdBooking.bookingId}/confirm`, tokens.actor, { quoteId: quoted.json().quoteId }, 'phase-071-confirm-booking');
+  assert.equal(confirmed.json().booking.status, 'READY_FOR_DISPATCH');
+  const confirmedReplay = await post(`/v1/bookings/${createdBooking.bookingId}/confirm`, tokens.actor, { quoteId: quoted.json().quote.quoteId }, 'phase-071-confirm-booking');
   expectCode(confirmedReplay, 200);
   assert.deepEqual(confirmedReplay.json(), confirmed.json());
 
   const createdProgress = await get(`/v1/bookings/${createdBooking.bookingId}/core-journey-progress`, tokens.actor);
   expectCode(createdProgress, 200);
-  assert.equal(createdProgress.json().bookingStatus, 'CONFIRMED');
+  assert.equal(createdProgress.json().bookingStatus, 'READY_FOR_DISPATCH');
   assert.equal(createdProgress.json().nextAction, 'DISPATCH');
   assert.equal(createdProgress.json().productionChargingEnabled, false);
   expectCode(await get(`/v1/bookings/${createdBooking.bookingId}/core-journey-progress`, tokens.outsider), 404, 'CORE_JOURNEY_NOT_FOUND');
