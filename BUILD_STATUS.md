@@ -2,13 +2,17 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.82 — Hosted API Container Runtime Smoke Test**
+**Engineering Phase 0.83 — Containerised API-to-PostGIS Readiness**
 
-Status: **SOURCE IMPLEMENTED / FULL LOCAL CURRENT-CHECKPOINT VERIFICATION PASSES / HOSTED CONTAINER RUNTIME VERIFICATION PENDING / PRODUCTION PROVIDERS AND OPERATIONAL MUTATIONS DISABLED**
+Status: **SOURCE IMPLEMENTED / FULL LOCAL CURRENT-CHECKPOINT VERIFICATION PASSES / HOSTED CONTAINER-DEPENDENCY VERIFICATION PENDING / PRODUCTION PROVIDERS AND OPERATIONAL MUTATIONS DISABLED**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
+
+- The hosted container gate provisions isolated PostGIS 16 with the repository migration chain.
+- API and database run on a dedicated per-job Docker network with disposable CI-only credentials.
+- Merge now requires both dependency-independent liveness and database-backed readiness from the packaged API.
 
 - Hosted CI starts the exact API image built for the commit and cleans it up regardless of test outcome.
 - The gate verifies Docker's configured runtime user is `node`.
