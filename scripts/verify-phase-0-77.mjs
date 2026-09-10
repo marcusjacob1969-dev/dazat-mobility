@@ -7,7 +7,7 @@ const runner = readFileSync(join(root, 'scripts/verify-core-journey-http-postgre
 const app = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
 const errors = [];
 for (const truth of [
-  '/telemetry/location`, driverToken', 'movementPlausible, true', '/arriving`, driverToken',
+  'routeTelemetry', '/telemetry/location`, driverToken', 'movementPlausible, true', '/arriving`, driverToken',
   "journeyStatus, 'ARRIVING'", '/complete`, driverToken', 'completedLiveJourneyReplay.json(), completedLiveJourney.json()',
   'driverCompletedProgress.json(), riderCompletedProgress.json()', "nextAction, 'PAYMENT_PROVIDER_UNAVAILABLE'",
   "availabilityStatus, 'AVAILABLE'"

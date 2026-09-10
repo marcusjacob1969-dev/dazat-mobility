@@ -372,7 +372,7 @@ try {
     source: 'DEVICE_GPS', accuracyMetres: 5, confidence: 0.99
   });
   expectCode(pickupObservation, 202);
-  assert.equal(pickupObservation.json().telemetryState, 'LIVE');
+  assert.equal(pickupObservation.json().telemetryState, 'DELAYED');
   assert.equal(pickupObservation.json().usableForCriticalDecision, true);
   const arrived = await post(`/v1/journeys/${acknowledged.json().journeyId}/arrived`, driverToken, undefined, 'phase-075-mark-arrived');
   expectCode(arrived, 200);
@@ -423,8 +423,15 @@ try {
   assert.equal(riderInProgress.json().milestones.find((milestone) => milestone.name === 'RIDECHECK').status, 'COMPLETED');
   assert.equal(riderInProgress.json().milestones.find((milestone) => milestone.name === 'JOURNEY').status, 'IN_PROGRESS');
 
-  const destinationTelemetry = await post(`/v1/journeys/${acknowledged.json().journeyId}/telemetry/location`, driverToken, {
+  const routeTelemetry = await post(`/v1/journeys/${acknowledged.json().journeyId}/telemetry/location`, driverToken, {
     clientObservationId: '70000000-0000-4000-8000-000000000059',
+    latitude: 51.5073, longitude: -0.10765, observedAt: new Date(Date.now() - 20_000).toISOString(),
+    source: 'DEVICE_GPS', accuracyMetres: 5, confidence: 0.99
+  });
+  expectCode(routeTelemetry, 202);
+  assert.equal(routeTelemetry.json().movementPlausible, true);
+  const destinationTelemetry = await post(`/v1/journeys/${acknowledged.json().journeyId}/telemetry/location`, driverToken, {
+    clientObservationId: '70000000-0000-4000-8000-000000000060',
     latitude: 51.5074, longitude: -0.0877, observedAt: new Date().toISOString(),
     source: 'DEVICE_GPS', accuracyMetres: 5, confidence: 0.99
   });
