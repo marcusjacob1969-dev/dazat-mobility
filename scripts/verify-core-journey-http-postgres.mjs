@@ -45,12 +45,41 @@ const tokens = {
 const hash = (value) => createHash('sha256').update(value).digest('hex');
 const pool = new pg.Pool({ connectionString, max: 1 });
 const client = await pool.connect();
-const database = { query: (...args) => client.query(...args), end: async () => {} };
+let savepointCounter = 0;
+const database = {
+  query: (...args) => client.query(...args),
+  connect: async () => {
+    const savepoint = `phase_071_command_${++savepointCounter}`;
+    let active = false;
+    return {
+      query: (text, values) => {
+        const command = typeof text === 'string' ? text.trim().toUpperCase() : '';
+        if (command === 'BEGIN') { active = true; return client.query(`SAVEPOINT ${savepoint}`); }
+        if (command === 'COMMIT') { active = false; return client.query(`RELEASE SAVEPOINT ${savepoint}`); }
+        if (command === 'ROLLBACK') {
+          if (!active) return Promise.resolve({ rows: [], rowCount: 0 });
+          active = false;
+          return client.query(`ROLLBACK TO SAVEPOINT ${savepoint}`).then(() => client.query(`RELEASE SAVEPOINT ${savepoint}`));
+        }
+        return client.query(text, values);
+      },
+      release: () => {}
+    };
+  },
+  end: async () => {}
+};
 let app;
 
 function auth(token) { return { authorization: `Bearer ${token}` }; }
 async function get(path, token) {
   return app.inject({ method: 'GET', url: path, ...(token ? { headers: auth(token) } : {}) });
+}
+async function post(path, token, body, idempotencyKey) {
+  return app.inject({
+    method: 'POST', url: path,
+    headers: { ...auth(token), ...(body === undefined ? {} : { 'content-type': 'application/json' }), ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) },
+    ...(body === undefined ? {} : { payload: body })
+  });
 }
 function expectCode(response, statusCode, code) {
   assert.equal(response.statusCode, statusCode, response.body);
@@ -143,10 +172,43 @@ try {
 
   const config = loadConfig({
     DATABASE_URL: connectionString, REDIS_URL: 'redis://disabled.invalid:6379', LOG_LEVEL: 'silent',
-    CONTACT_VERIFICATION_PEPPER: 'phase-070-contact-verification-pepper', RIDECHECK_PEPPER: 'phase-070-ridecheck-verifier-pepper'
+    CONTACT_VERIFICATION_PEPPER: 'phase-070-contact-verification-pepper', RIDECHECK_PEPPER: 'phase-070-ridecheck-verifier-pepper',
+    PRICING_MODE: 'development_fixture', DEVELOPMENT_QUOTE_AMOUNT_MINOR: '1800', DEVELOPMENT_QUOTE_CURRENCY: 'GBP'
   });
   app = buildApi(config, { database });
   await app.ready();
+
+  const createInput = {
+    regionCode: 'GB-LON',
+    pickup: { latitude: 51.5072, longitude: -0.1276, displayLabel: 'Phase 0.71 HTTP pickup' },
+    dropoff: { latitude: 51.5074, longitude: -0.0877, displayLabel: 'Phase 0.71 HTTP destination' }
+  };
+  const created = await post('/v1/bookings', tokens.actor, createInput, 'phase-071-create-booking');
+  expectCode(created, 201);
+  const createdBooking = created.json();
+  assert.equal(createdBooking.status, 'DRAFT');
+  const replayedCreate = await post('/v1/bookings', tokens.actor, createInput, 'phase-071-create-booking');
+  expectCode(replayedCreate, 201);
+  assert.deepEqual(replayedCreate.json(), createdBooking);
+
+  const quoted = await post(`/v1/bookings/${createdBooking.bookingId}/quote`, tokens.actor, undefined, 'phase-071-create-quote');
+  expectCode(quoted, 201);
+  assert.equal(quoted.json().quote.amountMinor, 1800);
+  assert.equal(quoted.json().quote.currency, 'GBP');
+  const confirmed = await post(`/v1/bookings/${createdBooking.bookingId}/confirm`, tokens.actor, { quoteId: quoted.json().quote.quoteId }, 'phase-071-confirm-booking');
+  expectCode(confirmed, 200);
+  assert.equal(confirmed.json().booking.status, 'READY_FOR_DISPATCH');
+  const confirmedReplay = await post(`/v1/bookings/${createdBooking.bookingId}/confirm`, tokens.actor, { quoteId: quoted.json().quote.quoteId }, 'phase-071-confirm-booking');
+  expectCode(confirmedReplay, 200);
+  assert.deepEqual(confirmedReplay.json(), confirmed.json());
+
+  const createdProgress = await get(`/v1/bookings/${createdBooking.bookingId}/core-journey-progress`, tokens.actor);
+  expectCode(createdProgress, 200);
+  assert.equal(createdProgress.json().bookingStatus, 'READY_FOR_DISPATCH');
+  assert.equal(createdProgress.json().nextAction, 'DISPATCH');
+  assert.equal(createdProgress.json().productionChargingEnabled, false);
+  expectCode(await get(`/v1/bookings/${createdBooking.bookingId}/core-journey-progress`, tokens.outsider), 404, 'CORE_JOURNEY_NOT_FOUND');
+  expectCode(await post('/v1/bookings', tokens.actor, createInput), 400, 'IDEMPOTENCY_KEY_REQUIRED');
 
   const riderIncident = await get(`/v1/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.actor);
   expectCode(riderIncident, 200);

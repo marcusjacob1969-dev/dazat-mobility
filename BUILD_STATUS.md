@@ -2,13 +2,17 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.70 — Database-Backed Authenticated Core-Journey HTTP**
+**Engineering Phase 0.71 — Authenticated Rider Booking-to-Confirmation HTTP**
 
-Status: **SOURCE IMPLEMENTED / LOCAL SOURCE, COMPILE, DOMAIN AND API RUNTIME TESTS PASS / PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED DISPOSABLE-POSTGIS HTTP VERIFICATION PENDING CI**
+Status: **SOURCE IMPLEMENTED / LOCAL SOURCE, COMPILE, DOMAIN AND API RUNTIME TESTS PASS / PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED DISPOSABLE-POSTGIS WRITE-FLOW VERIFICATION PENDING CI**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
+
+- Authenticated Rider HTTP now creates a real persisted Booking, requests the explicitly configured development quote, confirms it and reads the resulting canonical journey progress within hosted disposable PostGIS verification.
+- Booking creation and confirmation are replayed with the same idempotency keys and must return the original results without duplicate authoritative state.
+- Missing idempotency and cross-party progress access fail closed, while the resulting projection explicitly retains `productionChargingEnabled=false`.
 
 - Transaction-scoped PostGIS fixtures now exercise actual authenticated Rider, Driver and task-scoped Control Room HTTP routes through Fastify and the production SQL projection.
 - The hosted journey test covers a shared active-incident projection, completed-and-captured closure, Rider cancellation, cross-party and cross-assignment denial, Control Room scope denial, expired credentials and missing authentication.

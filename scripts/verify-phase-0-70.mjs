@@ -15,7 +15,8 @@ for (const truth of [
 for (const truth of ['verify-core-journey-http-postgres.mjs', 'Exercise authenticated core-journey HTTP against persisted fixtures']) {
   if (!workflow.includes(truth)) errors.push(`Hosted workflow missing: ${truth}`);
 }
-if (!app.includes("checkpoint: 'engineering-phase-0.70'")) errors.push('Build metadata is not at Phase 0.70');
+const checkpoint = app.match(/checkpoint: 'engineering-phase-0\.(\d+)'/)?.[1];
+if (!checkpoint || Number(checkpoint) < 70) errors.push('Build metadata predates Phase 0.70');
 if (errors.length) {
   console.error('DAZAT Engineering Phase 0.70 verification FAILED');
   for (const error of errors) console.error(`- ${error}`);
