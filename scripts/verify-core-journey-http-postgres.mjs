@@ -47,10 +47,10 @@ const ids = {
 };
 
 const tokens = {
-  actor: randomBytes(32).toString('base64url'),
-  operator: randomBytes(32).toString('base64url'),
-  outsider: randomBytes(32).toString('base64url'),
-  expired: randomBytes(32).toString('base64url')
+  actor: `dzs_${randomBytes(32).toString('base64url')}`,
+  operator: `dzs_${randomBytes(32).toString('base64url')}`,
+  outsider: `dzs_${randomBytes(32).toString('base64url')}`,
+  expired: `dzs_${randomBytes(32).toString('base64url')}`
 };
 const hash = (value) => createHash('sha256').update(value).digest('hex');
 const pool = new pg.Pool({ connectionString, max: 1 });
