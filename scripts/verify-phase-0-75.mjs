@@ -12,7 +12,8 @@ for (const truth of [
   'arrivedReplay.json(), arrived.json()', 'driverArrivedProgress.json(), riderArrivedProgress.json()',
   "milestone.name === 'ARRIVAL'"
 ]) if (!runner.includes(truth)) errors.push(`Assignment-to-arrival HTTP verifier missing: ${truth}`);
-if (!app.includes("checkpoint: 'engineering-phase-0.75'")) errors.push('Build metadata is not at Phase 0.75');
+const checkpoint = Number(app.match(/checkpoint: 'engineering-phase-0\.(\d+)'/)?.[1] ?? -1);
+if (checkpoint < 75) errors.push('Build metadata predates Phase 0.75');
 if (errors.length) {
   console.error('DAZAT Engineering Phase 0.75 verification FAILED');
   for (const error of errors) console.error(`- ${error}`);

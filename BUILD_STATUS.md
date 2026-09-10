@@ -2,13 +2,17 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.75 — Assignment-to-Arrival HTTP**
+**Engineering Phase 0.76 — RideCheck-to-Protected-Start HTTP**
 
 Status: **SOURCE IMPLEMENTED / LOCAL SOURCE, COMPILE, DOMAIN AND API RUNTIME TESTS PASS / PRODUCTION PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED DISPOSABLE-POSTGIS ACCEPTANCE VERIFICATION PENDING CI**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
+
+- The arrived Rider initiates a bounded one-time PIN RideCheck; idempotent replay does not return the secret challenge again.
+- Only the assigned Driver session can verify the Rider/Driver/vehicle/assignment pairing.
+- The protected Journey start revalidates arrival, RideCheck, assignment eligibility, fatigue and hold truth before advancing to `IN_PROGRESS`.
 
 - The accepted assignment now advances through real Driver acknowledgement, Journey creation, fresh pickup telemetry and geofenced arrival HTTP commands.
 - Acknowledgement and arrival replay idempotently, and Rider/Driver projections converge on canonical `DRIVER_ARRIVED` truth.
