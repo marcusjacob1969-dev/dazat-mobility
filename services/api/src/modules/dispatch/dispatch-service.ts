@@ -806,26 +806,35 @@ export async function startBookingDispatch(
           context.scheduledFor ? 'SCHEDULED' : 'ON_DEMAND',
           ...context.requirements.map((requirement) => requirement.type.trim().toUpperCase()).filter(Boolean)
         ];
+        const developmentDisclosureEnabled = config.developmentDispatchPickupEtaMinutes !== undefined
+          && config.developmentDriverEarningAmountMinor !== undefined;
+        const pickupEtaMinutes = developmentDisclosureEnabled ? config.developmentDispatchPickupEtaMinutes! : null;
+        const expectedEarningAmountMinor = developmentDisclosureEnabled ? config.developmentDriverEarningAmountMinor! : null;
+        const expectedEarningCurrency = developmentDisclosureEnabled ? config.developmentDriverEarningCurrency! : null;
+        const expectedEarningPolicyVersion = developmentDisclosureEnabled ? 'development-driver-earning-fixture-v1' : null;
         const disclosure = evaluateDriverOfferDisclosure({
           pickupDistanceMetres: row.provisional_distance_metres === null ? null : Number(row.provisional_distance_metres),
-          pickupEtaMinutes: null,
+          pickupEtaMinutes,
           serviceCodes: requiredServices,
           journeyContextLabels,
-          expectedEarningAmountMinor: null,
-          expectedEarningCurrency: null,
-          expectedEarningPolicyVersion: null,
+          expectedEarningAmountMinor,
+          expectedEarningCurrency,
+          expectedEarningPolicyVersion,
           expectedEarningDerivedFromRiderFare: false,
           ordinaryDeclinePenaltyApplied: false
         });
         await client.query(
           `INSERT INTO dispatch.driver_offer_disclosure
              (driver_offer_id, service_codes, journey_context_labels, pickup_distance_metres,
-              pickup_eta_status, expected_earning_status, informed_choice_ready, acceptance_allowed,
-              missing_disclosures)
-           VALUES ($1,$2,$3,$4,'UNAVAILABLE_ROUTE_ESTIMATE_NOT_CONFIGURED',
-                   'UNAVAILABLE_FINANCE_POLICY_NOT_APPROVED',$5,$6,$7)`,
+              pickup_eta_status, pickup_eta_minutes, expected_earning_status, expected_earning_amount_minor,
+              expected_earning_currency, expected_earning_policy_version, expected_earning_derived_from_rider_fare,
+              informed_choice_ready, acceptance_allowed, missing_disclosures)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,false,$11,$12,$13)`,
           [insertedOffer.rows[0]!.id, requiredServices, journeyContextLabels,
             row.provisional_distance_metres === null ? null : Number(row.provisional_distance_metres),
+            developmentDisclosureEnabled ? 'AVAILABLE' : 'UNAVAILABLE_ROUTE_ESTIMATE_NOT_CONFIGURED', pickupEtaMinutes,
+            developmentDisclosureEnabled ? 'VERIFIED_ESTIMATE' : 'UNAVAILABLE_FINANCE_POLICY_NOT_APPROVED',
+            expectedEarningAmountMinor, expectedEarningCurrency, expectedEarningPolicyVersion,
             disclosure.informedChoiceReady, disclosure.acceptanceAllowed, disclosure.missingDisclosures]
         );
       }

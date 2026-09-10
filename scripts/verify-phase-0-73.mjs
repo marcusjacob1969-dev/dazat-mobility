@@ -11,7 +11,8 @@ for (const truth of [
   "dispatchStatus, 'NO_ELIGIBLE_DRIVER'", 'eligibleCandidateCount, 0', 'offeredDriverCount, 0',
   "disposition, 'SUPPORT_REQUIRED'", "nextAction, 'SUPPORT_REQUIRED'", "milestone.name === 'DRIVER_ASSIGNED'"
 ]) if (!runner.includes(truth)) errors.push(`Dispatch HTTP verifier missing: ${truth}`);
-if (!app.includes("checkpoint: 'engineering-phase-0.73'")) errors.push('Build metadata is not at Phase 0.73');
+const checkpoint = Number(app.match(/checkpoint: 'engineering-phase-0\.(\d+)'/)?.[1] ?? -1);
+if (checkpoint < 73) errors.push('Build metadata predates Phase 0.73');
 if (errors.length) {
   console.error('DAZAT Engineering Phase 0.73 verification FAILED');
   for (const error of errors) console.error(`- ${error}`);

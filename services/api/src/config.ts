@@ -18,6 +18,9 @@ export interface ApiConfig {
   readonly dispatchOfferWaveSize: number;
   readonly dispatchLocationMaxAgeSeconds: number;
   readonly dispatchMinimumLocationConfidence: number;
+  readonly developmentDispatchPickupEtaMinutes?: number;
+  readonly developmentDriverEarningAmountMinor?: number;
+  readonly developmentDriverEarningCurrency?: string;
   readonly driverFatigueWarningAfterDutyMinutes: number;
   readonly driverFatigueRestRequiredAfterDutyMinutes: number;
   readonly driverFatigueMinimumQualifyingRestMinutes: number;
@@ -122,6 +125,16 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       throw new Error('Invalid DEVELOPMENT_QUOTE_AMOUNT_MINOR');
     }
   }
+  const developmentDispatchPickupEtaMinutes = env.DEVELOPMENT_DISPATCH_PICKUP_ETA_MINUTES === undefined
+    ? undefined : parseInteger(env, 'DEVELOPMENT_DISPATCH_PICKUP_ETA_MINUTES', 8, 0, 240);
+  const developmentDriverEarningAmountMinor = env.DEVELOPMENT_DRIVER_EARNING_AMOUNT_MINOR === undefined
+    ? undefined : parseInteger(env, 'DEVELOPMENT_DRIVER_EARNING_AMOUNT_MINOR', 1200, 0, 9007199254740991);
+  if ((developmentDispatchPickupEtaMinutes === undefined) !== (developmentDriverEarningAmountMinor === undefined)) {
+    throw new Error('Development Dispatch disclosures require both ETA and Driver earning fixtures');
+  }
+  if (developmentDispatchPickupEtaMinutes !== undefined && pricingMode !== 'development_fixture') {
+    throw new Error('Development Dispatch disclosures require development_fixture pricing mode');
+  }
   const driverFatigueWarningAfterDutyMinutes = parseInteger(env, 'DRIVER_FATIGUE_WARNING_AFTER_DUTY_MINUTES', 480, 60, 720);
   const driverFatigueRestRequiredAfterDutyMinutes = parseInteger(env, 'DRIVER_FATIGUE_REST_REQUIRED_AFTER_DUTY_MINUTES', 600, 120, 840);
   if (driverFatigueRestRequiredAfterDutyMinutes <= driverFatigueWarningAfterDutyMinutes) {
@@ -155,6 +168,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       if (!Number.isFinite(value) || value < 0 || value > 1) throw new Error('Invalid DISPATCH_MINIMUM_LOCATION_CONFIDENCE');
       return value;
     })(),
+    ...(developmentDispatchPickupEtaMinutes !== undefined ? { developmentDispatchPickupEtaMinutes } : {}),
+    ...(developmentDriverEarningAmountMinor !== undefined ? {
+      developmentDriverEarningAmountMinor,
+      developmentDriverEarningCurrency: (env.DEVELOPMENT_DRIVER_EARNING_CURRENCY ?? 'GBP').toUpperCase()
+    } : {}),
     journeyLocationMaxAgeSeconds: parseInteger(env, 'JOURNEY_LOCATION_MAX_AGE_SECONDS', 60, 10, 600),
     journeyLocationMaximumFutureSkewSeconds: parseInteger(env, 'JOURNEY_LOCATION_MAXIMUM_FUTURE_SKEW_SECONDS', 15, 0, 120),
     journeyLocationMaximumAccuracyMetres: parseInteger(env, 'JOURNEY_LOCATION_MAXIMUM_ACCURACY_METRES', 75, 5, 1_000),
