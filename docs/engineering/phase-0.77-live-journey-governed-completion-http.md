@@ -4,4 +4,4 @@ The hosted PostgreSQL vertical slice now completes the authenticated persisted J
 
 The completion command revalidates destination-approach and final-location evidence, derived service-context requirements, handover rules, operational holds and continuity cases. For this standard Booking, the successful transaction completes Journey, Booking, leg and assignment together and releases Driver availability from `ASSIGNED` to `AVAILABLE`.
 
-Both arriving and completion replay idempotently. Rider and Driver progress converge on the completed Journey, while Finance remains truthful: production charging is disabled and `PAYMENT_PROVIDER_UNAVAILABLE` is the remaining action rather than a fabricated payment.
+Both arriving and completion replay idempotently. Rider and Driver progress converge on the completed Journey, while Finance remains truthful: production charging is disabled and the canonical next action is `FINANCE` because no PaymentIntent has been prepared yet.

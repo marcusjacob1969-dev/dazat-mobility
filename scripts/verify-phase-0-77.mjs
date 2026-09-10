@@ -9,7 +9,7 @@ const errors = [];
 for (const truth of [
   'routeTelemetry', '/telemetry/location`, driverToken', 'movementPlausible, true', '/arriving`, driverToken',
   "journeyStatus, 'ARRIVING'", '/complete`, driverToken', 'completedLiveJourneyReplay.json(), completedLiveJourney.json()',
-  'driverCompletedProgress.json(), riderCompletedProgress.json()', "nextAction, 'PAYMENT_PROVIDER_UNAVAILABLE'",
+  'driverCompletedProgress.json(), riderCompletedProgress.json()', "nextAction, 'FINANCE'",
   "availabilityStatus, 'AVAILABLE'"
 ]) if (!runner.includes(truth)) errors.push(`Live completion HTTP verifier missing: ${truth}`);
 if (!app.includes("checkpoint: 'engineering-phase-0.77'")) errors.push('Build metadata is not at Phase 0.77');

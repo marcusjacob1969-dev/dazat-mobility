@@ -108,7 +108,7 @@ Phase 0.75 continues the same persisted assignment through Driver acknowledgemen
 
 Phase 0.76 completes the protected pickup boundary: the self-booking Rider initiates a one-time PIN RideCheck, the assigned Driver verifies the pairing, and only then can the real Journey-start command advance canonical Booking and Journey truth to `IN_PROGRESS`.
 
-Phase 0.77 completes the authenticated persisted journey: plausible live destination telemetry authorises `ARRIVING`, governed completion closes the Journey and assignment, releases the Driver to `AVAILABLE`, and converged Rider/Driver progress reports provider-disabled payment as the only remaining action.
+Phase 0.77 completes the authenticated persisted journey: plausible live destination telemetry authorises `ARRIVING`, governed completion closes the Journey and assignment, releases the Driver to `AVAILABLE`, and converged Rider/Driver progress truthfully requests the still-unprepared Finance step.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 

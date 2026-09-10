@@ -461,7 +461,7 @@ try {
   assert.equal(riderCompletedProgress.json().bookingStatus, 'COMPLETED');
   assert.equal(riderCompletedProgress.json().journeyStatus, 'COMPLETED');
   assert.equal(riderCompletedProgress.json().productionChargingEnabled, false);
-  assert.equal(riderCompletedProgress.json().nextAction, 'PAYMENT_PROVIDER_UNAVAILABLE');
+  assert.equal(riderCompletedProgress.json().nextAction, 'FINANCE');
   assert.equal(riderCompletedProgress.json().milestones.find((milestone) => milestone.name === 'JOURNEY').status, 'COMPLETED');
   const releasedAvailability = await get(`/v1/driver/eligibility?regionCode=GB-LON&vehicleId=${ids.dispatchVehicle}`, driverToken);
   expectCode(releasedAvailability, 200);
