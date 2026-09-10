@@ -64,13 +64,8 @@ export function projectCoreJourneyProgress(row: ProgressRow): CoreJourneyProgres
     ...(interrupted ? { interruptionReason: row.booking_status } : {}),
     productionChargingEnabled: false,
     milestones: safeMilestones,
-    nextAction: closedException
-      ? 'JOURNEY_CLOSED'
-      : supportException
-        ? 'SUPPORT_REQUIRED'
-        : financeBlockedByProvider
-          ? 'PAYMENT_PROVIDER_UNAVAILABLE'
-          : next?.name ?? 'JOURNEY_CLOSED'
+    nextAction: closedException ? 'JOURNEY_CLOSED' : supportException ? 'SUPPORT_REQUIRED'
+      : financeBlockedByProvider ? 'PAYMENT_PROVIDER_UNAVAILABLE' : next?.name ?? 'JOURNEY_CLOSED'
   };
 }
 
