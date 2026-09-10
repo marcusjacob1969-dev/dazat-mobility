@@ -182,6 +182,7 @@
 ./docs/engineering/phase-0.68-hosted-postgis-validation-recovery.md
 ./docs/engineering/phase-0.69-postgres-core-journey-query.md
 ./docs/engineering/phase-0.70-database-backed-core-journey-http.md
+./docs/engineering/phase-0.71-rider-booking-confirmation-http.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -359,6 +360,7 @@
 ./scripts/verify-phase-0-69.mjs
 ./scripts/verify-phase-0-7.mjs
 ./scripts/verify-phase-0-70.mjs
+./scripts/verify-phase-0-71.mjs
 ./scripts/verify-phase-0-8.mjs
 ./scripts/verify-phase-0-9.mjs
 ./scripts/verify-postgres-migrations.mjs
