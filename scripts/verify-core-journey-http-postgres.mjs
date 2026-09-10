@@ -368,11 +368,11 @@ try {
   assert.deepEqual(acknowledgedReplay.json(), acknowledged.json());
   const pickupObservation = await post(`/v1/journeys/${acknowledged.json().journeyId}/location-observations`, driverToken, {
     clientObservationId: '70000000-0000-4000-8000-000000000058',
-    latitude: 51.5072, longitude: -0.1276, observedAt: new Date().toISOString(),
+    latitude: 51.5072, longitude: -0.1276, observedAt: new Date(Date.now() - 40_000).toISOString(),
     source: 'DEVICE_GPS', accuracyMetres: 5, confidence: 0.99
   });
   expectCode(pickupObservation, 202);
-  assert.equal(pickupObservation.json().telemetryState, 'LIVE');
+  assert.equal(pickupObservation.json().telemetryState, 'DELAYED');
   assert.equal(pickupObservation.json().usableForCriticalDecision, true);
   const arrived = await post(`/v1/journeys/${acknowledged.json().journeyId}/arrived`, driverToken, undefined, 'phase-075-mark-arrived');
   expectCode(arrived, 200);
@@ -422,6 +422,53 @@ try {
   assert.equal(riderInProgress.json().bookingStatus, 'IN_PROGRESS');
   assert.equal(riderInProgress.json().milestones.find((milestone) => milestone.name === 'RIDECHECK').status, 'COMPLETED');
   assert.equal(riderInProgress.json().milestones.find((milestone) => milestone.name === 'JOURNEY').status, 'IN_PROGRESS');
+
+  const routeTelemetry = await post(`/v1/journeys/${acknowledged.json().journeyId}/telemetry/location`, driverToken, {
+    clientObservationId: '70000000-0000-4000-8000-000000000059',
+    latitude: 51.5073, longitude: -0.10765, observedAt: new Date(Date.now() - 20_000).toISOString(),
+    source: 'DEVICE_GPS', accuracyMetres: 5, confidence: 0.99
+  });
+  expectCode(routeTelemetry, 202);
+  assert.equal(routeTelemetry.json().movementPlausible, true);
+  const destinationTelemetry = await post(`/v1/journeys/${acknowledged.json().journeyId}/telemetry/location`, driverToken, {
+    clientObservationId: '70000000-0000-4000-8000-000000000060',
+    latitude: 51.5074, longitude: -0.0877, observedAt: new Date().toISOString(),
+    source: 'DEVICE_GPS', accuracyMetres: 5, confidence: 0.99
+  });
+  expectCode(destinationTelemetry, 202);
+  assert.equal(destinationTelemetry.json().telemetryState, 'LIVE');
+  assert.equal(destinationTelemetry.json().usableForMonitoring, true);
+  assert.equal(destinationTelemetry.json().movementPlausible, true);
+  const arriving = await post(`/v1/journeys/${acknowledged.json().journeyId}/arriving`, driverToken, undefined, 'phase-077-mark-arriving');
+  expectCode(arriving, 200);
+  assert.equal(arriving.json().bookingStatus, 'ARRIVING');
+  assert.equal(arriving.json().journeyStatus, 'ARRIVING');
+  const arrivingReplay = await post(`/v1/journeys/${acknowledged.json().journeyId}/arriving`, driverToken, undefined, 'phase-077-mark-arriving');
+  expectCode(arrivingReplay, 200);
+  assert.deepEqual(arrivingReplay.json(), arriving.json());
+  const completedLiveJourney = await post(`/v1/journeys/${acknowledged.json().journeyId}/complete`, driverToken, undefined, 'phase-077-complete-journey');
+  expectCode(completedLiveJourney, 200);
+  assert.equal(completedLiveJourney.json().bookingStatus, 'COMPLETED');
+  assert.equal(completedLiveJourney.json().journeyStatus, 'COMPLETED');
+  assert.equal(completedLiveJourney.json().assignmentStatus, 'COMPLETED');
+  assert.equal(completedLiveJourney.json().driverAvailability, 'AVAILABLE');
+  assert.equal(completedLiveJourney.json().paymentInitiated, false);
+  const completedLiveJourneyReplay = await post(`/v1/journeys/${acknowledged.json().journeyId}/complete`, driverToken, undefined, 'phase-077-complete-journey');
+  expectCode(completedLiveJourneyReplay, 200);
+  assert.deepEqual(completedLiveJourneyReplay.json(), completedLiveJourney.json());
+  const riderCompletedProgress = await get(`/v1/bookings/${successfulCreated.json().bookingId}/core-journey-progress`, registeredToken);
+  const driverCompletedProgress = await get(`/v1/driver/bookings/${successfulCreated.json().bookingId}/core-journey-progress`, driverToken);
+  expectCode(riderCompletedProgress, 200);
+  expectCode(driverCompletedProgress, 200);
+  assert.deepEqual(driverCompletedProgress.json(), riderCompletedProgress.json());
+  assert.equal(riderCompletedProgress.json().bookingStatus, 'COMPLETED');
+  assert.equal(riderCompletedProgress.json().journeyStatus, 'COMPLETED');
+  assert.equal(riderCompletedProgress.json().productionChargingEnabled, false);
+  assert.equal(riderCompletedProgress.json().nextAction, 'FINANCE');
+  assert.equal(riderCompletedProgress.json().milestones.find((milestone) => milestone.name === 'JOURNEY').status, 'COMPLETED');
+  const releasedAvailability = await get(`/v1/driver/eligibility?regionCode=GB-LON&vehicleId=${ids.dispatchVehicle}`, driverToken);
+  expectCode(releasedAvailability, 200);
+  assert.equal(releasedAvailability.json().eligible, true);
   expectCode(await del('/v1/identity/session', driverToken), 204);
 
   const riderIncident = await get(`/v1/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.actor);

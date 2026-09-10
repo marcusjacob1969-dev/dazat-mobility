@@ -188,6 +188,7 @@
 ./docs/engineering/phase-0.74-eligible-driver-dispatch-acceptance-http.md
 ./docs/engineering/phase-0.75-assignment-to-arrival-http.md
 ./docs/engineering/phase-0.76-ridecheck-protected-start-http.md
+./docs/engineering/phase-0.77-live-journey-governed-completion-http.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -371,6 +372,7 @@
 ./scripts/verify-phase-0-74.mjs
 ./scripts/verify-phase-0-75.mjs
 ./scripts/verify-phase-0-76.mjs
+./scripts/verify-phase-0-77.mjs
 ./scripts/verify-phase-0-8.mjs
 ./scripts/verify-phase-0-9.mjs
 ./scripts/verify-postgres-migrations.mjs
