@@ -243,6 +243,22 @@ try {
   expectCode(await get(`/v1/bookings/${createdBooking.bookingId}/core-journey-progress`, tokens.outsider), 404, 'CORE_JOURNEY_NOT_FOUND');
   expectCode(await post('/v1/bookings', registeredToken, createInput), 400, 'IDEMPOTENCY_KEY_REQUIRED');
 
+  const noDriverDispatch = await post(`/v1/bookings/${createdBooking.bookingId}/dispatch`, registeredToken, undefined, 'phase-073-start-dispatch');
+  expectCode(noDriverDispatch, 200);
+  assert.equal(noDriverDispatch.json().bookingStatus, 'NO_ELIGIBLE_DRIVER');
+  assert.equal(noDriverDispatch.json().dispatchStatus, 'NO_ELIGIBLE_DRIVER');
+  assert.equal(noDriverDispatch.json().eligibleCandidateCount, 0);
+  assert.equal(noDriverDispatch.json().offeredDriverCount, 0);
+  const noDriverReplay = await post(`/v1/bookings/${createdBooking.bookingId}/dispatch`, registeredToken, undefined, 'phase-073-start-dispatch');
+  expectCode(noDriverReplay, 200);
+  assert.deepEqual(noDriverReplay.json(), noDriverDispatch.json());
+  const noDriverProgress = await get(`/v1/bookings/${createdBooking.bookingId}/core-journey-progress`, registeredToken);
+  expectCode(noDriverProgress, 200);
+  assert.equal(noDriverProgress.json().bookingStatus, 'NO_ELIGIBLE_DRIVER');
+  assert.equal(noDriverProgress.json().disposition, 'SUPPORT_REQUIRED');
+  assert.equal(noDriverProgress.json().nextAction, 'SUPPORT_REQUIRED');
+  assert.equal(noDriverProgress.json().milestones.find((milestone) => milestone.name === 'DRIVER_ASSIGNED').status, 'BLOCKED');
+
   const riderIncident = await get(`/v1/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.actor);
   expectCode(riderIncident, 200);
   assert.equal(riderIncident.json().disposition, 'SUPPORT_REQUIRED');

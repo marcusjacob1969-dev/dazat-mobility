@@ -2,13 +2,17 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.72 — Registration-to-Confirmed-Booking HTTP**
+**Engineering Phase 0.73 — Confirmed-Booking-to-Dispatch HTTP**
 
-Status: **SOURCE IMPLEMENTED / LOCAL SOURCE, COMPILE, DOMAIN AND API RUNTIME TESTS PASS / PRODUCTION PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED DISPOSABLE-POSTGIS REGISTRATION-TO-BOOKING VERIFICATION PENDING CI**
+Status: **SOURCE IMPLEMENTED / LOCAL SOURCE, COMPILE, DOMAIN AND API RUNTIME TESTS PASS / PRODUCTION PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED DISPOSABLE-POSTGIS DISPATCH VERIFICATION PENDING CI**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
+
+- The newly registered Rider's confirmed Booking now enters Dispatch through the real idempotent HTTP command in hosted PostGIS verification.
+- With no complete Driver eligibility evidence, Dispatch persists the truthful `NO_ELIGIBLE_DRIVER` result with zero candidates and zero offers, and a replay returns the original outcome.
+- Canonical journey progress immediately becomes `SUPPORT_REQUIRED`, with Driver assignment blocked and no assignment fabricated.
 
 - The hosted Rider journey now starts with real idempotent account registration, synthetic development-only contact-code delivery, contact confirmation and issuance of a hashed bearer session.
 - The issued session is read through the authenticated session route, drives the real Booking-to-confirmation HTTP flow, and is explicitly revoked and proven unusable afterward.
