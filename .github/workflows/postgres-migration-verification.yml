@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - name: Build production API image
         run: docker build --file services/api/Dockerfile --tag dazat-api:${{ github.sha }} .
       - name: Smoke-test production API image
@@ -42,7 +42,7 @@ jobs:
             dazat-api:${{ github.sha }}
           curl --fail --retry 15 --retry-all-errors --retry-delay 1 http://127.0.0.1:3001/health/live
           curl --fail --retry 10 --retry-all-errors --retry-delay 1 http://127.0.0.1:3001/health/ready | grep --fixed-strings '"database":"READY"'
-          curl --fail --retry 5 --retry-all-errors --retry-delay 1 http://127.0.0.1:3001/v1/build-info | grep --fixed-strings '"checkpoint":"engineering-phase-0.87"'
+          curl --fail --retry 5 --retry-all-errors --retry-delay 1 http://127.0.0.1:3001/v1/build-info | grep --fixed-strings '"checkpoint":"engineering-phase-0.88"'
           docker stop --time 10 dazat-api-smoke
           test "$(docker inspect --format '{{.State.ExitCode}}' dazat-api-smoke)" = "0"
 
@@ -50,8 +50,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 24
           cache: npm
@@ -113,8 +113,8 @@ jobs:
       DATABASE_URL: postgresql://dazat_ci:dazat_ci_${{ github.run_id }}@localhost:5432/dazat_migration_verify_ci
       DAZAT_MIGRATION_VALIDATION_TARGET: ephemeral
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 24
       - name: Install locked workspace dependencies

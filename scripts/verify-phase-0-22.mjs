@@ -21,7 +21,7 @@ const workflow = readFileSync(join(root, required[0]), 'utf8');
 for (const truth of [
   'pull_request:', 'branches: [main]', 'postgis/postgis:16-3.4',
   'POSTGRES_DB: dazat_migration_verify_ci', 'DAZAT_MIGRATION_VALIDATION_TARGET: ephemeral',
-  'actions/checkout@v4', 'actions/setup-node@v4', 'node-version: 24',
+  'node-version: 24',
   'workspace-check:', 'cache: npm', 'npm ci --ignore-scripts',
   'npm run audit:security',
   'npm run build --workspaces --if-present && npm run check',
@@ -29,6 +29,10 @@ for (const truth of [
   'node --test tests/domain/postgres-migration-runner-source.test.mjs',
   'node scripts/verify-postgres-migrations.mjs'
 ]) if (!workflow.includes(truth)) errors.push(`CI migration workflow missing: ${truth}`);
+for (const [action, pattern] of [
+  ['actions/checkout', /actions\/checkout@[a-f0-9]{40}/],
+  ['actions/setup-node', /actions\/setup-node@[a-f0-9]{40}/]
+]) if (!pattern.test(workflow)) errors.push(`CI migration workflow missing commit-pinned action: ${action}`);
 if (workflow.includes('POSTGRES_PASSWORD: production') || workflow.includes('npm publish')) errors.push('CI migration workflow contains a prohibited production or publish action');
 
 if (errors.length) {
