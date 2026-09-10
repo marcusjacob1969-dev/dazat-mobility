@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import pg from 'pg';
 import { buildApi } from '../services/api/dist/app.js';
 import { loadConfig } from '../services/api/dist/config.js';
@@ -47,10 +47,10 @@ const ids = {
 };
 
 const tokens = {
-  actor: 'dzs_phase070_actor_opaque_bearer_secret',
-  operator: 'dzs_phase070_operator_opaque_bearer_secret',
-  outsider: 'dzs_phase070_outsider_opaque_bearer_secret',
-  expired: 'dzs_phase070_expired_opaque_bearer_secret'
+  actor: randomUUID(),
+  operator: randomUUID(),
+  outsider: randomUUID(),
+  expired: randomUUID()
 };
 const hash = (value) => createHash('sha256').update(value).digest('hex');
 const pool = new pg.Pool({ connectionString, max: 1 });
@@ -469,6 +469,33 @@ try {
   const releasedAvailability = await get(`/v1/driver/eligibility?regionCode=GB-LON&vehicleId=${ids.dispatchVehicle}`, driverToken);
   expectCode(releasedAvailability, 200);
   assert.equal(releasedAvailability.json().eligible, true);
+
+  const preparedPayment = await post(`/v1/bookings/${successfulCreated.json().bookingId}/payment-intents`, registeredToken, undefined, 'phase-078-prepare-payment');
+  expectCode(preparedPayment, 201);
+  assert.equal(preparedPayment.json().amountMinor, 1800);
+  assert.equal(preparedPayment.json().currency, 'GBP');
+  assert.equal(preparedPayment.json().status, 'CREATED');
+  assert.equal(preparedPayment.json().chargingEligibility, 'NOT_ELIGIBLE');
+  assert.equal(preparedPayment.json().providerActionAttempted, false);
+  assert.equal(preparedPayment.json().productionChargingEnabled, false);
+  assert.equal(preparedPayment.json().blindRetryAllowed, false);
+  const preparedPaymentReplay = await post(`/v1/bookings/${successfulCreated.json().bookingId}/payment-intents`, registeredToken, undefined, 'phase-078-prepare-payment');
+  expectCode(preparedPaymentReplay, 201);
+  assert.deepEqual(preparedPaymentReplay.json(), preparedPayment.json());
+  const paymentStatus = await get(`/v1/payments/${preparedPayment.json().paymentIntentId}/status`, registeredToken);
+  expectCode(paymentStatus, 200);
+  assert.equal(paymentStatus.json().status, 'CREATED');
+  assert.equal(paymentStatus.json().providerActionAttempted, false);
+  assert.equal(paymentStatus.json().reconciliationRequired, false);
+  assert.equal(paymentStatus.json().productionChargingEnabled, false);
+  expectCode(await get(`/v1/payments/${preparedPayment.json().paymentIntentId}/status`, tokens.outsider), 403, 'FINANCE_FORBIDDEN');
+  expectCode(await get(`/v1/receipts/${successfulCreated.json().bookingId}`, registeredToken), 409, 'RECEIPT_NOT_READY');
+  const financeProgress = await get(`/v1/bookings/${successfulCreated.json().bookingId}/core-journey-progress`, registeredToken);
+  expectCode(financeProgress, 200);
+  assert.equal(financeProgress.json().paymentIntentStatus, 'CREATED');
+  assert.equal(financeProgress.json().productionChargingEnabled, false);
+  assert.equal(financeProgress.json().nextAction, 'PAYMENT_PROVIDER_UNAVAILABLE');
+  assert.equal(financeProgress.json().milestones.find((milestone) => milestone.name === 'FINANCE').status, 'BLOCKED');
   expectCode(await del('/v1/identity/session', driverToken), 204);
 
   const riderIncident = await get(`/v1/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.actor);
