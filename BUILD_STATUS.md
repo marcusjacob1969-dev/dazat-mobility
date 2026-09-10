@@ -2,13 +2,18 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.73 — Confirmed-Booking-to-Dispatch HTTP**
+**Engineering Phase 0.74 — Eligible-Driver Dispatch Acceptance HTTP**
 
-Status: **SOURCE IMPLEMENTED / LOCAL SOURCE, COMPILE, DOMAIN AND API RUNTIME TESTS PASS / PRODUCTION PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED DISPOSABLE-POSTGIS DISPATCH VERIFICATION PENDING CI**
+Status: **SOURCE IMPLEMENTED / LOCAL SOURCE, COMPILE, DOMAIN AND API RUNTIME TESTS PASS / PRODUCTION PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED DISPOSABLE-POSTGIS ACCEPTANCE VERIFICATION PENDING CI**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
+
+- A verified Driver now enters the hosted vertical slice through real registration, contact verification and bearer-session HTTP routes; only the external back-office eligibility evidence is seeded.
+- Real availability, candidate selection, informed-offer listing and atomic offer acceptance are exercised against migrated PostGIS, including idempotent acceptance replay.
+- Rider and Driver progress converge on the same canonical `DRIVER_ASSIGNED` state and completed assignment milestone.
+- Development-only Dispatch disclosure fixtures provide an independently configured Driver earning and pickup ETA; both must be enabled together with development pricing, while production remains non-actionable without approved providers.
 
 - The newly registered Rider's confirmed Booking now enters Dispatch through the real idempotent HTTP command in hosted PostGIS verification.
 - With no complete Driver eligibility evidence, Dispatch persists the truthful `NO_ELIGIBLE_DRIVER` result with zero candidates and zero offers, and a replay returns the original outcome.

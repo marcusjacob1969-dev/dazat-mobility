@@ -33,7 +33,17 @@ const ids = {
   shift: '70000000-0000-4000-8000-000000000041', fatigue: '70000000-0000-4000-8000-000000000042',
   hold: '70000000-0000-4000-8000-000000000043', support: '70000000-0000-4000-8000-000000000044',
   handover: '70000000-0000-4000-8000-000000000045', role: '70000000-0000-4000-8000-000000000046',
-  task: '70000000-0000-4000-8000-000000000047'
+  task: '70000000-0000-4000-8000-000000000047',
+  dispatchVehicle: '70000000-0000-4000-8000-000000000048',
+  dispatchAuthorisation: '70000000-0000-4000-8000-000000000049',
+  dispatchInsurance: '70000000-0000-4000-8000-000000000050',
+  dispatchDriverSnapshot: '70000000-0000-4000-8000-000000000051',
+  dispatchVehicleSnapshot: '70000000-0000-4000-8000-000000000052',
+  dispatchPermission: '70000000-0000-4000-8000-000000000053',
+  maintenancePlan: '70000000-0000-4000-8000-000000000054',
+  maintenancePlanVersion: '70000000-0000-4000-8000-000000000055',
+  maintenanceRequirement: '70000000-0000-4000-8000-000000000056',
+  maintenanceEvaluation: '70000000-0000-4000-8000-000000000057'
 };
 
 const tokens = {
@@ -79,6 +89,13 @@ async function post(path, token, body, idempotencyKey) {
     method: 'POST', url: path,
     headers: { ...auth(token), ...(body === undefined ? {} : { 'content-type': 'application/json' }), ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) },
     ...(body === undefined ? {} : { payload: body })
+  });
+}
+async function put(path, token, body, idempotencyKey) {
+  return app.inject({
+    method: 'PUT', url: path,
+    headers: { ...auth(token), 'content-type': 'application/json', ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) },
+    payload: body
   });
 }
 async function del(path, token) {
@@ -177,7 +194,9 @@ try {
     DATABASE_URL: connectionString, REDIS_URL: 'redis://disabled.invalid:6379', LOG_LEVEL: 'silent',
     CONTACT_VERIFICATION_PEPPER: 'phase-070-contact-verification-pepper', RIDECHECK_PEPPER: 'phase-070-ridecheck-verifier-pepper',
     VERIFICATION_DELIVERY_MODE: 'development_console', DAZAT_DEV_EXPOSE_VERIFICATION_CODE: 'true',
-    PRICING_MODE: 'development_fixture', DEVELOPMENT_QUOTE_AMOUNT_MINOR: '1800', DEVELOPMENT_QUOTE_CURRENCY: 'GBP'
+    PRICING_MODE: 'development_fixture', DEVELOPMENT_QUOTE_AMOUNT_MINOR: '1800', DEVELOPMENT_QUOTE_CURRENCY: 'GBP',
+    DEVELOPMENT_DISPATCH_PICKUP_ETA_MINUTES: '8', DEVELOPMENT_DRIVER_EARNING_AMOUNT_MINOR: '1200',
+    DEVELOPMENT_DRIVER_EARNING_CURRENCY: 'GBP'
   });
   app = buildApi(config, { database });
   await app.ready();
@@ -258,6 +277,88 @@ try {
   assert.equal(noDriverProgress.json().disposition, 'SUPPORT_REQUIRED');
   assert.equal(noDriverProgress.json().nextAction, 'SUPPORT_REQUIRED');
   assert.equal(noDriverProgress.json().milestones.find((milestone) => milestone.name === 'DRIVER_ASSIGNED').status, 'BLOCKED');
+
+  const driverRegistrationInput = {
+    profileKind: 'DRIVER', preferredName: 'Phase 0.74 Driver',
+    contact: { type: 'EMAIL', value: 'phase-074-driver@example.invalid' }
+  };
+  const driverRegistration = await post('/v1/identity/registrations', undefined, driverRegistrationInput, 'phase-074-register-driver');
+  expectCode(driverRegistration, 202);
+  const driverVerification = await post('/v1/identity/verifications/contact', undefined, {
+    accountId: driverRegistration.json().accountId, contactPointId: driverRegistration.json().contact.id
+  });
+  expectCode(driverVerification, 202);
+  const driverAuthenticated = await post('/v1/identity/verifications/contact/confirm', undefined, {
+    verificationId: driverVerification.json().verificationId,
+    code: driverVerification.json().developmentCode,
+    device: { deviceInstanceId: 'phase-074-driver-ci-device', platform: 'CI' }
+  });
+  expectCode(driverAuthenticated, 200);
+  const driverToken = driverAuthenticated.json().session.bearerToken;
+  const liveDriverProfileId = driverRegistration.json().driverProfileId;
+  await client.query(`UPDATE driver.driver_profile SET onboarding_status = 'APPROVED' WHERE id = $1`, [liveDriverProfileId]);
+  await client.query(`INSERT INTO vehicle_fleet.vehicle (id, registration_mark, lifecycle_status) VALUES ($1, 'DZ74 CI', 'ACTIVE')`, [ids.dispatchVehicle]);
+  await client.query(`INSERT INTO driver.driver_vehicle_authorisation (id, driver_profile_id, vehicle_id, status, valid_from, valid_until) VALUES ($1,$2,$3,'ACTIVE',now() - interval '1 hour',now() + interval '1 day')`, [ids.dispatchAuthorisation, liveDriverProfileId, ids.dispatchVehicle]);
+  await client.query(`INSERT INTO compliance.driver_vehicle_insurance_validation (id, driver_profile_id, vehicle_id, status, insurer_reference, policy_reference, evidence_references, verification_authority, valid_until) VALUES ($1,$2,$3,'ELIGIBLE','phase-074-insurer','phase-074-policy','["phase-074-insurance"]','CI_VERIFIER',now() + interval '1 day')`, [ids.dispatchInsurance, liveDriverProfileId, ids.dispatchVehicle]);
+  await client.query(`INSERT INTO compliance.driver_eligibility_snapshot (id, driver_profile_id, status, policy_version, evidence_references, valid_until) VALUES ($1,$2,'ELIGIBLE','phase-0.74','["phase-074-driver"]',now() + interval '1 day')`, [ids.dispatchDriverSnapshot, liveDriverProfileId]);
+  await client.query(`INSERT INTO compliance.vehicle_eligibility_snapshot (id, vehicle_id, status, policy_version, service_capabilities, evidence_references, valid_until) VALUES ($1,$2,'ELIGIBLE','phase-0.74','{}','["phase-074-vehicle"]',now() + interval '1 day')`, [ids.dispatchVehicleSnapshot, ids.dispatchVehicle]);
+  await client.query(`INSERT INTO driver.driver_permission (id, driver_profile_id, region_code, service_code, status, risk_tier, source_type, source_reference_id, policy_version, valid_from, valid_until) VALUES ($1,$2,'GB-LON','STANDARD','ACTIVE','STANDARD','COMPLIANCE_REVIEW',$3,'phase-0.74',now() - interval '1 hour',now() + interval '1 day')`, [ids.dispatchPermission, liveDriverProfileId, ids.dispatchDriverSnapshot]);
+  await client.query(`INSERT INTO vehicle_fleet.vehicle_maintenance_plan (id, vehicle_id) VALUES ($1,$2)`, [ids.maintenancePlan, ids.dispatchVehicle]);
+  await client.query(`INSERT INTO vehicle_fleet.vehicle_maintenance_plan_version (id, maintenance_plan_id, version, status, source_types, source_references, policy_version, effective_from, effective_until) VALUES ($1,$2,1,'ACTIVE',ARRAY['DAZAT_POLICY']::vehicle_fleet.maintenance_plan_source[],'["phase-074-plan"]','phase-0.74',now() - interval '1 hour',now() + interval '1 day')`, [ids.maintenancePlanVersion, ids.maintenancePlan]);
+  await client.query(`INSERT INTO vehicle_fleet.maintenance_requirement (id, plan_version_id, requirement_code, description, source_type, source_reference, due_at, evidence_references) VALUES ($1,$2,'DAILY_CHECK','Daily operational check','DAZAT_POLICY','phase-0.74',now() + interval '1 day','["phase-074-requirement"]')`, [ids.maintenanceRequirement, ids.maintenancePlanVersion]);
+  await client.query(`INSERT INTO vehicle_fleet.maintenance_requirement_evaluation (id, maintenance_requirement_id, status, urgency, evidence_references, evaluated_by_authority, policy_version) VALUES ($1,$2,'OPEN','ROUTINE','["phase-074-evaluation"]','CI_VERIFIER','phase-0.74')`, [ids.maintenanceEvaluation, ids.maintenanceRequirement]);
+
+  const eligibilityBeforeOnline = await get(`/v1/driver/eligibility?regionCode=GB-LON&vehicleId=${ids.dispatchVehicle}`, driverToken);
+  expectCode(eligibilityBeforeOnline, 200);
+  assert.equal(eligibilityBeforeOnline.json().eligible, false);
+  assert.ok(eligibilityBeforeOnline.json().blockers.includes('NOT_AVAILABLE'));
+  const availability = await put('/v1/driver/availability', driverToken, {
+    status: 'AVAILABLE', regionCode: 'GB-LON', vehicleId: ids.dispatchVehicle,
+    location: { latitude: 51.5072, longitude: -0.1276, observedAt: new Date().toISOString(), source: 'DEVICE_GPS', confidence: 0.99 }
+  }, 'phase-074-driver-available');
+  expectCode(availability, 200);
+  assert.equal(availability.json().status, 'AVAILABLE');
+  assert.equal(availability.json().eligibility.eligible, true);
+
+  const successfulCreated = await post('/v1/bookings', registeredToken, {
+    ...createInput,
+    pickup: { ...createInput.pickup, displayLabel: 'Phase 0.74 successful Dispatch pickup' }
+  }, 'phase-074-create-booking');
+  expectCode(successfulCreated, 201);
+  const successfulQuote = await post(`/v1/bookings/${successfulCreated.json().bookingId}/quote`, registeredToken, undefined, 'phase-074-create-quote');
+  expectCode(successfulQuote, 201);
+  const successfulConfirm = await post(`/v1/bookings/${successfulCreated.json().bookingId}/confirm`, registeredToken, { quoteId: successfulQuote.json().quote.quoteId }, 'phase-074-confirm-booking');
+  expectCode(successfulConfirm, 200);
+  const successfulDispatch = await post(`/v1/bookings/${successfulCreated.json().bookingId}/dispatch`, registeredToken, undefined, 'phase-074-start-dispatch');
+  expectCode(successfulDispatch, 200);
+  assert.equal(successfulDispatch.json().dispatchStatus, 'OFFERING');
+  assert.equal(successfulDispatch.json().eligibleCandidateCount, 1);
+  assert.equal(successfulDispatch.json().offeredDriverCount, 1);
+  const offers = await get('/v1/driver/offers', driverToken);
+  expectCode(offers, 200);
+  assert.equal(offers.json().offers.length, 1);
+  const offer = offers.json().offers[0];
+  assert.equal(offer.bookingId, successfulCreated.json().bookingId);
+  assert.equal(offer.disclosure.informedChoiceReady, true);
+  assert.equal(offer.disclosure.acceptanceAllowed, true);
+  assert.deepEqual(offer.disclosure.missingDisclosures, []);
+  assert.equal(offer.disclosure.pickupEta.minutes, 8);
+  assert.equal(offer.disclosure.expectedEarning.amountMinor, 1200);
+  const accepted = await post(`/v1/driver/offers/${offer.offerId}/accept`, driverToken, undefined, 'phase-074-accept-offer');
+  expectCode(accepted, 200);
+  assert.equal(accepted.json().bookingStatus, 'DRIVER_ASSIGNED');
+  const acceptedReplay = await post(`/v1/driver/offers/${offer.offerId}/accept`, driverToken, undefined, 'phase-074-accept-offer');
+  expectCode(acceptedReplay, 200);
+  assert.deepEqual(acceptedReplay.json(), accepted.json());
+  const riderAssignedProgress = await get(`/v1/bookings/${successfulCreated.json().bookingId}/core-journey-progress`, registeredToken);
+  const driverAssignedProgress = await get(`/v1/driver/bookings/${successfulCreated.json().bookingId}/core-journey-progress`, driverToken);
+  expectCode(riderAssignedProgress, 200);
+  expectCode(driverAssignedProgress, 200);
+  assert.equal(riderAssignedProgress.json().bookingStatus, 'DRIVER_ASSIGNED');
+  assert.deepEqual(driverAssignedProgress.json(), riderAssignedProgress.json());
+  assert.equal(riderAssignedProgress.json().milestones.find((milestone) => milestone.name === 'DRIVER_ASSIGNED').status, 'COMPLETED');
+  assert.equal((await get('/v1/driver/offers', driverToken)).json().offers.length, 0);
+  expectCode(await del('/v1/identity/session', driverToken), 204);
 
   const riderIncident = await get(`/v1/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.actor);
   expectCode(riderIncident, 200);
