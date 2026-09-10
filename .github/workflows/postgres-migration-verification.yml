@@ -67,3 +67,5 @@ jobs:
         run: node scripts/verify-postgres-migrations.mjs
       - name: Compile API and validate core-journey SQL against migrated schema
         run: npm run build:core && npm run build --workspace @dazat/api && node scripts/verify-core-journey-postgres.mjs
+      - name: Exercise authenticated core-journey HTTP against persisted fixtures
+        run: node scripts/verify-core-journey-http-postgres.mjs
