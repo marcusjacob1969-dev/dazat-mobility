@@ -12,7 +12,8 @@ for (const truth of [
   "journeyStatus, 'IN_PROGRESS'", 'journeyStartedReplay.json(), journeyStarted.json()',
   'driverInProgress.json(), riderInProgress.json()', "milestone.name === 'RIDECHECK'"
 ]) if (!runner.includes(truth)) errors.push(`RideCheck-to-start HTTP verifier missing: ${truth}`);
-if (!app.includes("checkpoint: 'engineering-phase-0.76'")) errors.push('Build metadata is not at Phase 0.76');
+const checkpoint = Number(app.match(/checkpoint: 'engineering-phase-0\.(\d+)'/)?.[1] ?? -1);
+if (checkpoint < 76) errors.push('Build metadata predates Phase 0.76');
 if (errors.length) {
   console.error('DAZAT Engineering Phase 0.76 verification FAILED');
   for (const error of errors) console.error(`- ${error}`);
