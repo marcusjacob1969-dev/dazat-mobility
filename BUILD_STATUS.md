@@ -2,13 +2,16 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.79 — Rider Finance Boundary Contract and UI**
+**Engineering Phase 0.80 — Demonstrable Provider-Disabled Finance Closure**
 
-Status: **SOURCE IMPLEMENTED / FULL LOCAL CURRENT-CHECKPOINT VERIFICATION PASSES / PRODUCTION PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED CI PENDING**
+Status: **SOURCE IMPLEMENTED / DEMO, COMPILE AND CHECKPOINT VERIFICATION PASS / PRODUCTION PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED CI PENDING**
 
 DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. No Ventora source code is required by this repository.
 
 ### Implemented source
+
+- The production-safe executable demo now carries the successful vertical slice into created PaymentIntent truth.
+- It asserts the blocked Finance milestone, disabled charging, and `PAYMENT_PROVIDER_UNAVAILABLE` next action before printing evidence.
 
 - OpenAPI now exposes `PAYMENT_PROVIDER_UNAVAILABLE` as canonical progress truth.
 - Rider payment preparation refreshes both Payment status and journey progress, preventing stale Finance UI after the intent is created.

@@ -191,6 +191,7 @@
 ./docs/engineering/phase-0.77-live-journey-governed-completion-http.md
 ./docs/engineering/phase-0.78-provider-disabled-finance-handoff-http.md
 ./docs/engineering/phase-0.79-rider-finance-boundary-ui.md
+./docs/engineering/phase-0.80-provider-disabled-finance-demo.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -378,6 +379,7 @@
 ./scripts/verify-phase-0-78.mjs
 ./scripts/verify-phase-0-79.mjs
 ./scripts/verify-phase-0-8.mjs
+./scripts/verify-phase-0-80.mjs
 ./scripts/verify-phase-0-9.mjs
 ./scripts/verify-postgres-migrations.mjs
 ./services/api/package.json
