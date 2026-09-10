@@ -26,8 +26,8 @@ jobs:
             --env CONTACT_VERIFICATION_PEPPER=ci-only-contact-pepper-000000000000 \
             --env RIDECHECK_PEPPER=ci-only-ridecheck-pepper-0000000000 \
             dazat-api:${{ github.sha }}
-          curl --fail --retry 15 --retry-connrefused --retry-delay 1 http://127.0.0.1:3001/health/live
-          curl --fail http://127.0.0.1:3001/v1/build-info | grep --fixed-strings '"checkpoint":"engineering-phase-0.82"'
+          curl --fail --retry 15 --retry-all-errors --retry-delay 1 http://127.0.0.1:3001/health/live
+          curl --fail --retry 5 --retry-all-errors --retry-delay 1 http://127.0.0.1:3001/v1/build-info | grep --fixed-strings '"checkpoint":"engineering-phase-0.82"'
 
   workspace-check:
     runs-on: ubuntu-latest
