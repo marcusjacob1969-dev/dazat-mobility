@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-**Engineering Phase 0.74 — Eligible-Driver Dispatch Acceptance HTTP**
+**Engineering Phase 0.75 — Assignment-to-Arrival HTTP**
 
 Status: **SOURCE IMPLEMENTED / LOCAL SOURCE, COMPILE, DOMAIN AND API RUNTIME TESTS PASS / PRODUCTION PROVIDER AND CHARGING INTEGRATIONS DISABLED / HOSTED DISPOSABLE-POSTGIS ACCEPTANCE VERIFICATION PENDING CI**
 
@@ -10,7 +10,9 @@ DAZAT is being built cleanly from the frozen v0.4 PRE-WORK COMPLETE blueprint. N
 
 ### Implemented source
 
-- A verified Driver now enters the hosted vertical slice through real registration, contact verification and bearer-session HTTP routes; only the external back-office eligibility evidence is seeded.
+- The accepted assignment now advances through real Driver acknowledgement, Journey creation, fresh pickup telemetry and geofenced arrival HTTP commands.
+- Acknowledgement and arrival replay idempotently, and Rider/Driver projections converge on canonical `DRIVER_ARRIVED` truth.
+- A verified Driver enters the hosted vertical slice through real registration, contact verification and bearer-session HTTP routes; only the external back-office eligibility evidence is seeded.
 - Real availability, candidate selection, informed-offer listing and atomic offer acceptance are exercised against migrated PostGIS, including idempotent acceptance replay.
 - Rider and Driver progress converge on the same canonical `DRIVER_ASSIGNED` state and completed assignment milestone.
 - Development-only Dispatch disclosure fixtures provide an independently configured Driver earning and pickup ETA; both must be enabled together with development pricing, while production remains non-actionable without approved providers.

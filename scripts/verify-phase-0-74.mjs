@@ -16,7 +16,8 @@ for (const truth of [
 for (const truth of ['developmentDispatchPickupEtaMinutes', 'developmentDriverEarningAmountMinor', "development-driver-earning-fixture-v1"]) {
   if (!dispatch.includes(truth) && !config.includes(truth)) errors.push(`Development disclosure boundary missing: ${truth}`);
 }
-if (!app.includes("checkpoint: 'engineering-phase-0.74'")) errors.push('Build metadata is not at Phase 0.74');
+const checkpoint = Number(app.match(/checkpoint: 'engineering-phase-0\.(\d+)'/)?.[1] ?? -1);
+if (checkpoint < 74) errors.push('Build metadata predates Phase 0.74');
 if (errors.length) {
   console.error('DAZAT Engineering Phase 0.74 verification FAILED');
   for (const error of errors) console.error(`- ${error}`);
