@@ -16,6 +16,18 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build production API image
         run: docker build --file services/api/Dockerfile --tag dazat-api:${{ github.sha }} .
+      - name: Smoke-test production API image
+        run: |
+          trap 'docker logs dazat-api-smoke || true; docker rm --force dazat-api-smoke || true' EXIT
+          test "$(docker image inspect --format '{{.Config.User}}' dazat-api:${{ github.sha }})" = "node"
+          docker run --detach --name dazat-api-smoke --publish 3001:3001 \
+            --env DATABASE_URL=postgresql://unused:unused@127.0.0.1:5432/unused \
+            --env REDIS_URL=redis://127.0.0.1:6379 \
+            --env CONTACT_VERIFICATION_PEPPER=ci-only-contact-pepper-000000000000 \
+            --env RIDECHECK_PEPPER=ci-only-ridecheck-pepper-0000000000 \
+            dazat-api:${{ github.sha }}
+          curl --fail --retry 15 --retry-connrefused --retry-delay 1 http://127.0.0.1:3001/health/live
+          curl --fail http://127.0.0.1:3001/v1/build-info | grep --fixed-strings '"checkpoint":"engineering-phase-0.82"'
 
   workspace-check:
     runs-on: ubuntu-latest
