@@ -2,7 +2,7 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.72**.
+Current checkpoint: **Engineering Phase 0.73**.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
@@ -99,6 +99,8 @@ Phase 0.70 exercises those authenticated HTTP endpoints over persisted transacti
 Phase 0.71 drives the beginning of the vertical slice through real authenticated Rider HTTP mutations: idempotent Booking creation, development-fixture quote creation, confirmation and canonical persisted progress, with cross-party denial and charging still disabled.
 
 Phase 0.72 removes the pre-seeded session from that Rider flow: hosted PostGIS verification now performs idempotent registration, development-only contact-code delivery, verification, bearer-session authentication, Booking-to-confirmation and explicit session revocation through real HTTP routes.
+
+Phase 0.73 sends that confirmed Booking through the actual Dispatch HTTP command and proves the safe no-candidate path is idempotent, persists `NO_ELIGIBLE_DRIVER`, creates no assignment and moves shared Rider progress to explicit support-required truth.
 
 Phase 0.33 centralises bearer credential parsing for all protected API modules, accepts the case-insensitive standard scheme, and rejects missing, empty, ambiguous, multi-value and oversized credentials.
 

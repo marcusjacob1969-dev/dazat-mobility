@@ -109,6 +109,7 @@
     "verify:phase-0-70": "node scripts/verify-phase-0-70.mjs",
     "verify:core-journey:http-postgres": "node scripts/verify-core-journey-http-postgres.mjs",
     "verify:phase-0-71": "node scripts/verify-phase-0-71.mjs",
-    "verify:phase-0-72": "node scripts/verify-phase-0-72.mjs"
+    "verify:phase-0-72": "node scripts/verify-phase-0-72.mjs",
+    "verify:phase-0-73": "node scripts/verify-phase-0-73.mjs"
   }
 }
