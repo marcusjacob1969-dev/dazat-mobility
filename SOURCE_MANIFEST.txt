@@ -1,6 +1,7 @@
 ./.dockerignore
 ./.editorconfig
 ./.env.example
+./.github/dependabot.yml
 ./.github/workflows/postgres-migration-verification.yml
 ./.gitignore
 ./.nvmrc
@@ -202,6 +203,7 @@
 ./docs/engineering/phase-0.87-production-api-vulnerability-evidence.md
 ./docs/engineering/phase-0.88-pinned-ci-actions.md
 ./docs/engineering/phase-0.89-ci-concurrency.md
+./docs/engineering/phase-0.90-dependency-update-monitoring.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -402,6 +404,7 @@
 ./scripts/verify-phase-0-88.mjs
 ./scripts/verify-phase-0-89.mjs
 ./scripts/verify-phase-0-9.mjs
+./scripts/verify-phase-0-90.mjs
 ./scripts/verify-postgres-migrations.mjs
 ./services/api/Dockerfile
 ./services/api/package.json
