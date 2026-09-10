@@ -390,6 +390,38 @@ try {
   assert.equal(riderArrivedProgress.json().bookingStatus, 'DRIVER_ARRIVED');
   assert.equal(riderArrivedProgress.json().journeyStatus, 'ARRIVED');
   assert.equal(riderArrivedProgress.json().milestones.find((milestone) => milestone.name === 'ARRIVAL').status, 'COMPLETED');
+
+  const rideCheck = await post(`/v1/journeys/${acknowledged.json().journeyId}/ridecheck/start`, registeredToken, undefined, 'phase-076-start-ridecheck');
+  expectCode(rideCheck, 201);
+  assert.equal(rideCheck.json().bookingStatus, 'AWAITING_RIDECHECK');
+  assert.match(rideCheck.json().challengeCode, /^\d{6}$/);
+  assert.equal(rideCheck.json().challengeCodeReturnedOnce, true);
+  const rideCheckReplay = await post(`/v1/journeys/${acknowledged.json().journeyId}/ridecheck/start`, registeredToken, undefined, 'phase-076-start-ridecheck');
+  expectCode(rideCheckReplay, 201);
+  assert.equal(rideCheckReplay.json().rideCheckSessionId, rideCheck.json().rideCheckSessionId);
+  assert.equal(rideCheckReplay.json().challengeCodeReturnedOnce, false);
+  assert.equal('challengeCode' in rideCheckReplay.json(), false);
+  const rideCheckVerified = await post(`/v1/journeys/${acknowledged.json().journeyId}/ridecheck/verify`, driverToken, {
+    rideCheckSessionId: rideCheck.json().rideCheckSessionId, code: rideCheck.json().challengeCode
+  }, 'phase-076-verify-ridecheck');
+  expectCode(rideCheckVerified, 200);
+  assert.equal(rideCheckVerified.json().verified, true);
+  assert.equal(rideCheckVerified.json().bookingStatus, 'PASSENGER_VERIFIED');
+  const journeyStarted = await post(`/v1/journeys/${acknowledged.json().journeyId}/start`, driverToken, undefined, 'phase-076-start-journey');
+  expectCode(journeyStarted, 200);
+  assert.equal(journeyStarted.json().bookingStatus, 'IN_PROGRESS');
+  assert.equal(journeyStarted.json().journeyStatus, 'IN_PROGRESS');
+  const journeyStartedReplay = await post(`/v1/journeys/${acknowledged.json().journeyId}/start`, driverToken, undefined, 'phase-076-start-journey');
+  expectCode(journeyStartedReplay, 200);
+  assert.deepEqual(journeyStartedReplay.json(), journeyStarted.json());
+  const riderInProgress = await get(`/v1/bookings/${successfulCreated.json().bookingId}/core-journey-progress`, registeredToken);
+  const driverInProgress = await get(`/v1/driver/bookings/${successfulCreated.json().bookingId}/core-journey-progress`, driverToken);
+  expectCode(riderInProgress, 200);
+  expectCode(driverInProgress, 200);
+  assert.deepEqual(driverInProgress.json(), riderInProgress.json());
+  assert.equal(riderInProgress.json().bookingStatus, 'IN_PROGRESS');
+  assert.equal(riderInProgress.json().milestones.find((milestone) => milestone.name === 'RIDECHECK').status, 'COMPLETED');
+  assert.equal(riderInProgress.json().milestones.find((milestone) => milestone.name === 'JOURNEY').status, 'IN_PROGRESS');
   expectCode(await del('/v1/identity/session', driverToken), 204);
 
   const riderIncident = await get(`/v1/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.actor);
