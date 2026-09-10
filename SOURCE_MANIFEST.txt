@@ -200,6 +200,7 @@
 ./docs/engineering/phase-0.85-container-image-digests.md
 ./docs/engineering/phase-0.86-api-cyclonedx-sbom.md
 ./docs/engineering/phase-0.87-production-api-vulnerability-evidence.md
+./docs/engineering/phase-0.88-pinned-ci-actions.md
 ./docs/traceability/foundation-requirements.md
 ./docs/traceability/identity-account-requirements.md
 ./docs/traceability/phase-0-10-requirements.md
@@ -397,6 +398,7 @@
 ./scripts/verify-phase-0-85.mjs
 ./scripts/verify-phase-0-86.mjs
 ./scripts/verify-phase-0-87.mjs
+./scripts/verify-phase-0-88.mjs
 ./scripts/verify-phase-0-9.mjs
 ./scripts/verify-postgres-migrations.mjs
 ./services/api/Dockerfile
