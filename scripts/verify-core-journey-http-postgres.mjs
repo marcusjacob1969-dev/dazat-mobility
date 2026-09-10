@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import pg from 'pg';
 import { buildApi } from '../services/api/dist/app.js';
 import { loadConfig } from '../services/api/dist/config.js';
@@ -47,10 +47,10 @@ const ids = {
 };
 
 const tokens = {
-  actor: randomUUID(),
-  operator: randomUUID(),
-  outsider: randomUUID(),
-  expired: randomUUID()
+  actor: randomBytes(32).toString('base64url'),
+  operator: randomBytes(32).toString('base64url'),
+  outsider: randomBytes(32).toString('base64url'),
+  expired: randomBytes(32).toString('base64url')
 };
 const hash = (value) => createHash('sha256').update(value).digest('hex');
 const pool = new pg.Pool({ connectionString, max: 1 });
