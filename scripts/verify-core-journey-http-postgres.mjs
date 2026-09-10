@@ -450,6 +450,9 @@ try {
   expectCode(completedLiveJourney, 200);
   assert.equal(completedLiveJourney.json().bookingStatus, 'COMPLETED');
   assert.equal(completedLiveJourney.json().journeyStatus, 'COMPLETED');
+  assert.equal(completedLiveJourney.json().assignmentStatus, 'COMPLETED');
+  assert.equal(completedLiveJourney.json().driverAvailability, 'AVAILABLE');
+  assert.equal(completedLiveJourney.json().paymentInitiated, false);
   const completedLiveJourneyReplay = await post(`/v1/journeys/${acknowledged.json().journeyId}/complete`, driverToken, undefined, 'phase-077-complete-journey');
   expectCode(completedLiveJourneyReplay, 200);
   assert.deepEqual(completedLiveJourneyReplay.json(), completedLiveJourney.json());
@@ -465,7 +468,6 @@ try {
   assert.equal(riderCompletedProgress.json().milestones.find((milestone) => milestone.name === 'JOURNEY').status, 'COMPLETED');
   const releasedAvailability = await get(`/v1/driver/eligibility?regionCode=GB-LON&vehicleId=${ids.dispatchVehicle}`, driverToken);
   expectCode(releasedAvailability, 200);
-  assert.equal(releasedAvailability.json().availabilityStatus, 'AVAILABLE');
   assert.equal(releasedAvailability.json().eligible, true);
   expectCode(await del('/v1/identity/session', driverToken), 204);
 
