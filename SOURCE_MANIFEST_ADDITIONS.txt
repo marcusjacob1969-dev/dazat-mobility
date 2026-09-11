@@ -1,4 +1,7 @@
 ./SOURCE_MANIFEST_ADDITIONS.txt
 ./docs/engineering/phase-0.92-image-supply-chain.md
-./docs/traceability/phase-0.92-image-supply-chain.md
+./docs/engineering/phase-0.91-restricted-container.md
+./docs/traceability/phase-0-91-restricted-container.md
+./docs/traceability/phase-0-92-image-supply-chain.md
+./scripts/verify-phase-0-91.mjs
 ./scripts/verify-phase-0-92.mjs
