@@ -1,6 +1,6 @@
 {
   "name": "dazat-mobility",
-  "version": "0.0.22",
+  "version": "0.0.21",
   "private": true,
   "description": "DAZAT Mobility production engineering monorepo",
   "engines": {"node": ">=22"},
