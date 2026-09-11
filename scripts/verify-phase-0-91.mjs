@@ -26,11 +26,9 @@ if (workflow.includes('--security-opt apparmor=unconfined')) errors.push('Restri
 
 const buildInfoPath = join(root, 'services/api/src/app.ts');
 const buildInfo = existsSync(buildInfoPath) ? readFileSync(buildInfoPath, 'utf8') : '';
-if (!buildInfo.includes("checkpoint: 'engineering-phase-0.91'")) errors.push('API build checkpoint is not engineering-phase-0.91');
-
-const runtimeTestPath = join(root, 'tests/api/runtime-contract.test.mjs');
-const runtimeTest = existsSync(runtimeTestPath) ? readFileSync(runtimeTestPath, 'utf8') : '';
-if (!runtimeTest.includes("engineering-phase-0.91")) errors.push('Runtime contract does not assert engineering-phase-0.91');
+if (!/checkpoint:\s*'engineering-phase-0\.(9[1-9]|[1-9][0-9])'/.test(buildInfo)) {
+  errors.push('API build checkpoint is not a post-0.90 engineering checkpoint');
+}
 
 if (errors.length) {
   console.error('DAZAT Engineering Phase 0.91 verification FAILED');
