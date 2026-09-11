@@ -4,5 +4,3 @@
 ./docs/traceability/phase-0-92-image-supply-chain.md
 ./scripts/verify-phase-0-91.mjs
 ./scripts/verify-phase-0-92.mjs
-./tests/domain/pricing.test.mjs
-./tests/domain/telephony-voice-source.test.mjs
