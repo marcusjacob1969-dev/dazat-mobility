@@ -31,7 +31,13 @@ const duplicates = declared.filter((path, index) => index > 0 && path === declar
 if (duplicates.length) errors.push(`SOURCE_MANIFEST_ADDITIONS.txt contains duplicate source paths: ${duplicates.join(', ')}`);
 const tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8' })
   .trim().split('\n').sort().map((path) => `./${path}`);
-if (declared.join('\n') !== tracked.join('\n')) errors.push('SOURCE_MANIFEST.txt plus SOURCE_MANIFEST_ADDITIONS.txt does not exactly match the source tree');
+const declaredSet = new Set(declared);
+const trackedSet = new Set(tracked);
+const missingFromManifest = tracked.filter((path) => !declaredSet.has(path));
+const staleManifestEntries = declared.filter((path) => !trackedSet.has(path));
+if (missingFromManifest.length || staleManifestEntries.length) {
+  errors.push(`SOURCE_MANIFEST.txt plus SOURCE_MANIFEST_ADDITIONS.txt does not exactly match the source tree; missing entries: ${missingFromManifest.join(', ') || 'none'}; stale entries: ${staleManifestEntries.join(', ') || 'none'}`);
+}
 
 const sql = existsSync(join(root, required[0])) ? readFileSync(join(root, required[0]), 'utf8') : '';
 for (const object of [
