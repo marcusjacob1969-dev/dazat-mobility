@@ -25,6 +25,8 @@ jobs:
           trap 'docker logs dazat-api-smoke || true; docker logs dazat-postgres-smoke || true; docker rm --force dazat-api-smoke dazat-postgres-smoke || true; docker network rm dazat-smoke || true' EXIT
           test "$(docker image inspect --format '{{.Config.User}}' dazat-api:${{ github.sha }})" = "node"
           docker network create dazat-smoke
+          for attempt in $(seq 1 5); do docker pull postgis/postgis:16-3.4@sha256:44126d872ac91993766c341e369c539e8196614321765d36a6f1bab0419a5fa5 && break; test "$attempt" -lt 5; sleep 3; done
+          docker image inspect postgis/postgis:16-3.4@sha256:44126d872ac91993766c341e369c539e8196614321765d36a6f1bab0419a5fa5 >/dev/null
           docker run --detach --name dazat-postgres-smoke --network dazat-smoke \
             --env POSTGRES_DB=dazat_container_verify \
             --env POSTGRES_USER=dazat_ci \
