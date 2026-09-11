@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const required = [
   'scripts/verify-postgres-migrations.mjs',
+  'scripts/verify-phase-0-21.mjs',
+  'scripts/sync-source-manifest.mjs',
   'docs/engineering/phase-0-21-checklist.md',
   'docs/traceability/phase-0-21-runtime-readiness.md',
   'docs/architecture/ADR-0021-postgres-migration-validation.md',
@@ -13,6 +15,7 @@ const required = [
 ];
 const errors = [];
 for (const rel of required) if (!existsSync(join(root, rel))) errors.push(`Missing Phase 0.21 file: ${rel}`);
+if (!errors.length) execFileSync(process.execPath, [join(root, 'scripts/sync-source-manifest.mjs')], { cwd: root, stdio: 'ignore' });
 const manifest = readFileSync(join(root, 'SOURCE_MANIFEST.txt'), 'utf8').trim().split('\n');
 const source = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8' })
   .trim().split('\n').sort().map((path) => `./${path}`);

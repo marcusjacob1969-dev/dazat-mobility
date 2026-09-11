@@ -22,9 +22,22 @@ const errors = [];
 for (const rel of required) if (!existsSync(join(root, rel))) errors.push(`Missing Phase 0.7 file: ${rel}`);
 
 const manifest = readFileSync(join(root, 'SOURCE_MANIFEST.txt'), 'utf8').trim().split('\n');
+const additionsPath = join(root, 'SOURCE_MANIFEST_ADDITIONS.txt');
+const additions = existsSync(additionsPath)
+  ? readFileSync(additionsPath, 'utf8').trim().split('\n').filter(Boolean)
+  : [];
+const declared = [...manifest, ...additions].filter(Boolean).sort();
+const duplicates = declared.filter((path, index) => index > 0 && path === declared[index - 1]);
+if (duplicates.length) errors.push(`SOURCE_MANIFEST_ADDITIONS.txt contains duplicate source paths: ${duplicates.join(', ')}`);
 const tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8' })
   .trim().split('\n').sort().map((path) => `./${path}`);
-if (manifest.join('\n') !== tracked.join('\n')) errors.push('SOURCE_MANIFEST.txt does not exactly match the source tree');
+const declaredSet = new Set(declared);
+const trackedSet = new Set(tracked);
+const missingFromManifest = tracked.filter((path) => !declaredSet.has(path));
+const staleManifestEntries = declared.filter((path) => !trackedSet.has(path));
+if (missingFromManifest.length || staleManifestEntries.length) {
+  errors.push(`SOURCE_MANIFEST.txt plus SOURCE_MANIFEST_ADDITIONS.txt does not exactly match the source tree; missing entries: ${missingFromManifest.join(', ') || 'none'}; stale entries: ${staleManifestEntries.join(', ') || 'none'}`);
+}
 
 const sql = existsSync(join(root, required[0])) ? readFileSync(join(root, required[0]), 'utf8') : '';
 for (const object of [
@@ -105,3 +118,4 @@ if (errors.length) {
 
 console.log('DAZAT Engineering Phase 0.7 verification PASSED');
 console.log(`Checked ${required.length} checkpoint files plus provider-disablement, money, ledger, reconciliation and projection boundaries.`);
+console.log(`Source manifest baseline plus ${additions.length} explicit additions exactly matches the source tree.`);
