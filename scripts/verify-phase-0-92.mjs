@@ -19,6 +19,13 @@ if (!workflow.includes('docker build --file services/api/Dockerfile --tag dazat-
 if (!workflow.includes("docker image inspect --format '{{.Config.User}}' dazat-api:${{ github.sha }}")) errors.push('Hosted API verification must inspect the built image user');
 if (!workflow.includes('npm ci --ignore-scripts')) errors.push('Hosted workspace verification must retain locked dependency installation without lifecycle scripts');
 
+const manifestSyncPath = join(root, 'scripts/sync-source-manifest.mjs');
+if (!existsSync(manifestSyncPath)) errors.push('Source manifest synchronisation script is missing');
+const packagePath = join(root, 'package.json');
+const packageJson = existsSync(packagePath) ? readFileSync(packagePath, 'utf8') : '';
+if (!packageJson.includes('node scripts/sync-source-manifest.mjs &&')) errors.push('Repository check must synchronise the source manifest before checkpoint verification');
+if (existsSync(join(root, 'SOURCE_MANIFEST_ADDITIONS.txt'))) errors.push('Legacy source manifest additions workaround must not remain');
+
 if (errors.length) {
   console.error('DAZAT Engineering Phase 0.92 verification FAILED');
   for (const error of errors) console.error(`- ${error}`);
