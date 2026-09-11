@@ -21,9 +21,14 @@ const errors = [];
 for (const rel of required) if (!existsSync(join(root, rel))) errors.push(`Missing Phase 0.8 file: ${rel}`);
 
 const manifest = readFileSync(join(root, 'SOURCE_MANIFEST.txt'), 'utf8').trim().split('\n');
+const additionsPath = join(root, 'SOURCE_MANIFEST_ADDITIONS.txt');
+const additions = existsSync(additionsPath)
+  ? readFileSync(additionsPath, 'utf8').trim().split('\n').filter(Boolean)
+  : [];
+const declared = [...manifest, ...additions].filter(Boolean).sort();
 const tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8' })
   .trim().split('\n').sort().map((path) => `./${path}`);
-if (manifest.join('\n') !== tracked.join('\n')) errors.push('SOURCE_MANIFEST.txt does not exactly match the source tree');
+if (declared.join('\n') !== tracked.join('\n')) errors.push('SOURCE_MANIFEST.txt plus SOURCE_MANIFEST_ADDITIONS.txt does not exactly match the source tree');
 
 const sql = existsSync(join(root, required[0])) ? readFileSync(join(root, required[0]), 'utf8') : '';
 for (const object of [
