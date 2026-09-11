@@ -9,7 +9,10 @@ const nodeImage = 'node:24-bookworm-slim@sha256:2fe369e969550cde8e867afc3fe370b2
 const postgisImage = 'postgis/postgis:16-3.4@sha256:44126d872ac91993766c341e369c539e8196614321765d36a6f1bab0419a5fa5';
 const errors = [];
 if (dockerfile.split(nodeImage).length - 1 !== 2) errors.push('Both API build and runtime stages must use the verified Node digest');
-if (workflow.split(postgisImage).length - 1 !== 2) errors.push('Both hosted PostGIS boundaries must use the verified digest');
+const postgisOccurrences = workflow.split(postgisImage).length - 1;
+if (postgisOccurrences < 2) errors.push('Hosted PostGIS verification must use the verified digest at every required boundary');
+const postgisReferences = workflow.match(/postgis\/postgis:16-3\.4(?:@sha256:[0-9a-f]{64})?/g) ?? [];
+if (postgisReferences.some((reference) => reference !== postgisImage)) errors.push('Every PostGIS 16.3.4 workflow reference must use the verified immutable digest');
 if (/^FROM node:24-bookworm-slim AS/m.test(dockerfile)) errors.push('Mutable Node base-image tag remains');
 if (/image: postgis\/postgis:16-3\.4\s*$/m.test(workflow)) errors.push('Mutable PostGIS service tag remains');
 if (errors.length) {
