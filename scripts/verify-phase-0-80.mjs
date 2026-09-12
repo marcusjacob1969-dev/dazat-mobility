@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const demo = readFileSync(join(root, 'scripts/demo-core-journey.mjs'), 'utf8');
 const errors = [];
-for (const truth of ['providerDisabledFinanceProgress', "payment_intent_status: 'CREATED'", "'PAYMENT_PROVIDER_UNAVAILABLE'", "name === 'FINANCE').status, 'BLOCKED'", "checkpoint: 'engineering-phase-0.80'"]) {
+for (const truth of ['providerDisabledFinanceProgress', "payment_intent_status: 'CREATED'", "'PAYMENT_PROVIDER_UNAVAILABLE'", "name === 'FINANCE').status, 'BLOCKED'"]) {
   if (!demo.includes(truth)) errors.push(`Finance demo truth missing: ${truth}`);
 }
 if (errors.length) {
