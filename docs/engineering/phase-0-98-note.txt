@@ -1,0 +1,1 @@
+Phase 0.98 executable vertical-slice failure-proof evidence is defined in the Phase 0.98 verifier and core journey demo.

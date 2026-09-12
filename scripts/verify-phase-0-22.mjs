@@ -24,7 +24,7 @@ for (const truth of [
   'node-version: 24',
   'workspace-check:', 'cache: npm', 'npm ci --ignore-scripts',
   'npm run audit:security',
-  'npm run build --workspaces --if-present && npm run check',
+  'npm run build --workspaces --if-present', 'npm run check',
   'postgresql-client', 'node scripts/verify-phase-0-21.mjs',
   'node --test tests/domain/postgres-migration-runner-source.test.mjs',
   'node scripts/verify-postgres-migrations.mjs'

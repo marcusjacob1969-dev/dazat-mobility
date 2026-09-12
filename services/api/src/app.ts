@@ -175,7 +175,7 @@ export function buildApi(config: ApiConfig, dependencies: ApiDependencies): Fast
 
   app.get('/v1/build-info', async () => ({
     product: 'DAZAT Mobility',
-    checkpoint: 'engineering-phase-0.95',
+    checkpoint: 'engineering-phase-0.98',
     implementationStatus: 'CURRENT_CHECKPOINT_VERIFIED_PROVIDER_AND_OPERATIONAL_MUTATIONS_DISABLED'
   }));
 
