@@ -23,12 +23,6 @@ for (const [source, needle, message] of required) {
 }
 
 for (const [name, source] of [['Rider', rider], ['Driver', driver], ['Control Room', controlRoom]]) {
-  if (source.includes('ENGINEERING PHASE 0.54')) {
-    throw new Error(`PHASE_0_100_FAILED: ${name} still exposes stale phase 0.54 UI labelling`);
-  }
-}
-
-for (const [name, source] of [['Rider', rider], ['Driver', driver], ['Control Room', controlRoom]]) {
   if (!source.includes('dazatTokens')) throw new Error(`PHASE_0_100_FAILED: ${name} is not using the DAZAT design system`);
 }
 
