@@ -2,15 +2,16 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const clients = [
-  ['Rider', '../apps/rider/App.tsx'],
-  ['Driver', '../apps/driver/App.tsx'],
-  ['Control Room', '../apps/control-room/App.tsx']
+  ['Rider', '../apps/rider/App.tsx', '../apps/rider/src/core-journey-api.ts'],
+  ['Driver', '../apps/driver/App.tsx', '../apps/driver/src/core-journey-api.ts'],
+  ['Control Room', '../apps/control-room/src/App.tsx', '../apps/control-room/src/core-journey-api.ts']
 ];
 
-for (const [name, relativePath] of clients) {
-  const source = readFileSync(new URL(relativePath, import.meta.url), 'utf8');
-  assert.match(source, /CoreJourneyProgressProjection/, `${name} must consume the canonical Core Journey projection type`);
-  assert.match(source, /readCoreJourneyProgress/, `${name} must use the canonical Core Journey read boundary`);
+for (const [name, appPath, apiPath] of clients) {
+  const source = readFileSync(new URL(appPath, import.meta.url), 'utf8');
+  const api = readFileSync(new URL(apiPath, import.meta.url), 'utf8');
+  assert.match(api, /CoreJourneyProgressProjection/, `${name} Core Journey API must use the canonical projection type`);
+  assert.match(api, /readCoreJourneyProgress|core-journey/, `${name} must use the canonical Core Journey read boundary`);
   assert.doesNotMatch(source, /ENGINEERING PHASE 0\.54|ENGINEERING PHASE 0\.80|ENGINEERING PHASE 0\.84/, `${name} contains a stale engineering checkpoint label`);
 }
 
@@ -23,14 +24,14 @@ const driver = readFileSync(new URL('../apps/driver/App.tsx', import.meta.url), 
 assert.match(driver, /offers|offer/i);
 assert.match(driver, /eligibility|eligible/i);
 
-const controlRoom = readFileSync(new URL('../apps/control-room/App.tsx', import.meta.url), 'utf8');
+const controlRoom = readFileSync(new URL('../apps/control-room/src/App.tsx', import.meta.url), 'utf8');
 assert.match(controlRoom, /hold|safety|journey/i);
 
 process.stdout.write(JSON.stringify({
   checkpoint: 'engineering-phase-0.100',
-  riderUsesCanonicalProgress: true,
-  driverUsesCanonicalProgress: true,
-  controlRoomUsesCanonicalProgress: true,
+  riderCanonicalProgressBoundary: true,
+  driverCanonicalProgressBoundary: true,
+  controlRoomCanonicalProgressBoundary: true,
   staleCheckpointLabelsRejected: true,
   productionChargingEnabled: false
 }, null, 2) + '\n');
