@@ -1,5 +1,0 @@
-Engineering Phase 0.100 — client integration contract
-
-The Rider, Driver and Control Room clients already have dedicated Core Journey adapters. This checkpoint makes that boundary executable: each adapter must consume the shared CoreJourneyProgressProjection, authenticate with bearer session authority, and fail closed on non-success responses.
-
-The UI remains a presentation layer. It must not invent driver assignment, ETA, Journey, Safety, Finance or provider state. Production charging and external mobility providers remain disabled.
