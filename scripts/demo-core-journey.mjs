@@ -16,4 +16,4 @@ const providerDisabledFinanceProgress = projectCoreJourneyProgress({ booking_id:
 assert.equal(providerDisabledFinanceProgress.nextAction, 'PAYMENT_PROVIDER_UNAVAILABLE');
 assert.equal(providerDisabledFinanceProgress.productionChargingEnabled, false);
 assert.equal(providerDisabledFinanceProgress.milestones.find((item) => item.name === 'FINANCE').status, 'BLOCKED');
-process.stdout.write(`${JSON.stringify({ checkpoint: 'engineering-phase-0.80', productionSafeDemo: true, scenarios: results, interruptedProgress, providerDisabledFinanceProgress }, null, 2)}\n`);
+process.stdout.write(`${JSON.stringify({ checkpoint: 'engineering-phase-0.96', productionSafeDemo: true, scenarios: results, interruptedProgress, providerDisabledFinanceProgress }, null, 2)}\n`);
