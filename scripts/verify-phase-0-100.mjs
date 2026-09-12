@@ -14,8 +14,8 @@ const required = [
   [rider, 'readCoreJourneyProgress', 'Rider reads canonical Core Journey progress'],
   [driver, 'CoreJourneyProgressProjection', 'Driver consumes the canonical Core Journey contract'],
   [driver, 'readDriverCoreJourneyProgress', 'Driver reads canonical Core Journey progress'],
+  [controlRoom, 'CoreJourneyProgressProjection', 'Control Room consumes the canonical Core Journey contract'],
   [controlRoom, 'readTaskScopedCoreJourneyProgress', 'Control Room reads task-scoped canonical Core Journey progress'],
-  [controlRoom, 'Core Journey', 'Control Room presents the canonical journey boundary'],
 ];
 
 for (const [source, needle, message] of required) {
