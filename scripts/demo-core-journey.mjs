@@ -3,10 +3,25 @@ import { runProviderDisabledCoreJourney } from '../packages/domain/dist/index.js
 import { projectCoreJourneyProgress } from '../services/api/dist/modules/core-journey/core-journey-service.js';
 const now = new Date('2026-09-09T10:00:00.000Z');
 const valid = { now, quote: { amountMinor: 1250, currency: 'GBP', expiresAt: new Date('2026-09-09T10:15:00.000Z') }, driver: { accountActive: true, driverProfileApproved: true, complianceStatus: 'ELIGIBLE', complianceValidUntil: new Date('2027-01-01'), vehicleAuthorised: true, vehicleStatus: 'ELIGIBLE', vehicleValidUntil: new Date('2027-01-01'), servicePermissionMatch: true, operatingRestrictionActive: false, availabilityStatus: 'AVAILABLE', locationObservedAt: new Date('2026-09-09T09:59:50Z'), locationConfidence: 0.99, minimumLocationConfidence: 0.8, maxLocationAgeSeconds: 60, hasActiveAssignment: false, hasScheduleConflict: false, fatigueSafetyPassed: true, hardRequirementsMatch: true }, pickup: { latitude: 53.4808, longitude: -2.2426 }, pickupObservation: { latitude: 53.48081, longitude: -2.24261, observedAt: new Date('2026-09-09T09:59:55Z'), receivedAt: now, accuracyMetres: 5, confidence: 0.99 }, locationPolicy: { maxAgeSeconds: 60, maximumFutureSkewSeconds: 5, maximumAccuracyMetres: 30, minimumConfidence: 0.8, arrivalRadiusMetres: 80 }, rideCheck: { verifierMatches: true, expiresAt: new Date('2026-09-09T10:05:00Z') }, completion: { journeyStatus: 'ARRIVING', bookingStatus: 'ARRIVING', assignmentActive: true, destinationEvidenceAccepted: true, activeCompletionHold: false, continuityCaseOpen: false, handoverRequired: false, authorisedHandoverRecorded: false, handoverFailureOpen: false } };
-const scenarios = [['happy-path', valid], ['fatigue-blocked', { ...valid, driver: { ...valid.driver, fatigueSafetyPassed: false } }], ['ridecheck-blocked', { ...valid, rideCheck: { ...valid.rideCheck, verifierMatches: false } }], ['completion-hold', { ...valid, completion: { ...valid.completion, activeCompletionHold: true } }]];
+const scenarios = [
+  ['happy-path', valid],
+  ['ineligible-driver', { ...valid, driver: { ...valid.driver, complianceStatus: 'INELIGIBLE' } }],
+  ['fatigue-blocked', { ...valid, driver: { ...valid.driver, fatigueSafetyPassed: false } }],
+  ['stale-pickup-evidence', { ...valid, pickupObservation: { ...valid.pickupObservation, observedAt: new Date('2026-09-09T09:57:00Z') } }],
+  ['ridecheck-blocked', { ...valid, rideCheck: { ...valid.rideCheck, verifierMatches: false } }],
+  ['completion-hold', { ...valid, completion: { ...valid.completion, activeCompletionHold: true } }],
+  ['destination-evidence-rejected', { ...valid, completion: { ...valid.completion, destinationEvidenceAccepted: false } }]
+];
 const results = scenarios.map(([scenario, input]) => ({ scenario, ...runProviderDisabledCoreJourney(input) }));
 assert.equal(results[0].completed, true);
-assert.deepEqual(results.slice(1).map((result) => result.blocker), ['FATIGUE_SAFETY_BLOCKED', 'RIDECHECK_MISMATCH', 'ACTIVE_COMPLETION_HOLD']);
+assert.deepEqual(results.slice(1).map((result) => result.blocker), [
+  'COMPLIANCE_NOT_ELIGIBLE',
+  'FATIGUE_SAFETY_BLOCKED',
+  'LOCATION_STALE',
+  'RIDECHECK_MISMATCH',
+  'ACTIVE_COMPLETION_HOLD',
+  'DESTINATION_EVIDENCE_REJECTED'
+]);
 assert.equal(results.every((result) => !result.realPaymentAttempted && !result.externalProviderContacted), true);
 const interruptedProgress = projectCoreJourneyProgress({ booking_id: 'demo-booking', booking_status: 'ACTIVE_INCIDENT', fare_agreement_id: 'demo-fare', dispatch_status: 'ASSIGNED', assignment_id: 'demo-assignment', journey_id: 'demo-journey', journey_status: 'IN_PROGRESS', arrival_accepted: true, ridecheck_status: 'VERIFIED', payment_intent_status: null });
 assert.equal(interruptedProgress.disposition, 'SUPPORT_REQUIRED');
@@ -16,4 +31,4 @@ const providerDisabledFinanceProgress = projectCoreJourneyProgress({ booking_id:
 assert.equal(providerDisabledFinanceProgress.nextAction, 'PAYMENT_PROVIDER_UNAVAILABLE');
 assert.equal(providerDisabledFinanceProgress.productionChargingEnabled, false);
 assert.equal(providerDisabledFinanceProgress.milestones.find((item) => item.name === 'FINANCE').status, 'BLOCKED');
-process.stdout.write(`${JSON.stringify({ checkpoint: 'engineering-phase-0.96', productionSafeDemo: true, scenarios: results, interruptedProgress, providerDisabledFinanceProgress }, null, 2)}\n`);
+process.stdout.write(`${JSON.stringify({ checkpoint: 'engineering-phase-0.98', productionSafeDemo: true, scenarios: results, interruptedProgress, providerDisabledFinanceProgress }, null, 2)}\n`);
