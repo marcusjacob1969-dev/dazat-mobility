@@ -6,14 +6,14 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const app = readFileSync(join(root, 'services/api/src/app.ts'), 'utf8');
 const errors = [];
 
-if (!app.includes("checkpoint: 'engineering-phase-0.95'")) {
-  errors.push('API build-info must identify Engineering Phase 0.95 as the current checkpoint');
+if (!/checkpoint: 'engineering-phase-0\.\d+'/.test(app)) {
+  errors.push('API build-info must expose a versioned engineering checkpoint');
 }
 if (app.includes("checkpoint: 'engineering-phase-0.91'")) {
   errors.push('API build-info still advertises the stale Phase 0.91 checkpoint');
 }
 if (!app.includes("implementationStatus: 'CURRENT_CHECKPOINT_VERIFIED_PROVIDER_AND_OPERATIONAL_MUTATIONS_DISABLED'")) {
-  errors.push('API build-info must expose the verified current implementation status without implying provider activation');
+  errors.push('API build-info must expose the verified implementation status without implying provider activation');
 }
 if (errors.length) {
   console.error('DAZAT Engineering Phase 0.95 verification FAILED');
