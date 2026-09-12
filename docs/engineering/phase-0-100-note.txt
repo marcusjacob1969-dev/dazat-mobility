@@ -1,0 +1,9 @@
+Engineering Phase 0.100 — vertical-slice client contract
+
+Purpose: move the demonstrable Rider → Driver → Control Room journey from backend-only proofs toward client integration without changing authoritative backend safety boundaries.
+
+Rules:
+- clients consume authoritative Core Journey progress and Dispatch/Journey projections;
+- stale engineering checkpoint labels are rejected;
+- clients must not invent driver, ETA, payment, or provider state;
+- production charging and external mobility providers remain disabled.
