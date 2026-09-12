@@ -267,9 +267,9 @@ export default function RiderApp() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.54 · ENGINEERING PHASE 0.16 CLOSURE BASELINE</Text>
+        <Text style={styles.eyebrow}>ENGINEERING PHASE 0.101 · CANONICAL JOURNEY EXPERIENCE</Text>
         <Text style={styles.title}>DAZAT Rider journey</Text>
-        <Text style={styles.body}>Verified Booking through protected pickup, active Journey visibility, governed changes and persistent Safety controls.</Text>
+        <Text style={styles.body}>One authoritative journey view: Booking → Dispatch → Driver arrival → protected RideCheck → Journey → Safety/holds → governed completion → non-charging Finance outcome.</Text>
 
         {flow === 'REGISTER' && (
           <View style={styles.section}>
