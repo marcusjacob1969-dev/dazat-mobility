@@ -18,7 +18,7 @@ test('Journey UI semantics remain presentation-only', () => {
 });
 
 test('safety and payment states are not collapsed into success', () => {
-  assert.match(source, /SUPPORT_REQUIRED[\\s\\S]*?danger/);
-  assert.match(source, /PAYMENT_PROVIDER_UNAVAILABLE[\\s\\S]*?warning/);
-  assert.match(source, /JOURNEY_CLOSED[\\s\\S]*?positive/);
+  assert.match(source, /SUPPORT_REQUIRED[\s\S]*?danger/);
+  assert.match(source, /PAYMENT_PROVIDER_UNAVAILABLE[\s\S]*?warning/);
+  assert.match(source, /JOURNEY_CLOSED[\s\S]*?positive/);
 });
