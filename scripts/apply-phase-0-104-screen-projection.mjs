@@ -1,0 +1,39 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+const root = process.cwd();
+function update(path, transform) {
+  const fullPath = join(root, path);
+  const before = readFileSync(fullPath, 'utf8');
+  const after = transform(before);
+  if (after === before) throw new Error(`Phase 0.104 transform made no change: ${path}`);
+  writeFileSync(fullPath, after);
+}
+
+update('apps/rider/App.tsx', (source) => {
+  let next = source;
+  if (!next.includes("./src/journey-ui")) next = next.replace("import { readCoreJourneyProgress } from './src/core-journey-api';", "import { readCoreJourneyProgress } from './src/core-journey-api';\nimport { presentRiderJourney } from './src/journey-ui';");
+  if (!next.includes('const journeyPresentation = coreJourneyProgress')) next = next.replace('  return (\n', `  const journeyPresentation = coreJourneyProgress\n    ? presentRiderJourney({ nextAction: coreJourneyProgress.nextAction, interruptionReason: coreJourneyProgress.interruptionReason, journeyStatus: coreJourneyProgress.journeyStatus })\n    : null;\n\n  return (\n`);
+  const anchor = '<Text style={styles.body}>Verified Booking through protected pickup, active Journey visibility, governed changes and persistent Safety controls.</Text>';
+  if (!next.includes('accessibilityLabel="Rider canonical Journey projection"')) next = next.replace(anchor, `${anchor}\n        {journeyPresentation ? (<View style={styles.notice} accessibilityRole="summary" accessibilityLabel="Rider canonical Journey projection"><Text style={styles.noticeTitle}>{journeyPresentation.label}</Text><Text style={styles.status}>Operational phase: {journeyPresentation.phase} · tone: {journeyPresentation.tone}</Text><Text style={styles.body}>{journeyPresentation.operationalHint}</Text><Text style={journeyPresentation.tone === 'danger' ? styles.error : styles.body}>Canonical next action: {coreJourneyProgress?.nextAction.replaceAll('_', ' ')}</Text></View>) : null}`);
+  return next;
+});
+
+update('apps/driver/App.tsx', (source) => {
+  let next = source;
+  if (!next.includes("./src/journey-ui")) next = next.replace("import { readDriverCoreJourneyProgress } from './src/core-journey-api';", "import { readDriverCoreJourneyProgress } from './src/core-journey-api';\nimport { presentDriverJourney } from './src/journey-ui';");
+  if (!next.includes('const journeyPresentation = coreJourneyProgress')) next = next.replace('  return (\n', `  const journeyPresentation = coreJourneyProgress\n    ? presentDriverJourney({ nextAction: coreJourneyProgress.nextAction, interruptionReason: coreJourneyProgress.interruptionReason, journeyStatus: coreJourneyProgress.journeyStatus })\n    : null;\n\n  return (\n`);
+  const anchor = '<Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. The complete Driver day keeps secure session, approved vehicle, eligibility, scheduled work, informed offers, pickup, RideCheck, Journey, earnings, break, finishing-soon and end-shift truth separate. Weak-signal recovery replaces speculative state and never pretends queued Safety commands were already processed.</Text>';
+  if (!next.includes('accessibilityLabel="Driver canonical Journey projection"')) next = next.replace(anchor, `${anchor}\n        {journeyPresentation ? (<View style={styles.notice} accessibilityRole="summary" accessibilityLabel="Driver canonical Journey projection"><Text style={styles.noticeTitle}>{journeyPresentation.label}</Text><Text style={styles.status}>Operational phase: {journeyPresentation.phase} · tone: {journeyPresentation.tone}</Text><Text style={styles.body}>{journeyPresentation.operationalHint}</Text><Text style={journeyPresentation.tone === 'danger' ? styles.error : styles.body}>Canonical next action: {coreJourneyProgress?.nextAction.replaceAll('_', ' ')}</Text></View>) : null}`);
+  return next;
+});
+
+update('apps/control-room/src/App.tsx', (source) => {
+  let next = source;
+  if (!next.includes('presentCoreJourneyForSurface')) next = next.replace("import { dazatTokens } from '@dazat/design-system';", "import { dazatTokens, presentCoreJourneyForSurface } from '@dazat/design-system';");
+  if (!next.includes('const journeyPresentation = journeyProgress')) next = next.replace('  return (\n', `  const journeyPresentation = journeyProgress\n    ? presentCoreJourneyForSurface({ surface: 'CONTROL_ROOM', nextAction: journeyProgress.nextAction, interruptionReason: journeyProgress.interruptionReason, journeyStatus: journeyProgress.journeyStatus })\n    : null;\n\n  return (\n`);
+  const anchor = '<p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>\n        Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.\n      </p>';
+  if (!next.includes('aria-label="Control Room canonical Journey projection"')) next = next.replace(anchor, `${anchor}\n      {journeyPresentation ? (<section aria-label="Control Room canonical Journey projection" style={{ maxWidth: 720, marginTop: 24, padding: 24, background: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card }}><h2 style={{ marginTop: 0 }}>{journeyPresentation.label}</h2><p style={{ fontWeight: 700 }}>Operational phase: {journeyPresentation.phase} · tone: {journeyPresentation.tone}</p><p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>{journeyPresentation.operationalHint}</p><p style={{ lineHeight: 1.7 }}>Canonical next action: {journeyProgress?.nextAction.replaceAll('_', ' ')}</p></section>) : null}`);
+  return next;
+});
+console.log('Phase 0.104 screen projection materialized');
