@@ -22,4 +22,4 @@ The existing detailed Journey controls remain in place for the current vertical 
 
 The Phase 0.104 verifier must prove all three screen sources import their surface contract, derive presentation from canonical `CoreJourneyProgressProjection`, expose the presentation phase/label/hint, and do not introduce client-side network or mutation logic in the presentation adapter.
 
-The complete verification chain remains the release gate, including the seven core-journey scenarios and the production-charging-disabled invariant.
+The complete verification chain remains the release gate, including the seven core-journey demo scenarios and the production-charging-disabled invariant.
