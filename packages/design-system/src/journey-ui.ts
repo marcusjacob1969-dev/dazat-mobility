@@ -5,7 +5,7 @@ export type JourneyUiPhase =
   | 'PICKUP_PROTECTED'
   | 'IN_JOURNEY'
   | 'SUPPORT_REQUIRED'
-  | 'PAYMENT_PENDING_PROVIDER'
+  | 'PAYMENT_PROVIDER_UNAVAILABLE'
   | 'COMPLETED';
 
 export type JourneyUiTone = 'neutral' | 'positive' | 'warning' | 'danger';
@@ -32,7 +32,7 @@ export function mapCoreJourneyToUiState(input: {
     case 'SUPPORT_REQUIRED':
       return { phase: 'SUPPORT_REQUIRED', label: 'Support required', tone: 'danger', actionable: true, actionLabel: 'Contact support' };
     case 'PAYMENT_PROVIDER_UNAVAILABLE':
-      return { phase: 'PAYMENT_PENDING_PROVIDER', label: 'Payment provider unavailable', tone: 'warning', actionable: false };
+      return { phase: 'PAYMENT_PROVIDER_UNAVAILABLE', label: 'Payment provider unavailable', tone: 'warning', actionable: false };
     case 'JOURNEY_CLOSED':
       return { phase: 'COMPLETED', label: 'Journey completed', tone: 'positive', actionable: false };
     case 'RIDE_CHECK_REQUIRED':
