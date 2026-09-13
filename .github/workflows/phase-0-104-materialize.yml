@@ -1,0 +1,35 @@
+name: Phase 0.104 materialize screen projection
+
+on:
+  push:
+    branches:
+      - codex/phase-0-104-screen-projection
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Materialize screen projection
+        run: node scripts/apply-phase-0-104-screen-projection.mjs
+      - name: Remove one-shot materializer
+        run: |
+          rm scripts/apply-phase-0-104-screen-projection.mjs
+          rm .github/workflows/phase-0-104-materialize.yml
+      - name: Commit generated screen integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/rider/App.tsx apps/driver/App.tsx apps/control-room/src/App.tsx
+          git add -u scripts/apply-phase-0-104-screen-projection.mjs .github/workflows/phase-0-104-materialize.yml
+          git commit -m "Phase 0.104: integrate canonical journey projection into screens"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
