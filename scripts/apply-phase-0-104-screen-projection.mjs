@@ -1,10 +1,12 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 const root = process.cwd();
-function update(path, transform) { const fullPath = join(root, path); const before = readFileSync(fullPath, 'utf8'); const after = transform(before); if (after === before) throw new Error(`Phase 0.104 transform made no change: ${path}`); writeFileSync(fullPath, after); }
+function update(path, transform) { const fullPath = join(root, path); const before = readFileSync(fullPath, 'utf8'); const after = transform(before); writeFileSync(fullPath, after); if (after === before) console.log(`Phase 0.104 already materialized: ${path}`); }
 function addBeforeReturn(source, functionName, insertion) { const functionIndex = source.indexOf(functionName); const returnIndex = source.indexOf('  return (\n', functionIndex); if (functionIndex < 0 || returnIndex < 0) throw new Error(`Unable to locate screen return for ${functionName}`); return source.slice(0, returnIndex) + insertion + '\n' + source.slice(returnIndex); }
 update('apps/rider/App.tsx', (source) => {
  let next = source;
+ const brokenField = /function Field\(([^]*?)\) \{\n  const journeyPresentation = coreJourneyProgress\n    \? presentRiderJourney\(\{\n        nextAction: coreJourneyProgress\.nextAction,\n        interruptionReason: coreJourneyProgress\.interruptionReason,\n        journeyStatus: coreJourneyProgress\.journeyStatus\n      \}\)\n    : null;\n\n/;
+ next = next.replace(brokenField, (match, args) => `function Field(${args}) {\n`);
  if (!next.includes("./src/journey-ui")) next = next.replace("import { readCoreJourneyProgress } from './src/core-journey-api';", "import { readCoreJourneyProgress } from './src/core-journey-api';\nimport { presentRiderJourney } from './src/journey-ui';");
  if (!next.includes('const journeyPresentation = coreJourneyProgress')) next = addBeforeReturn(next, 'export default function RiderApp()', `  const journeyPresentation = coreJourneyProgress\n    ? presentRiderJourney({ nextAction: coreJourneyProgress.nextAction, interruptionReason: coreJourneyProgress.interruptionReason, journeyStatus: coreJourneyProgress.journeyStatus })\n    : null;`);
  const anchor = '<Text style={styles.body}>Verified Booking through protected pickup, active Journey visibility, governed changes and persistent Safety controls.</Text>';
