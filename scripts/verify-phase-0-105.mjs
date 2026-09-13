@@ -1,0 +1,13 @@
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const root = fileURLToPath(new URL('..', import.meta.url));
+const test = join(root, 'tests/domain/journey-screen-scenario-matrix.test.mjs');
+const doc = join(root, 'docs/engineering/phase-0-105-core-journey-screen-scenario-matrix.md');
+if (!existsSync(test) || !existsSync(doc)) throw new Error('Phase 0.105 scenario matrix artifacts are missing');
+const source = readFileSync(test, 'utf8');
+for (const token of ['SUPPORT_REQUIRED', 'PAYMENT_PROVIDER_UNAVAILABLE', 'JOURNEY_CLOSED', 'RIDE_CHECK_REQUIRED', 'START_JOURNEY', 'DRIVER_ASSIGNMENT_REQUIRED', 'DRIVER_EN_ROUTE', 'JOURNEY_IN_PROGRESS']) if (!source.includes(`'${token}'`)) throw new Error(`Phase 0.105 matrix missing ${token}`);
+for (const surface of ['RIDER', 'DRIVER', 'CONTROL_ROOM']) if (!source.includes(`'${surface}'`)) throw new Error(`Phase 0.105 matrix missing ${surface}`);
+if (!source.includes('presentCoreJourneyForSurface')) throw new Error('Phase 0.105 matrix must consume shared presentation contract');
+if (source.includes('fetch(') || source.includes('axios')) throw new Error('Phase 0.105 matrix must remain network-free');
+console.log('Phase 0.105 core Journey screen scenario matrix verification PASSED');
