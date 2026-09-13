@@ -20,14 +20,6 @@ import { presentRiderJourney } from './src/journey-ui';
 type Flow = 'REGISTER' | 'VERIFY' | 'BOOK' | 'QUOTE' | 'READY';
 
 function Field(props: { label: string; value: string; onChangeText: (value: string) => void; keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad'; placeholder?: string }) {
-  const journeyPresentation = coreJourneyProgress
-    ? presentRiderJourney({
-        nextAction: coreJourneyProgress.nextAction,
-        interruptionReason: coreJourneyProgress.interruptionReason,
-        journeyStatus: coreJourneyProgress.journeyStatus
-      })
-    : null;
-
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{props.label}</Text>
@@ -272,6 +264,9 @@ export default function RiderApp() {
     });
   }
 
+  const journeyPresentation = coreJourneyProgress
+    ? presentRiderJourney({ nextAction: coreJourneyProgress.nextAction, interruptionReason: coreJourneyProgress.interruptionReason, journeyStatus: coreJourneyProgress.journeyStatus })
+    : null;
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
