@@ -36,6 +36,7 @@ import { readCommunicationInbox } from './src/communications-api';
 import { readContactPlan, readTelephonyCapabilities, readTelephonyInteractions } from './src/telephony-voice-api';
 import { readCommunicationsClosureCapabilities, readCommunicationsClosureStatus, readCommunicationsLaunchReadiness, readCommunicationsOperationsCapabilities, readCommunicationsOperationsStatus, readContactCases } from './src/communications-operations-api';
 import { readDriverCoreJourneyProgress } from './src/core-journey-api';
+import { presentDriverJourney } from './src/journey-ui';
 import type { CoreJourneyProgressProjection } from '@dazat/contracts';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'DRIVER_HOME';
@@ -503,6 +504,14 @@ export default function DriverApp() {
     });
   }
 
+  const journeyPresentation = coreJourneyProgress
+    ? presentDriverJourney({
+        nextAction: coreJourneyProgress.nextAction,
+        interruptionReason: coreJourneyProgress.interruptionReason,
+        journeyStatus: coreJourneyProgress.journeyStatus
+      })
+    : null;
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
@@ -510,6 +519,14 @@ export default function DriverApp() {
         <Text style={styles.eyebrow}>ENGINEERING PHASE 0.54 · ENGINEERING PHASE 0.16 CLOSURE BASELINE</Text>
         <Text style={styles.title}>DAZAT Driver journey</Text>
         <Text style={styles.body}>Authentication does not make a driver eligible; all hard checks must pass before Dispatch. The complete Driver day keeps secure session, approved vehicle, eligibility, scheduled work, informed offers, pickup, RideCheck, Journey, earnings, break, finishing-soon and end-shift truth separate. Weak-signal recovery replaces speculative state and never pretends queued Safety commands were already processed.</Text>
+        {journeyPresentation ? (
+          <View style={styles.notice} accessibilityRole="summary" accessibilityLabel="Driver canonical Journey projection">
+            <Text style={styles.noticeTitle}>{journeyPresentation.label}</Text>
+            <Text style={styles.status}>Operational phase: {journeyPresentation.phase} · tone: {journeyPresentation.tone}</Text>
+            <Text style={styles.body}>{journeyPresentation.operationalHint}</Text>
+            <Text style={journeyPresentation.tone === 'danger' ? styles.error : styles.body}>Canonical next action: {coreJourneyProgress?.nextAction.replaceAll('_', ' ')}</Text>
+          </View>
+        ) : null}
 
         {flow === 'REGISTER' ? (
           <View style={styles.section}>

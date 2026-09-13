@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { dazatTokens } from '@dazat/design-system';
+import { dazatTokens, presentCoreJourneyForSurface } from '@dazat/design-system';
 import type { CoreJourneyProgressProjection } from '@dazat/contracts';
 import { readTaskScopedCoreJourneyProgress } from './core-journey-api.js';
 
@@ -19,6 +19,15 @@ export function App() {
     finally { setJourneyLoading(false); }
   }
 
+  const journeyPresentation = journeyProgress
+    ? presentCoreJourneyForSurface({
+        surface: 'CONTROL_ROOM',
+        nextAction: journeyProgress.nextAction,
+        interruptionReason: journeyProgress.interruptionReason,
+        journeyStatus: journeyProgress.journeyStatus
+      })
+    : null;
+
   return (
     <main style={{ minHeight: '100vh', background: dazatTokens.color.canvas, color: dazatTokens.color.textPrimary, fontFamily: `${dazatTokens.typography.family}, ${dazatTokens.typography.fallback}`, padding: 32 }}>
       <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.54 · ENGINEERING PHASE 0.20 INSTITUTIONAL BASELINE</p>
@@ -26,6 +35,14 @@ export function App() {
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.
       </p>
+      {journeyPresentation ? (
+        <section aria-label="Control Room canonical Journey projection" style={{ maxWidth: 720, marginTop: 24, padding: 24, background: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card }}>
+          <h2 style={{ marginTop: 0 }}>{journeyPresentation.label}</h2>
+          <p style={{ fontWeight: 700 }}>Operational phase: {journeyPresentation.phase} · tone: {journeyPresentation.tone}</p>
+          <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>{journeyPresentation.operationalHint}</p>
+          <p style={{ lineHeight: 1.7 }}>Canonical next action: {journeyProgress?.nextAction.replaceAll('_', ' ')}</p>
+        </section>
+      ) : null}
       <section aria-label="Task-scoped core journey progress" style={{ maxWidth: 720, marginTop: 24, padding: 24, background: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card }}>
         <h2 style={{ marginTop: 0 }}>Task-scoped journey progress</h2>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>Loads only through a current fatigue-handover task. An ID alone grants no access.</p>
