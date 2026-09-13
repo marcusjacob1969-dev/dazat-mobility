@@ -15,6 +15,7 @@ import { readCommunicationInbox } from './src/communications-api';
 import { readContactPlan, readTelephonyCapabilities, readTelephonyInteractions } from './src/telephony-voice-api';
 import { readCommunicationsClosureCapabilities, readCommunicationsClosureStatus, readCommunicationsLaunchReadiness, readCommunicationsOperationsCapabilities, readCommunicationsOperationsStatus, readContactCases } from './src/communications-operations-api';
 import { readCoreJourneyProgress } from './src/core-journey-api';
+import { presentRiderJourney } from './src/journey-ui';
 
 type Flow = 'REGISTER' | 'VERIFY' | 'BOOK' | 'QUOTE' | 'READY';
 
@@ -263,6 +264,9 @@ export default function RiderApp() {
     });
   }
 
+  const journeyPresentation = coreJourneyProgress
+    ? presentRiderJourney({ nextAction: coreJourneyProgress.nextAction, interruptionReason: coreJourneyProgress.interruptionReason, journeyStatus: coreJourneyProgress.journeyStatus })
+    : null;
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
@@ -270,6 +274,14 @@ export default function RiderApp() {
         <Text style={styles.eyebrow}>ENGINEERING PHASE 0.54 · ENGINEERING PHASE 0.16 CLOSURE BASELINE</Text>
         <Text style={styles.title}>DAZAT Rider journey</Text>
         <Text style={styles.body}>Verified Booking through protected pickup, active Journey visibility, governed changes and persistent Safety controls.</Text>
+        {journeyPresentation ? (
+          <View style={styles.notice} accessibilityRole="summary" accessibilityLabel="Rider canonical Journey projection">
+            <Text style={styles.noticeTitle}>{journeyPresentation.label}</Text>
+            <Text style={styles.status}>Operational phase: {journeyPresentation.phase} · tone: {journeyPresentation.tone}</Text>
+            <Text style={styles.body}>{journeyPresentation.operationalHint}</Text>
+            <Text style={journeyPresentation.tone === 'danger' ? styles.error : styles.body}>Canonical next action: {coreJourneyProgress?.nextAction.replaceAll('_', ' ')}</Text>
+          </View>
+        ) : null}
 
         {flow === 'REGISTER' && (
           <View style={styles.section}>
