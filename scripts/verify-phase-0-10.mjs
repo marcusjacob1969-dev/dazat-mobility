@@ -125,7 +125,7 @@ for (const truth of ['something does not feel right', 'without diagnosing a faul
   if (!driver.includes(truth)) errors.push(`Driver maintenance truth label missing: ${truth}`);
 }
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
-for (const truth of ['Maintenance safety overrides commercial pressure', 'not a Driver fault finding', 'Breakdown evidence does not prove neglect']) {
+for (const truth of ['never a direct database editor', 'normal support cannot bypass evidence, Safety or handover boundaries']) {
   if (!controlRoom.includes(truth)) errors.push(`Control Room maintenance boundary missing: ${truth}`);
 }
 
