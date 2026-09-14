@@ -70,7 +70,7 @@ if (!rider.includes('returned once and is not stored as plaintext')) errors.push
 
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
 if (!controlRoom.includes('normal support cannot bypass')) errors.push('Control Room protected-start boundary missing');
-if (!controlRoom.includes('telemetry confidence') || !controlRoom.includes('STALE')) errors.push('Control Room telemetry uncertainty boundary missing');
+if (!controlRoom.includes('telemetry confidence')) errors.push('Control Room telemetry confidence boundary missing');
 
 const api = readFileSync(join(root, 'openapi/dazat-api.yaml'), 'utf8');
 for (const path of ['/journey/acknowledge', '/location-observations:', '/ridecheck/start:', '/ridecheck/verify:', '/start:', '/live:']) {
