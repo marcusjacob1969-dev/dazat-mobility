@@ -12,3 +12,4 @@ No new network calls, mutations, permissions, pricing, dispatch, payment, commun
 - Safety/support, payment-provider-unavailable and completion remain distinct.
 - Surface hints may differ because the Rider, Driver and Control Room have different operational responsibilities.
 - The test consumes the compiled design-system presentation contract and does not create client-side authority.
+- Historical checkpoint verifiers use durable architectural boundaries rather than obsolete screen-copy literals.
