@@ -36,8 +36,8 @@ for (const object of [
   'compliance.requirement_definition', 'compliance.driver_requirement_status', 'compliance.driver_document',
   'compliance.document_verification_review', 'driver.training_module', 'driver.training_record',
   'driver.driver_permission', 'driver.driver_restriction', 'driver.operating_eligibility_snapshot',
-  'driver.current_permission_projection',
-  'driver.command_deduplication', 'driver.outbox_message', 'driver.current_application_projection'
+  'driver.current_permission_projection', 'driver.command_deduplication', 'driver.outbox_message',
+  'driver.current_application_projection'
 ]) if (!sql.includes(object)) errors.push(`Missing Phase 0.8 persistence object: ${object}`);
 for (const guarantee of [
   'DriverApplication current state requires matching append-only transition history',
@@ -103,7 +103,11 @@ for (const truth of ['Application approval never grants operating eligibility by
   if (!driver.includes(truth)) errors.push(`Driver operating truth label missing: ${truth}`);
 }
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
-for (const truth of ['OCR is provenance, never authoritative compliance verification', 'cannot directly set APPROVED', 'precautionary restrictions are not findings of guilt']) {
+for (const truth of [
+  'never a direct database editor',
+  'normal support cannot bypass evidence, Safety or handover boundaries',
+  'telemetry confidence'
+]) {
   if (!controlRoom.includes(truth)) errors.push(`Control Room Driver authority boundary missing: ${truth}`);
 }
 

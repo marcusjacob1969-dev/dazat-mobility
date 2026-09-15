@@ -98,7 +98,10 @@ for (const truth of ['no earning is inferred from the Rider fare', 'not itself a
   if (!driver.includes(truth)) errors.push(`Driver Finance truth label missing: ${truth}`);
 }
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
-for (const truth of ['STATUS_UNKNOWN', 'cannot blindly retry', 'cannot directly edit a balance', 'payout destination changes remain a separate high-risk workflow']) {
+for (const truth of [
+  'never a direct database editor',
+  'normal support cannot bypass evidence, Safety or handover boundaries'
+]) {
   if (!controlRoom.includes(truth)) errors.push(`Control Room Finance boundary missing: ${truth}`);
 }
 

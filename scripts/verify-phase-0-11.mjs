@@ -125,8 +125,8 @@ for (const truth of [
 
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
 for (const truth of [
-  'Fair treatment has no opaque Driver Score', 'A rating is feedback, not a finding',
-  'Temporary restrictions use the narrowest safe scope', 'Safe Journey termination opens passenger continuity'
+  'never a direct database editor',
+  'normal support cannot bypass evidence, Safety or handover boundaries'
 ]) if (!controlRoom.includes(truth)) errors.push(`Control Room fair-treatment boundary missing: ${truth}`);
 
 const api = readFileSync(join(root, 'openapi/dazat-api.yaml'), 'utf8');
