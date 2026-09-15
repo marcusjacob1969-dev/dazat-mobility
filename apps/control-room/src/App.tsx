@@ -33,7 +33,7 @@ export function App() {
       <p style={{ fontSize: 12, fontWeight: 600, color: dazatTokens.color.textMuted }}>ENGINEERING PHASE 0.54 · ENGINEERING PHASE 0.20 INSTITUTIONAL BASELINE</p>
       <h1>DAZAT Control Room</h1>
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
-        Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety or handover boundaries.
+        Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety and handover boundaries.
       </p>
       {journeyPresentation ? (
         <section aria-label="Control Room canonical Journey projection" style={{ maxWidth: 720, marginTop: 24, padding: 24, background: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card }}>
@@ -71,7 +71,7 @@ export function App() {
       {/* RESOLVED never silently means VERIFIED. */}
       {/* No spreadsheet or personal-message shadow dispatch is permitted. */}
       {/* A signed agreement alone never enables launch. */}
-      {/* Never abandon an active passenger; active journeys continue safely. */}
+      {/* never abandon an active passenger; active journeys continue safely. */}
       {/* Commercial state cannot override active service or canonical truth; Approval does not assign a Driver; an SLA target cannot rewrite canonical lateness. */}
       {/* Active-journey Safety, breakdown continuity and school safeguarding outrank unresolved commercial approval; organisation commercial mutations remain disabled. */}
     </main>
