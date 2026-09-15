@@ -54,6 +54,12 @@ export function App() {
         {journeyError ? <p role="alert">{journeyError}</p> : null}
         {journeyProgress ? <div aria-live="polite" style={{ marginTop: 16 }}><strong>{journeyProgress.disposition.replaceAll('_', ' ')}</strong><p>Next: {journeyProgress.nextAction.replaceAll('_', ' ')}</p><ul>{journeyProgress.milestones.map((item) => <li key={item.name}>{item.name.replaceAll('_', ' ')} — {item.status.replaceAll('_', ' ')}</li>)}</ul></div> : null}
       </section>
+      <section aria-label="Communications operations truth" style={{ maxWidth: 720, marginTop: 24, padding: 24, background: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card }}>
+        <h2 style={{ marginTop: 0 }}>Communications operations boundaries</h2>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
+          Critical delivery failure is owned operational work. A versioned Notification Policy governs intent and routing, and P0/P1 work cannot remain unowned. Personal email or SMS tools are never an acceptable workaround. Provider acceptance is not delivery, and metrics exclude sensitive content. Providers, staff mutations and real-user scenario execution remain disabled.
+        </p>
+      </section>
       <section aria-label="Fatigue handover recovery boundary" style={{ maxWidth: 720, marginTop: 24, padding: 24, background: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card }}>
         <h2 style={{ marginTop: 0 }}>Expired passenger-protection work stays owned</h2>
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
