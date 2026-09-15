@@ -182,11 +182,14 @@ for (const truth of ['readInstitutionalTransportCapabilities', 'readInstitutiona
   if (!client.includes(truth)) errors.push(`Organisation Portal Part 2 client truth missing: ${truth}`);
 }
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
+// The Control Room UI has since moved to the canonical Core Journey projection surface.
+// Keep Phase 0.18 focused on durable domain/API guarantees rather than obsolete copy.
 for (const truth of [
-  'Institutional preparation never replaces Booking or Journey truth',
-  'Every occurrence is a separate Booking', 'Active Journeys cannot be changed by editing a series',
-  'PASSENGER_NOT_READY as an automatic no-show', 'all institutional mutation execution remains disabled'
-]) if (!controlRoom.includes(truth)) errors.push(`Control Room Part 2 boundary missing: ${truth}`);
+  'Active Journey projection shell',
+  'never a direct database editor',
+  'normal support cannot bypass evidence, Safety or handover boundaries',
+  'Providers, staff mutations and real-user scenario execution remain disabled'
+]) if (!controlRoom.includes(truth)) errors.push(`Control Room durable Phase 0.18 boundary missing: ${truth}`);
 
 const api = readFileSync(join(root, 'openapi/dazat-api.yaml'), 'utf8');
 for (const path of ['/v1/institutional-transport/capabilities:', '/v1/organisations/{organisationId}/institutional-transport:']) {
