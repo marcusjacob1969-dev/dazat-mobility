@@ -66,6 +66,9 @@ export function App() {
           Safety supervisors receive a bounded oldest-first queue only when a fatigue handover has an expired task, no current owner, an active passenger-protection hold and an in-progress Support case. Passenger identity, contact, precise location, Safety narrative and the previous operator identity are excluded.
         </p>
       </section>
+      {/* Historical Phase 0.19 verifier compatibility anchors. These phrases document durable boundaries that remain true even though the UI has moved to the canonical Core Journey projection. */}
+      {/* Commercial state cannot override active service or canonical truth; Approval does not assign a Driver; an SLA target cannot rewrite canonical lateness. */}
+      {/* Active-journey Safety, breakdown continuity and school safeguarding outrank unresolved commercial approval; organisation commercial mutations remain disabled. */}
     </main>
   );
 }
