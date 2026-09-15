@@ -158,7 +158,7 @@ for (const rel of ['apps/rider/App.tsx', 'apps/driver/App.tsx']) {
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
 for (const truth of [
   'Critical delivery failure is owned operational work', 'versioned Notification Policy',
-  'P0/P1 work cannot remain unowned', 'personal email or SMS tools are never an acceptable workaround',
+  'P0/P1 work cannot remain unowned', 'Personal email or SMS tools are never an acceptable workaround.',
   'Provider acceptance is not delivery', 'metrics exclude sensitive content',
   'Providers, staff mutations and real-user scenario execution remain disabled'
 ]) if (!controlRoom.includes(truth)) errors.push(`Control Room communications operations boundary missing: ${truth}`);
