@@ -125,6 +125,8 @@ for (const truth of ['something does not feel right', 'without diagnosing a faul
   if (!driver.includes(truth)) errors.push(`Driver maintenance truth label missing: ${truth}`);
 }
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
+// The Control Room is now a canonical projection surface. Keep this verifier tied to
+// durable architectural boundaries rather than obsolete presentation wording.
 for (const truth of ['never a direct database editor', 'normal support cannot bypass evidence, Safety or handover boundaries']) {
   if (!controlRoom.includes(truth)) errors.push(`Control Room maintenance boundary missing: ${truth}`);
 }
