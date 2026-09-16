@@ -103,7 +103,7 @@ for (const truth of ['DAZAT does not promise a generic discount', 'Deposits are 
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
 // The Control Room is now a canonical projection surface. Keep this verifier tied to
 // durable architectural boundaries rather than obsolete presentation wording.
-for (const truth of ['never a direct database editor', 'normal support cannot bypass evidence, Safety or handover boundaries']) {
+for (const truth of ['never a direct database editor', 'normal support cannot bypass evidence, Safety and handover boundaries']) {
   if (!controlRoom.includes(truth)) errors.push(`Control Room Fleet boundary missing: ${truth}`);
 }
 
