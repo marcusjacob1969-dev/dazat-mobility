@@ -53,9 +53,7 @@ for (const truth of ['charging disabled', 'Completion itself did not initiate pa
 const driver = readFileSync(join(root, 'apps/driver/App.tsx'), 'utf8');
 for (const truth of ['no earning is inferred from the Rider fare', 'not itself an earning or payout']) if (!driver.includes(truth)) errors.push(`Driver Finance truth label missing: ${truth}`);
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
-// Historical verifier wording was tied to an obsolete Control Room presentation.
-// The durable boundary is now expressed by the canonical Core Journey projection shell.
-for (const truth of ['never a direct database editor', 'normal support cannot bypass evidence, Safety or handover boundaries']) if (!controlRoom.includes(truth)) errors.push(`Control Room Finance boundary missing: ${truth}`);
+for (const truth of ['never a direct database editor', 'normal support cannot bypass evidence, Safety or handover boundaries']) if (!controlRoom.includes(truth)) errors.push(`Control Room canonical operational boundary missing: ${truth}`);
 const api = readFileSync(join(root, 'openapi/dazat-api.yaml'), 'utf8');
 for (const path of ['/payment-intents:', '/payments/{paymentId}/status:', '/receipts/{bookingId}:', '/driver/earnings:']) if (!api.includes(path)) errors.push(`OpenAPI Phase 0.7 path missing: ${path}`);
 for (const statement of ['Charging is disabled', 'STATUS_UNKNOWN includes reconciliation guidance', 'Rider fare is never projected as a Driver earning']) if (!api.includes(statement)) errors.push(`OpenAPI Finance truth statement missing: ${statement}`);
