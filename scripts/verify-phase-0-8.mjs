@@ -105,7 +105,7 @@ for (const truth of ['Application approval never grants operating eligibility by
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
 for (const truth of [
   'never a direct database editor',
-  'normal support cannot bypass evidence, Safety or handover boundaries',
+  'normal support cannot bypass evidence, Safety and handover boundaries',
   'telemetry confidence'
 ]) {
   if (!controlRoom.includes(truth)) errors.push(`Control Room Driver authority boundary missing: ${truth}`);
