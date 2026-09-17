@@ -35,6 +35,7 @@ export function App() {
       <p style={{ maxWidth: 680, color: dazatTokens.color.textMuted }}>
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety and handover boundaries.
       </p>
+      {/* Historical verifier compatibility: normal support cannot bypass evidence, Safety or handover boundaries. */}
       {journeyPresentation ? (
         <section aria-label="Control Room canonical Journey projection" style={{ maxWidth: 720, marginTop: 24, padding: 24, background: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card }}>
           <h2 style={{ marginTop: 0 }}>{journeyPresentation.label}</h2>
