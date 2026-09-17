@@ -127,8 +127,9 @@ for (const truth of ['something does not feel right', 'without diagnosing a faul
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
 // The Control Room is now a canonical projection surface. Keep this verifier tied to
 // durable architectural boundaries rather than obsolete presentation wording.
-for (const truth of ['never a direct database editor', 'normal support cannot bypass evidence, Safety or handover boundaries']) {
-  if (!controlRoom.includes(truth)) errors.push(`Control Room maintenance boundary missing: ${truth}`);
+if (!controlRoom.includes('never a direct database editor')) errors.push('Control Room maintenance boundary missing: never a direct database editor');
+if (!/normal support cannot bypass evidence, Safety (?:or|and) handover boundaries/.test(controlRoom)) {
+  errors.push('Control Room maintenance boundary missing: normal support cannot bypass evidence, Safety or/and handover boundaries');
 }
 
 const api = readFileSync(join(root, 'openapi/dazat-api.yaml'), 'utf8');
