@@ -10,9 +10,9 @@
     "start": "node dist/main.js"
   },
   "dependencies": {
-    "fastify": "^5.12.1",
+    "fastify": "^5.12.4",
     "pg": "^8.13.0",
-    "zod": "^4.0.0",
+    "zod": "^4.6.5",
     "@dazat/domain": "0.0.21",
     "@dazat/contracts": "0.0.21"
   },
