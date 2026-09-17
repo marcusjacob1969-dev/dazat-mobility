@@ -66,6 +66,7 @@ export function App() {
         <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>
           Safety supervisors receive a bounded oldest-first queue only when a fatigue handover has an expired task, no current owner, an active passenger-protection hold and an in-progress Support case. Passenger identity, contact, precise location, Safety narrative and the previous operator identity are excluded.
         </p>
+        <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>Queue eligibility is advisory; recovery requires a separate evidence-backed, idempotent command.</p>
       </section>
       {/* Historical verifier compatibility anchors. These phrases document durable Phase 0.20 boundaries; they do not create operational behaviour. */}
       {/* Institutional operations stay canonical, owned and verifiable. */}
