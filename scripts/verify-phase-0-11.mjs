@@ -124,9 +124,11 @@ for (const truth of [
 ]) if (!driver.includes(truth)) errors.push(`Driver fair-treatment truth label missing: ${truth}`);
 
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
+// The Control Room is now a canonical projection surface. Keep this verifier tied to
+// the current durable evidence, Safety and handover boundary rather than obsolete wording.
 for (const truth of [
   'never a direct database editor',
-  'normal support cannot bypass evidence, Safety or handover boundaries'
+  'normal support cannot bypass evidence, Safety and handover boundaries'
 ]) if (!controlRoom.includes(truth)) errors.push(`Control Room fair-treatment boundary missing: ${truth}`);
 
 const api = readFileSync(join(root, 'openapi/dazat-api.yaml'), 'utf8');
