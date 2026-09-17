@@ -119,7 +119,7 @@ for (const truth of [
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
 for (const truth of [
   'never a direct database editor',
-  'normal support cannot bypass evidence, Safety or handover boundaries'
+  'normal support cannot bypass evidence, Safety and handover boundaries'
 ]) if (!controlRoom.includes(truth)) errors.push(`Control Room daily-operations boundary missing: ${truth}`);
 
 const api = readFileSync(join(root, 'openapi/dazat-api.yaml'), 'utf8');
