@@ -36,6 +36,14 @@ export function App() {
         Active Journey projection shell. Authorised operations see canonical health, telemetry confidence, route concerns and completion requirements. This surface is never a direct database editor and normal support cannot bypass evidence, Safety and handover boundaries.
       </p>
       {/* Historical verifier compatibility: normal support cannot bypass evidence, Safety or handover boundaries. */}
+      {journeyProgress?.disposition === 'SUPPORT_REQUIRED' ? (
+        <section aria-label="Control Room active Safety hold" role="alert" style={{ maxWidth: 720, marginTop: 24, padding: 24, background: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card }}>
+          <h2 style={{ marginTop: 0 }}>Active Safety hold</h2>
+          <p style={{ fontWeight: 700 }}>Operational intervention required before normal Journey progression.</p>
+          <p style={{ lineHeight: 1.7 }}>Canonical reason: {journeyProgress.interruptionReason?.replaceAll('_', ' ') ?? 'SUPPORT_REQUIRED'}</p>
+          <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>This is visibility only. The Control Room surface cannot clear the hold or rewrite Journey state from the client.</p>
+        </section>
+      ) : null}
       {journeyPresentation ? (
         <section aria-label="Control Room canonical Journey projection" style={{ maxWidth: 720, marginTop: 24, padding: 24, background: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card }}>
           <h2 style={{ marginTop: 0 }}>{journeyPresentation.label}</h2>
