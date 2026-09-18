@@ -529,6 +529,18 @@ try {
   assert.equal(driverCompleted.json().nextAction, 'JOURNEY_CLOSED');
   assert.equal(driverCompleted.json().milestones.find((milestone) => milestone.name === 'FINANCE').status, 'COMPLETED');
 
+  // Phase 0.115: completed Journey vertical proof across canonical and Finance surfaces.
+  const completedReceipt = await get('/v1/receipts/' + ids.completedBooking, tokens.actor);
+  expectCode(completedReceipt, 200);
+  assert.equal(completedReceipt.json().bookingId, ids.completedBooking);
+  assert.equal(completedReceipt.json().capturedAmountMinor, 2500);
+  const completedEarnings = await get('/v1/driver/earnings', tokens.actor);
+  expectCode(completedEarnings, 200);
+  assert.ok(completedEarnings.json().earnings.some((earning) => earning.bookingId === ids.completedBooking));
+  assert.equal(completedEarnings.json().payoutDerivedFromEarnings, false);
+  assert.equal(completedEarnings.json().riderFareUsedAsDriverEarning, false);
+  assert.equal(completed.json().productionChargingEnabled, false);
+
   const cancelled = await get(`/v1/bookings/${ids.cancelledBooking}/core-journey-progress`, tokens.actor);
   expectCode(cancelled, 200);
   assert.equal(cancelled.json().disposition, 'CLOSED');
