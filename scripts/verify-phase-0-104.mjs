@@ -10,7 +10,8 @@ const files = {
   riderBinding: join(root, 'apps/rider/src/journey-ui.ts'),
   driverBinding: join(root, 'apps/driver/src/journey-ui.ts'),
   controlRoomBinding: join(root, 'apps/control-room/src/journey-ui.ts'),
-  shared: join(root, 'packages/design-system/src/journey-ui-integration.ts')
+  shared: join(root, 'packages/design-system/src/journey-ui-integration.ts'),
+  journeyUi: join(root, 'packages/design-system/src/journey-ui.ts')
 };
 for (const [name, path] of Object.entries(files)) if (!existsSync(path)) throw new Error(`Missing Phase 0.104 ${name}: ${path}`);
 const source = Object.fromEntries(Object.entries(files).map(([name, path]) => [name, readFileSync(path, 'utf8')]));
