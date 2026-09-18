@@ -42,6 +42,11 @@ export function App() {
           <p style={{ fontWeight: 700 }}>Operational phase: {journeyPresentation.phase} · tone: {journeyPresentation.tone}</p>
           <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>{journeyPresentation.operationalHint}</p>
           <p style={{ lineHeight: 1.7 }}>Canonical next action: {journeyProgress?.nextAction.replaceAll('_', ' ')}</p>
+          <div aria-label="Canonical Journey milestones" style={{ marginTop: 12 }}>
+            {journeyProgress.milestones.map((milestone) => (
+              <p key={milestone.name} style={{ lineHeight: 1.5, margin: '4px 0' }}>{milestone.name.replaceAll('_', ' ')} · {milestone.status}</p>
+            ))}
+          </div>
         </section>
       ) : null}
       <section aria-label="Task-scoped core journey progress" style={{ maxWidth: 720, marginTop: 24, padding: 24, background: dazatTokens.color.surface, borderRadius: dazatTokens.radius.card }}>
