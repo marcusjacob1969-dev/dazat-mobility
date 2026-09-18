@@ -523,6 +523,11 @@ try {
   assert.equal(completed.json().disposition, 'CLOSED');
   assert.equal(completed.json().paymentIntentStatus, 'CAPTURED');
   assert.ok(completed.json().milestones.every((milestone) => milestone.status === 'COMPLETED'));
+  const driverCompleted = await get(`/v1/driver/bookings/${ids.completedBooking}/core-journey-progress`, tokens.actor);
+  expectCode(driverCompleted, 200);
+  assert.deepEqual(driverCompleted.json(), completed.json());
+  assert.equal(driverCompleted.json().nextAction, 'JOURNEY_CLOSED');
+  assert.equal(driverCompleted.json().milestones.find((milestone) => milestone.name === 'FINANCE').status, 'COMPLETED');
 
   const cancelled = await get(`/v1/bookings/${ids.cancelledBooking}/core-journey-progress`, tokens.actor);
   expectCode(cancelled, 200);
