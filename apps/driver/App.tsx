@@ -526,7 +526,7 @@ export default function DriverApp() {
             <Text style={styles.body}>{journeyPresentation.operationalHint}</Text>
             <Text style={journeyPresentation.tone === 'danger' ? styles.error : styles.body}>Canonical next action: {coreJourneyProgress?.nextAction.replaceAll('_', ' ')}</Text>
             <View style={{ marginTop: 12, gap: 6 }} accessibilityLabel="Canonical Journey milestones">
-              {coreJourneyProgress.milestones.map((milestone) => (
+              {coreJourneyProgress?.milestones.map((milestone) => (
                 <Text key={milestone.name} style={styles.body}>{milestone.name.replaceAll('_', ' ')} · {milestone.status}</Text>
               ))}
             </View>
