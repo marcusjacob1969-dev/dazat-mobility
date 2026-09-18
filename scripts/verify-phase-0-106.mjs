@@ -13,7 +13,7 @@ for (const [name, path] of Object.entries(files)) if (!existsSync(path)) throw n
 const source = Object.fromEntries(Object.entries(files).map(([name, path]) => [name, readFileSync(path, 'utf8')]));
 
 for (const [name, app] of Object.entries({ rider: source.rider, driver: source.driver, controlRoom: source.controlRoom })) {
-  if (!app.includes('journeyProgress.milestones.map') && !app.includes('journeyProgress?.milestones.map')) throw new Error(`${name} must render canonical Journey milestones`);
+  if (!app.includes('journeyProgress.milestones.map') && !app.includes('journeyProgress?.milestones.map') && !app.includes('coreJourneyProgress.milestones.map')) throw new Error(`${name} must render canonical Journey milestones`);
   if (!app.includes('Canonical Journey milestones')) throw new Error(`${name} milestone accessibility boundary is missing`);
   if (!app.includes("milestone.name.replaceAll('_', ' ')")) throw new Error(`${name} must display canonical milestone names`);
   if (!app.includes('milestone.status')) throw new Error(`${name} must display canonical milestone status`);
