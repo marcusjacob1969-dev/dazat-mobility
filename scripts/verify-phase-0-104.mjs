@@ -10,7 +10,8 @@ const files = {
   riderBinding: join(root, 'apps/rider/src/journey-ui.ts'),
   driverBinding: join(root, 'apps/driver/src/journey-ui.ts'),
   controlRoomBinding: join(root, 'apps/control-room/src/journey-ui.ts'),
-  shared: join(root, 'packages/design-system/src/journey-ui-integration.ts')
+  shared: join(root, 'packages/design-system/src/journey-ui-integration.ts'),
+  journeyUi: join(root, 'packages/design-system/src/journey-ui.ts')
 };
 for (const [name, path] of Object.entries(files)) if (!existsSync(path)) throw new Error(`Missing Phase 0.104 ${name}: ${path}`);
 const source = Object.fromEntries(Object.entries(files).map(([name, path]) => [name, readFileSync(path, 'utf8')]));
@@ -27,7 +28,8 @@ if (!source.controlRoom.includes('presentCoreJourneyForSurface')) throw new Erro
 if (!source.controlRoom.includes("surface: 'CONTROL_ROOM'")) throw new Error('Control Room screen surface is not explicit');
 if (!source.controlRoom.includes('const journeyPresentation = journeyProgress')) throw new Error('Control Room screen does not derive presentation from canonical Journey progress');
 if (!source.controlRoom.includes('aria-label="Control Room canonical Journey projection"')) throw new Error('Control Room screen projection summary is missing');
-for (const token of ['SUPPORT_REQUIRED', 'PAYMENT_PROVIDER_UNAVAILABLE', 'JOURNEY_CLOSED', 'RIDE_CHECK_REQUIRED', 'JOURNEY_IN_PROGRESS']) if (!source.shared.includes(token) && token !== 'JOURNEY_CLOSED') throw new Error(`Shared Journey UI contract missing ${token}`);
+for (const token of ['mapCoreJourneyToUiState', 'JourneyUiState']) if (!source.shared.includes(token)) throw new Error(`Shared Journey UI adapter missing ${token}`);
+for (const token of ['SUPPORT_REQUIRED', 'PAYMENT_PROVIDER_UNAVAILABLE', 'JOURNEY_CLOSED', 'RIDE_CHECK_REQUIRED', 'JOURNEY_IN_PROGRESS']) if (!source.shared.includes(token) && !source.journeyUi.includes(token)) throw new Error(`Shared Journey UI contract missing ${token}`);
 for (const [name, app] of Object.entries({ rider: source.rider, driver: source.driver, controlRoom: source.controlRoom })) {
   if (!app.includes('CoreJourneyProgressProjection')) throw new Error(`${name} lost canonical projection type`);
   if (app.includes('mapCoreJourneyToUiState')) throw new Error(`${name} must use the surface binding rather than mapping semantics directly`);

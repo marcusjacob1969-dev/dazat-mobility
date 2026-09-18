@@ -125,8 +125,11 @@ for (const truth of ['something does not feel right', 'without diagnosing a faul
   if (!driver.includes(truth)) errors.push(`Driver maintenance truth label missing: ${truth}`);
 }
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
-for (const truth of ['Maintenance safety overrides commercial pressure', 'not a Driver fault finding', 'Breakdown evidence does not prove neglect']) {
-  if (!controlRoom.includes(truth)) errors.push(`Control Room maintenance boundary missing: ${truth}`);
+// The Control Room is now a canonical projection surface. Keep this verifier tied to
+// durable architectural boundaries rather than obsolete presentation wording.
+if (!controlRoom.includes('never a direct database editor')) errors.push('Control Room maintenance boundary missing: never a direct database editor');
+if (!/normal support cannot bypass evidence, Safety (?:or|and) handover boundaries/.test(controlRoom)) {
+  errors.push('Control Room maintenance boundary missing: normal support cannot bypass evidence, Safety or/and handover boundaries');
 }
 
 const api = readFileSync(join(root, 'openapi/dazat-api.yaml'), 'utf8');

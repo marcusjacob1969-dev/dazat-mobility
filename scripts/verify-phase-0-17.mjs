@@ -70,15 +70,13 @@ for (const boundary of [
   'organisation_permission_grant_update_guard', 'organisation_invitation_update_guard',
   'organisation_restriction_update_guard', 'organisation_service_policy_update_guard',
   'organisation_agreement_update_guard', 'organisation_passenger_roster_entry_update_guard',
-  'booking_authority_rule_update_guard',
-  'organisation_approval_request_update_guard', 'organisation_support_case_update_guard',
-  'organisation_api_client_update_guard', 'organisation_api_credential_update_guard',
-  'organisation_webhook_subscription_update_guard', 'organisation_export_request_update_guard',
-  'organisation_event_immutable',
+  'booking_authority_rule_update_guard', 'organisation_approval_request_update_guard',
+  'organisation_support_case_update_guard', 'organisation_api_client_update_guard',
+  'organisation_api_credential_update_guard', 'organisation_webhook_subscription_update_guard',
+  'organisation_export_request_update_guard', 'organisation_event_immutable',
   'one_active_person_roster_entry', 'one_active_managed_passenger_roster_entry',
   'organisation_command_deduplication_immutable', 'organisation_audit_event_immutable',
-  'UNIQUE (organisation_id, command_type, idempotency_key)',
-  "event_type IN (", "'OrganisationCreated.v1'", "'OrganisationClosed.v1'"
+  'UNIQUE (organisation_id, command_type, idempotency_key)', "event_type IN (", "'OrganisationCreated.v1'", "'OrganisationClosed.v1'"
 ]) if (!sql.includes(boundary)) errors.push(`Missing Phase 0.17 SQL boundary: ${boundary}`);
 if ((sql.match(/\$\$/g) ?? []).length % 2 !== 0) errors.push('Migration has unbalanced PostgreSQL dollar quotes');
 if ((sql.match(/CREATE TABLE IF NOT EXISTS/g) ?? []).length !== 31) errors.push('Phase 0.17 migration must define exactly 31 persistence tables');
@@ -118,12 +116,10 @@ for (const projection of [
 const service = readFileSync(join(root, 'services/api/src/modules/organisation-operations/organisation-operations-service.ts'), 'utf8');
 for (const boundary of [
   'getOrganisationOperationsCapabilities', 'listActorOrganisations', 'getActorOrganisationContext',
-  'WHERE membership.person_id = $1', 'membership.organisation_id = $2',
-  "membership.status = 'ACTIVE'", 'membership.valid_from <= now()',
-  'permission_grant.organisation_id = membership.organisation_id',
+  'WHERE membership.person_id = $1', 'membership.organisation_id = $2', "membership.status = 'ACTIVE'",
+  'membership.valid_from <= now()', 'permission_grant.organisation_id = membership.organisation_id',
   'tenantScopedByAuthenticatedPerson: true', 'backendTenantIsolationEnforced: true',
-  'clientSuppliedOrganisationIdGrantsAccess: false', 'portalMutationEnabled: false',
-  'integrationExecutionEnabled: false'
+  'clientSuppliedOrganisationIdGrantsAccess: false', 'portalMutationEnabled: false', 'integrationExecutionEnabled: false'
 ]) if (!service.includes(boundary)) errors.push(`Missing Organisation service boundary: ${boundary}`);
 if (/\b(?:fetch|axios)\s*\(/i.test(service)) errors.push('Organisation service contains an unapproved external integration call');
 
@@ -167,22 +163,22 @@ for (const truth of ['readOrganisationCapabilities', 'readActorOrganisations', '
   if (!portalClient.includes(truth)) errors.push(`Organisation Portal client truth missing: ${truth}`);
 }
 if (!portalClient.includes("method: 'GET'")) errors.push('Organisation Portal client must be explicitly read-only');
+
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
 for (const truth of [
-  'Organisation access is tenant-, role- and purpose-scoped', 'Membership is not universal authority',
-  'cannot make an organisation own a passenger', 'cannot strand an active Journey',
-  'Organisation mutations, external API execution, webhook delivery, export execution and direct database editing remain disabled'
-]) if (!controlRoom.includes(truth)) errors.push(`Control Room Organisation boundary missing: ${truth}`);
+  'never a direct database editor',
+  'normal support cannot bypass evidence, Safety or handover boundaries',
+  'Providers, staff mutations and real-user scenario execution remain disabled'
+]) if (!controlRoom.includes(truth)) errors.push(`Control Room current architecture boundary missing: ${truth}`);
 
 const api = readFileSync(join(root, 'openapi/dazat-api.yaml'), 'utf8');
 for (const path of ['/v1/organisations/capabilities:', '/v1/organisations:', '/v1/organisations/{organisationId}/context:']) {
   if (!api.includes(path)) errors.push(`OpenAPI Phase 0.17 path missing: ${path}`);
 }
 for (const statement of [
-  'not a second Booking engine', 'not an owner of passenger identity',
-  'backend enforces active membership', 'cost centres are not Finance ledger truth',
-  'OrganisationOperationsCapabilitiesProjection', 'ActorOrganisationContextProjection',
-  'organisationStaffMutationsEnabled', 'externalIntegrationExecutionEnabled',
+  'not a second Booking engine', 'not an owner of passenger identity', 'backend enforces active membership',
+  'cost centres are not Finance ledger truth', 'OrganisationOperationsCapabilitiesProjection',
+  'ActorOrganisationContextProjection', 'organisationStaffMutationsEnabled', 'externalIntegrationExecutionEnabled',
   'ORG-TEN-001', 'OrganisationCreated.v1'
 ]) if (!api.includes(statement)) errors.push(`OpenAPI Organisation truth statement missing: ${statement}`);
 const apiVersion = api.match(/\n\s*version:\s*0\.0\.(\d+)/)?.[1];

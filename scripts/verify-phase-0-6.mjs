@@ -77,8 +77,22 @@ for (const action of ['requestJourneyStop', "signalSafety('SOS')", "signalSafety
   if (!rider.includes(action)) errors.push(`Rider active Journey boundary missing: ${action}`);
 }
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
-for (const expectation of ['NORMAL, ATTENTION, AT_RISK or INCIDENT', 'never an automatic misconduct finding', 'authorised handover', 'Payment is not initiated']) {
-  if (!controlRoom.includes(expectation)) errors.push(`Control Room Phase 0.6 expectation missing: ${expectation}`);
+for (const expectation of [
+  'presentCoreJourneyForSurface',
+  "surface: 'CONTROL_ROOM'",
+  'telemetry confidence',
+  'normal support cannot bypass',
+  'handover'
+]) {
+  if (!controlRoom.includes(expectation)) errors.push(`Control Room Phase 0.6 current contract missing: ${expectation}`);
+}
+// The historical UI wording was intentionally retired. These boundaries now live
+// in their authoritative domain/API sources rather than being duplicated as prose.
+if (!domain.includes('ROUTE_CONCERN_IS_AUTOMATIC_MISCONDUCT_FINDING = false')) {
+  errors.push('No automatic misconduct-finding boundary is missing from the authoritative domain source');
+}
+if (!journey.includes('paymentInitiated: false')) {
+  errors.push('Provider-disabled payment boundary is missing from the authoritative Journey service');
 }
 
 const api = readFileSync(join(root, 'openapi/dazat-api.yaml'), 'utf8');

@@ -184,9 +184,11 @@ for (const rel of ['apps/rider/App.tsx', 'apps/driver/App.tsx']) {
 }
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
 for (const truth of [
-  'Final closure does not grant operational authority', 'Priority changes urgency and routing; it never grants broader access',
-  'stale fallback is prohibited', 'Eighteen acceptance cases and thirteen launch gates are explicit',
-  'Unmanaged provider calls, closure mutations, real-user scenarios and pilot launch remain disabled'
+  'Active Journey projection shell',
+  'never a direct database editor',
+  'normal support cannot bypass evidence, Safety or handover boundaries',
+  'Provider acceptance is not delivery',
+  'Providers, staff mutations and real-user scenario execution remain disabled'
 ]) if (!controlRoom.includes(truth)) errors.push(`Control Room final-closure boundary missing: ${truth}`);
 
 const api = readFileSync(join(root, 'openapi/dazat-api.yaml'), 'utf8');

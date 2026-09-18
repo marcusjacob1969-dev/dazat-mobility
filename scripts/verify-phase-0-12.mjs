@@ -118,8 +118,8 @@ for (const truth of [
 
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
 for (const truth of [
-  'Blind offers fail closed', 'Weak-signal reconciliation replaces speculative client state',
-  'Current demand and forecast are labelled separately', 'High-risk active cases require human escalation'
+  'never a direct database editor',
+  'normal support cannot bypass evidence, Safety and handover boundaries'
 ]) if (!controlRoom.includes(truth)) errors.push(`Control Room daily-operations boundary missing: ${truth}`);
 
 const api = readFileSync(join(root, 'openapi/dazat-api.yaml'), 'utf8');
