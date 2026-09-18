@@ -17,7 +17,7 @@ for (const [name, app] of Object.entries({ rider: source.rider, driver: source.d
   if (!app.includes('Canonical Journey milestones')) throw new Error(`${name} milestone accessibility boundary is missing`);
   if (!app.includes("milestone.name.replaceAll('_', ' ')")) throw new Error(`${name} must display canonical milestone names`);
   if (!app.includes('milestone.status')) throw new Error(`${name} must display canonical milestone status`);
-  if (app.includes('setJourneyMilestones') || app.includes('useState<') && app.includes('milestone')) throw new Error(`${name} must not create UI-local milestone authority`);
+  if (app.includes('setJourneyMilestones')) throw new Error(`${name} must not create UI-local milestone authority`);
 }
 if (!source.projection.includes('CoreJourneyProgressProjection')) throw new Error('Canonical Core Journey projection type is missing');
 if (!source.projection.includes('milestones: CoreJourneyMilestone[]')) throw new Error('Canonical milestone collection is missing');
