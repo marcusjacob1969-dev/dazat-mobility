@@ -357,9 +357,6 @@ try {
   assert.deepEqual(driverAssignedProgress.json().milestones, riderAssignedProgress.json().milestones);
   assert.equal(driverAssignedProgress.json().nextAction, riderAssignedProgress.json().nextAction);
 
-  const driverAssignedProgress = await get(`/v1/driver/bookings/${successfulCreated.json().bookingId}/core-journey-progress`, driverToken);
-  expectCode(riderAssignedProgress, 200);
-  expectCode(driverAssignedProgress, 200);
   assert.equal(riderAssignedProgress.json().bookingStatus, 'DRIVER_ASSIGNED');
   assert.deepEqual(driverAssignedProgress.json(), riderAssignedProgress.json());
   assert.equal(riderAssignedProgress.json().milestones.find((milestone) => milestone.name === 'DRIVER_ASSIGNED').status, 'COMPLETED');
