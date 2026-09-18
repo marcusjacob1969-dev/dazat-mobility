@@ -12,7 +12,7 @@ for (const [name, source] of [['Rider', rider], ['Driver', driver]]) {
   if (!source.includes('CoreJourneyProgressProjection')) throw new Error(`${name} must expose the canonical projection`);
   if (!source.includes('BLOCKED')) throw new Error(`${name} must render blocked canonical milestones`);
 }
-if (!controlRoom.includes('Core Journey')) throw new Error('Control Room must expose Core Journey operational truth');
+if (!controlRoom.includes('readTaskScopedCoreJourneyProgress')) throw new Error('Control Room must consume canonical Core Journey operational truth');
 if (!controlRoom.includes('Safety') || !controlRoom.includes('handover')) throw new Error('Control Room failure view must retain Safety/handover boundaries');
 
 const requiredProofs = [
