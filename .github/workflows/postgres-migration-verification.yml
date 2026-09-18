@@ -71,7 +71,7 @@ jobs:
           npm sbom --workspace @dazat/api --omit=dev --sbom-format cyclonedx > artifacts/sbom/dazat-api.cdx.json
           node scripts/validate-api-sbom.mjs artifacts/sbom/dazat-api.cdx.json
       - name: Retain API SBOM evidence
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: dazat-api-sbom-${{ github.sha }}
           path: artifacts/sbom/dazat-api.cdx.json
@@ -82,7 +82,7 @@ jobs:
           npm audit --workspace @dazat/api --omit=dev --audit-level=high --json > artifacts/sbom/dazat-api-audit.json
           node scripts/validate-api-audit.mjs artifacts/sbom/dazat-api-audit.json
       - name: Retain API vulnerability evidence
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: dazat-api-vulnerability-audit-${{ github.sha }}
           path: artifacts/sbom/dazat-api-audit.json
