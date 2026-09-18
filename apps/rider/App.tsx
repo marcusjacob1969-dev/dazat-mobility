@@ -265,7 +265,7 @@ export default function RiderApp() {
   }
 
   const journeyPresentation = coreJourneyProgress
-    ? presentRiderJourney({ nextAction: coreJourneyProgress.nextAction, interruptionReason: coreJourneyProgress.interruptionReason, journeyStatus: coreJourneyProgress.journeyStatus })
+    ? presentRiderJourney({ nextAction: coreJourneyProgress.nextAction, interruptionReason: coreJourneyProgress.interruptionReason ?? null, journeyStatus: coreJourneyProgress.journeyStatus ?? null })
     : null;
   return (
     <SafeAreaView style={styles.safeArea}>
