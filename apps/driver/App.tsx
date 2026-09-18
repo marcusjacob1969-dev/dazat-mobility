@@ -507,8 +507,8 @@ export default function DriverApp() {
   const journeyPresentation = coreJourneyProgress
     ? presentDriverJourney({
         nextAction: coreJourneyProgress.nextAction,
-        interruptionReason: coreJourneyProgress.interruptionReason,
-        journeyStatus: coreJourneyProgress.journeyStatus
+        interruptionReason: coreJourneyProgress.interruptionReason ?? null,
+        journeyStatus: coreJourneyProgress.journeyStatus ?? null
       })
     : null;
 
