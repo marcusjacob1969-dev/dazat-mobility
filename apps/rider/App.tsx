@@ -168,6 +168,7 @@ export default function RiderApp() {
       const result = await startBookingDispatch(sessionToken, booking.bookingId);
       setBooking({ ...booking, status: result.bookingStatus });
       setDispatch(await getBookingDispatch(sessionToken, booking.bookingId));
+      setCoreJourneyProgress(await readCoreJourneyProgress(sessionToken, booking.bookingId));
     });
   }
 
@@ -188,6 +189,7 @@ export default function RiderApp() {
       });
       setJourneyNotice(result.message);
       setJourney(await getBookingJourney(sessionToken, journey.bookingId));
+      setCoreJourneyProgress(await readCoreJourneyProgress(sessionToken, journey.bookingId));
     });
   }
 
@@ -199,6 +201,7 @@ export default function RiderApp() {
         ? `Silent Assistance persisted · ${result.journeyHealth} · no automatic call to you`
         : `${signal.replace('_', ' ')} persisted · ${result.journeyHealth}`);
       setJourney(await getBookingJourney(sessionToken, journey.bookingId));
+      setCoreJourneyProgress(await readCoreJourneyProgress(sessionToken, journey.bookingId));
     });
   }
 

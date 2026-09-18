@@ -371,6 +371,7 @@ export default function DriverApp() {
       setAvailability('ASSIGNED');
       setOffers([]);
       setArrivalPlan(await readArrivalPlan(sessionToken, result.bookingId));
+      setCoreJourneyProgress(await readDriverCoreJourneyProgress(sessionToken, result.bookingId));
     });
   }
 
@@ -379,6 +380,7 @@ export default function DriverApp() {
     void run(async () => {
       const result = await acknowledgeAssignment(sessionToken, assignedBookingId);
       setJourney(await getDriverJourney(sessionToken, result.journeyId));
+      setCoreJourneyProgress(await readDriverCoreJourneyProgress(sessionToken, result.bookingId));
     });
   }
 
@@ -396,6 +398,7 @@ export default function DriverApp() {
         await sendPickupLocation(sessionToken, journey.journeyId, Number(latitude), Number(longitude));
       }
       setJourney(await getDriverJourney(sessionToken, journey.journeyId));
+      setCoreJourneyProgress(await readDriverCoreJourneyProgress(sessionToken, journey.bookingId));
     });
   }
 
@@ -409,6 +412,7 @@ export default function DriverApp() {
     void run(async () => {
       await markArrived(sessionToken, journey.journeyId);
       setJourney(await getDriverJourney(sessionToken, journey.journeyId));
+      setCoreJourneyProgress(await readDriverCoreJourneyProgress(sessionToken, journey.bookingId));
     });
   }
 
@@ -417,6 +421,7 @@ export default function DriverApp() {
     void run(async () => {
       setRideCheckOutcome(await verifyPickupRideCheck(sessionToken, journey.journeyId, journey.rideCheckSessionId!, rideCheckCode));
       setJourney(await getDriverJourney(sessionToken, journey.journeyId));
+      setCoreJourneyProgress(await readDriverCoreJourneyProgress(sessionToken, journey.bookingId));
     });
   }
 
@@ -425,6 +430,7 @@ export default function DriverApp() {
     void run(async () => {
       await beginJourney(sessionToken, journey.journeyId);
       setJourney(await getDriverJourney(sessionToken, journey.journeyId));
+      setCoreJourneyProgress(await readDriverCoreJourneyProgress(sessionToken, journey.bookingId));
     });
   }
 
