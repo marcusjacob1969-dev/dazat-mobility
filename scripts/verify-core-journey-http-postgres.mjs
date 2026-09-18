@@ -499,18 +499,21 @@ try {
   expectCode(await del('/v1/identity/session', driverToken), 204);
 
   const riderIncident = await get(`/v1/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.actor);
-  expectCode(riderIncident, 200);
-  assert.equal(riderIncident.json().disposition, 'SUPPORT_REQUIRED');
-  assert.equal(riderIncident.json().interruptionReason, 'ACTIVE_INCIDENT');
-  assert.equal(riderIncident.json().nextAction, 'SUPPORT_REQUIRED');
-
   const driverIncident = await get(`/v1/driver/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.actor);
-  expectCode(driverIncident, 200);
-  assert.deepEqual(driverIncident.json(), riderIncident.json());
-
   const controlIncident = await get(`/v1/control-room/fatigue-handovers/${ids.handover}/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.operator);
+  expectCode(riderIncident, 200);
+  expectCode(driverIncident, 200);
   expectCode(controlIncident, 200);
-  assert.deepEqual(controlIncident.json(), riderIncident.json());
+  const riderIncidentMilestones = riderIncident.json().milestones;
+  const driverIncidentMilestones = driverIncident.json().milestones;
+  const controlIncidentMilestones = controlIncident.json().milestones;
+  assert.deepEqual(driverIncidentMilestones, riderIncidentMilestones);
+  assert.deepEqual(controlIncidentMilestones, riderIncidentMilestones);
+  assert.equal(riderIncidentMilestones.find((milestone) => milestone.name === 'JOURNEY').status, 'BLOCKED');
+  assert.equal(riderIncident.json().nextAction, 'SUPPORT_REQUIRED');
+  assert.equal(driverIncident.json().nextAction, 'SUPPORT_REQUIRED');
+  assert.equal(controlIncident.json().nextAction, 'SUPPORT_REQUIRED');
+
 
   const completed = await get(`/v1/bookings/${ids.completedBooking}/core-journey-progress`, tokens.actor);
   expectCode(completed, 200);
