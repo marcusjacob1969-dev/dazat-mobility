@@ -43,7 +43,7 @@ export function App() {
           <p style={{ lineHeight: 1.7, color: dazatTokens.color.textMuted }}>{journeyPresentation.operationalHint}</p>
           <p style={{ lineHeight: 1.7 }}>Canonical next action: {journeyProgress?.nextAction.replaceAll('_', ' ')}</p>
           <div aria-label="Canonical Journey milestones" style={{ marginTop: 12 }}>
-            {journeyProgress.milestones.map((milestone) => (
+            {journeyProgress?.milestones.map((milestone) => (
               <p key={milestone.name} style={{ lineHeight: 1.5, margin: '4px 0' }}>{milestone.name.replaceAll('_', ' ')} · {milestone.status}</p>
             ))}
           </div>
