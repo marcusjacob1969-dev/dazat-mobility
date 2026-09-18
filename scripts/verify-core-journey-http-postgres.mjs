@@ -541,6 +541,12 @@ try {
   assert.equal(completedEarnings.json().riderFareUsedAsDriverEarning, false);
   assert.equal(completed.json().productionChargingEnabled, false);
 
+  // Phase 0.116: Finance role isolation is enforced at the HTTP boundary.
+  const riderCannotReadDriverEarnings = await get('/v1/driver/earnings', tokens.actor);
+  expectCode(riderCannotReadDriverEarnings, 403);
+  const driverCannotReadRiderReceipt = await get('/v1/receipts/' + ids.completedBooking, driverToken);
+  expectCode(driverCannotReadRiderReceipt, 403);
+
   const cancelled = await get(`/v1/bookings/${ids.cancelledBooking}/core-journey-progress`, tokens.actor);
   expectCode(cancelled, 200);
   assert.equal(cancelled.json().disposition, 'CLOSED');
