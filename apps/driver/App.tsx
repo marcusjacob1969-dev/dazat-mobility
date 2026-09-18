@@ -440,6 +440,7 @@ export default function DriverApp() {
       const result = await sendDriverSos(sessionToken, journey.journeyId);
       setSafetyStatus(`SOS persisted · ${result.journeyHealth}`);
       setJourney(await getDriverJourney(sessionToken, journey.journeyId));
+      setCoreJourneyProgress(await readDriverCoreJourneyProgress(sessionToken, journey.bookingId));
     });
   }
 
@@ -448,6 +449,7 @@ export default function DriverApp() {
     void run(async () => {
       await markDestinationArriving(sessionToken, journey.journeyId);
       setJourney(await getDriverJourney(sessionToken, journey.journeyId));
+      setCoreJourneyProgress(await readDriverCoreJourneyProgress(sessionToken, journey.bookingId));
     });
   }
 
@@ -457,6 +459,7 @@ export default function DriverApp() {
       await completeActiveJourney(sessionToken, journey.journeyId);
       setAvailability('AVAILABLE');
       setJourney(await getDriverJourney(sessionToken, journey.journeyId));
+      setCoreJourneyProgress(await readDriverCoreJourneyProgress(sessionToken, journey.bookingId));
     });
   }
 
