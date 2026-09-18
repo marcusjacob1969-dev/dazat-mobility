@@ -8,6 +8,7 @@ const driver = readFileSync(join(root, 'apps/driver/App.tsx'), 'utf8');
 const controlRoom = readFileSync(join(root, 'apps/control-room/src/App.tsx'), 'utf8');
 const controlRoomApi = readFileSync(join(root, 'apps/control-room/src/core-journey-api.ts'), 'utf8');
 const routes = readFileSync(join(root, 'services/api/src/modules/core-journey/routes.ts'), 'utf8');
+const service = readFileSync(join(root, 'services/api/src/modules/core-journey/core-journey-service.ts'), 'utf8');
 
 for (const [name, source, reader] of [
   ['Rider', rider, 'readCoreJourneyProgress'],
@@ -28,7 +29,7 @@ if (!controlRoomApi.includes('controlledHandoverId') || !controlRoomApi.includes
 if (!routes.includes("app.get('/v1/bookings/:bookingId/core-journey-progress'")) throw new Error('Rider Core Journey HTTP route is missing');
 if (!routes.includes("app.get('/v1/driver/bookings/:bookingId/core-journey-progress'")) throw new Error('Driver Core Journey HTTP route is missing');
 if (!routes.includes("app.get('/v1/control-room/fatigue-handovers/:controlledHandoverId/bookings/:bookingId/core-journey-progress'")) throw new Error('Control Room Core Journey HTTP route is missing');
-if (!routes.includes("task.purpose = 'DRIVER_FATIGUE_HANDOVER'")) throw new Error('Control Room Core Journey route must remain task-scoped to fatigue handover authority');
+if (!service.includes("task.purpose = 'DRIVER_FATIGUE_HANDOVER'")) throw new Error('Control Room Core Journey service must remain task-scoped to fatigue handover authority');
 if (routes.includes("POST '/v1/bookings/:bookingId/core-journey-progress'") || routes.includes("app.post('/v1/bookings/:bookingId/core-journey-progress'")) throw new Error('Core Journey progress must remain read-only');
 
 console.log('DAZAT Phase 0.107 Rider/Driver/Control Room canonical HTTP-slice verification PASSED');
