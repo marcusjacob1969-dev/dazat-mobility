@@ -816,9 +816,21 @@ export default function DriverApp() {
                       <View style={styles.section}>
                         <Text style={styles.status}>Journey completed. Driver availability returned to AVAILABLE; no earning is inferred from the Rider fare.</Text>
                         <SecondaryButton label="Refresh authoritative earnings" onPress={refreshEarnings} />
-                        {earnings ? <Text style={styles.body}>{earnings.earnings.length
-                          ? `${earnings.earnings.length} separately posted Driver earning record(s).`
-                          : 'No DriverEarning has been posted. A completed Journey is not itself an earning or payout.'}</Text> : null}
+                        {earnings ? (
+                          earnings.earnings.length ? (
+                            <View style={styles.notice}>
+                              <Text style={styles.noticeTitle}>Posted earnings</Text>
+                              {earnings.earnings.map((earning) => (
+                                <Text key={earning.driverEarningId} style={styles.body}>
+                                  {earning.currency} {formatMinorUnits(earning.amountMinor, earning.currency)} · {earning.status} · booking {earning.bookingId}
+                                </Text>
+                              ))}
+                              <Text style={styles.devNotice}>EARNINGS ARE POSTED FINANCE RECORDS · PAYOUT IS NOT INFERRED</Text>
+                            </View>
+                          ) : (
+                            <Text style={styles.body}>No DriverEarning has been posted. A completed Journey is not itself an earning or payout.</Text>
+                          )
+                        ) : null}
                       </View>
                     ) : null}
                   </>
