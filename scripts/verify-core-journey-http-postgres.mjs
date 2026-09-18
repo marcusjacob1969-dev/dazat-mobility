@@ -485,6 +485,9 @@ try {
   const preparedPaymentReplay = await post(`/v1/bookings/${successfulCreated.json().bookingId}/payment-intents`, registeredToken, undefined, 'phase-078-prepare-payment');
   expectCode(preparedPaymentReplay, 201);
   assert.deepEqual(preparedPaymentReplay.json(), preparedPayment.json());
+  const conflictingPayment = await post(`/v1/bookings/${successfulCreated.json().bookingId}/payment-intents`, registeredToken, { conflict: true }, 'phase-078-prepare-payment');
+  expectCode(conflictingPayment, 409, 'IDEMPOTENCY_KEY_REUSED');
+
   const paymentStatus = await get(`/v1/payments/${preparedPayment.json().paymentIntentId}/status`, registeredToken);
   expectCode(paymentStatus, 200);
   assert.equal(paymentStatus.json().status, 'CREATED');
