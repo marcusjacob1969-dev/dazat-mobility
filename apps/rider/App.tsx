@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, View } from 'react-native';
 import { dazatTokens } from '@dazat/design-system';
-import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, CommunicationInboxProjection, CommunicationsClosureCapabilitiesProjection, CommunicationsClosureStatusProjection, CommunicationsLaunchReadinessProjection, CommunicationsOperationsCapabilitiesProjection, CommunicationsOperationsStatusProjection, ContactCaseListProjection, ContactPlanProjection, CoreJourneyProgressProjection, PaymentStatusProjection, RegistrationContactType, StartRideCheckResult, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection } from '@dazat/contracts';
+import type { ActiveJourneyProjection, BookingDispatchProjection, BookingQuoteResult, BookingSummary, CommunicationInboxProjection, CommunicationsClosureCapabilitiesProjection, CommunicationsClosureStatusProjection, CommunicationsLaunchReadinessProjection, CommunicationsOperationsCapabilitiesProjection, CommunicationsOperationsStatusProjection, ContactCaseListProjection, ContactPlanProjection, CoreJourneyProgressProjection, PaymentStatusProjection, ReceiptProjection, RegistrationContactType, StartRideCheckResult, TelephonyInteractionListProjection, TelephonyServiceCapabilitiesProjection } from '@dazat/contracts';
 import {
   confirmRiderContactVerification,
   startRiderContactVerification,
@@ -10,7 +10,7 @@ import {
 import { confirmRiderBooking, createRiderBooking, quoteRiderBooking } from './src/booking-api';
 import { getBookingDispatch, startBookingDispatch } from './src/dispatch-api';
 import { getBookingJourney, requestJourneyStop, sendRiderSafetySignal, startPassengerRideCheck } from './src/journey-api';
-import { prepareProviderDisabledPaymentIntent, readPaymentStatus } from './src/finance-api';
+import { prepareProviderDisabledPaymentIntent, readPaymentStatus, readReceipt } from './src/finance-api';
 import { readCommunicationInbox } from './src/communications-api';
 import { readContactPlan, readTelephonyCapabilities, readTelephonyInteractions } from './src/telephony-voice-api';
 import { readCommunicationsClosureCapabilities, readCommunicationsClosureStatus, readCommunicationsLaunchReadiness, readCommunicationsOperationsCapabilities, readCommunicationsOperationsStatus, readContactCases } from './src/communications-operations-api';
@@ -68,6 +68,7 @@ export default function RiderApp() {
   const [changeLon, setChangeLon] = useState('');
   const [journeyNotice, setJourneyNotice] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusProjection | null>(null);
+  const [receipt, setReceipt] = useState<ReceiptProjection | null>(null);
   const [coreJourneyProgress, setCoreJourneyProgress] = useState<CoreJourneyProgressProjection | null>(null);
   const [communicationInbox, setCommunicationInbox] = useState<CommunicationInboxProjection | null>(null);
   const [telephonyCapabilities, setTelephonyCapabilities] = useState<TelephonyServiceCapabilitiesProjection | null>(null);
@@ -221,6 +222,11 @@ export default function RiderApp() {
   function refreshPaymentStatus() {
     if (!paymentStatus) return;
     void run(async () => setPaymentStatus(await readPaymentStatus(sessionToken, paymentStatus.paymentIntentId)));
+  }
+
+  function refreshReceipt() {
+    if (!booking) return;
+    void run(async () => setReceipt(await readReceipt(sessionToken, booking.bookingId)));
   }
 
   function refreshCoreJourneyProgress() {
@@ -428,6 +434,18 @@ export default function RiderApp() {
                             <Text style={styles.body}>{paymentStatus.guidance}</Text>
                           </View>
                         ) : null}
+                        <SecondaryButton label="Check receipt availability" onPress={refreshReceipt} />
+                        {receipt ? (
+                          <View style={styles.notice} accessibilityRole="summary">
+                            <Text style={styles.noticeTitle}>Receipt available</Text>
+                            <Text style={styles.body}>Receipt: {receipt.receiptId}</Text>
+                            <Text style={styles.body}>{receipt.currency} {receipt.capturedAmountMinor} minor units captured</Text>
+                            <Text style={styles.body}>Refunded: {receipt.refundedAmountMinor} minor units</Text>
+                            <Text style={styles.body}>Captured: {new Date(receipt.capturedAt).toLocaleString('en-GB')}</Text>
+                          </View>
+                        ) : (
+                          <Text style={styles.body}>A receipt is read from canonical Finance truth only after a captured Payment exists. Provider-disabled PaymentIntents do not create a receipt.</Text>
+                        )}
                       </View>
                     ) : null}
                   </View>
