@@ -20,5 +20,5 @@ for (const [name, app] of Object.entries({ rider: source.rider, driver: source.d
   if (app.includes('setJourneyMilestones')) throw new Error(`${name} must not create UI-local milestone authority`);
 }
 if (!source.projection.includes('CoreJourneyProgressProjection')) throw new Error('Canonical Core Journey projection type is missing');
-if (!source.projection.includes('milestones: CoreJourneyMilestone[]')) throw new Error('Canonical milestone collection is missing');
+if (!source.projection.includes('milestones: readonly CoreJourneyMilestone[]')) throw new Error('Canonical milestone collection is missing');
 console.log('DAZAT Phase 0.106 canonical milestone timeline verification PASSED');
