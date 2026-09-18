@@ -7,7 +7,7 @@ const files = {
   rider: join(root, 'apps/rider/App.tsx'),
   driver: join(root, 'apps/driver/App.tsx'),
   controlRoom: join(root, 'apps/control-room/src/App.tsx'),
-  projection: join(root, 'packages/contracts/src/core-journey.ts')
+  projection: join(root, 'packages/contracts/src/core-journey-progress.ts')
 };
 for (const [name, path] of Object.entries(files)) if (!existsSync(path)) throw new Error(`Missing Phase 0.106 ${name}: ${path}`);
 const source = Object.fromEntries(Object.entries(files).map(([name, path]) => [name, readFileSync(path, 'utf8')]));
