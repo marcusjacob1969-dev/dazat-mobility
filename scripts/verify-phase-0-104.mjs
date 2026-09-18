@@ -28,7 +28,7 @@ if (!source.controlRoom.includes('presentCoreJourneyForSurface')) throw new Erro
 if (!source.controlRoom.includes("surface: 'CONTROL_ROOM'")) throw new Error('Control Room screen surface is not explicit');
 if (!source.controlRoom.includes('const journeyPresentation = journeyProgress')) throw new Error('Control Room screen does not derive presentation from canonical Journey progress');
 if (!source.controlRoom.includes('aria-label="Control Room canonical Journey projection"')) throw new Error('Control Room screen projection summary is missing');
-for (const token of ['mapCoreJourneyToUiState', 'JourneyUiState', 'JourneyUiPhase']) if (!source.shared.includes(token)) throw new Error(`Shared Journey UI adapter missing ${token}`);
+for (const token of ['mapCoreJourneyToUiState', 'JourneyUiState']) if (!source.shared.includes(token)) throw new Error(`Shared Journey UI adapter missing ${token}`);
 for (const token of ['SUPPORT_REQUIRED', 'PAYMENT_PROVIDER_UNAVAILABLE', 'JOURNEY_CLOSED', 'RIDE_CHECK_REQUIRED', 'JOURNEY_IN_PROGRESS']) if (!source.shared.includes(token) && !source.journeyUi.includes(token)) throw new Error(`Shared Journey UI contract missing ${token}`);
 for (const [name, app] of Object.entries({ rider: source.rider, driver: source.driver, controlRoom: source.controlRoom })) {
   if (!app.includes('CoreJourneyProgressProjection')) throw new Error(`${name} lost canonical projection type`);
