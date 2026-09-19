@@ -572,6 +572,18 @@ try {
     [ids.completedPayment]
   );
 
+  // Phase 0.136: Payment/PaymentIntent monetary and currency consistency is enforced by PostgreSQL triggers.
+  await assertDatabaseRejects("UPDATE finance.payment SET currency = 'EUR' WHERE id = $1", [ids.completedPayment]);
+  await assertDatabaseRejects('UPDATE finance.payment SET authorised_amount_minor = 3201 WHERE id = $1', [ids.completedPayment]);
+  await assertDatabaseRejects('UPDATE finance.payment SET captured_amount_minor = 3201 WHERE id = $1', [ids.completedPayment]);
+  await assertDatabaseRejects('UPDATE finance.payment SET refunded_amount_minor = 1 WHERE id = $1', [ids.completedPayment]);
+  await assertDatabaseRejects("UPDATE finance.payment SET status = 'CAPTURED', captured_amount_minor = 0 WHERE id = $1", [ids.completedPayment]);
+  await assertDatabaseRejects("UPDATE finance.payment SET status = 'REFUNDED', refunded_amount_minor = 0 WHERE id = $1", [ids.completedPayment]);
+  await assertDatabaseRejects("UPDATE finance.payment SET status = 'REFUNDED', refunded_amount_minor = captured_amount_minor - 1 WHERE id = $1", [ids.completedPayment]);
+  await assertDatabaseRejects('UPDATE finance.payment_intent SET amount_minor = 1000 WHERE id = $1', [ids.completedPayment]);
+  await assertDatabaseRejects("UPDATE finance.payment_intent SET currency = 'EUR' WHERE id = $1", [ids.completedPayment]);
+  await assertDatabaseRejects("UPDATE finance.payment_intent SET status = 'CREATED' WHERE id = $1", [ids.completedPayment]);
+
   // Phase 0.133: captured Payment rows must retain an authoritative capture timestamp, and uncaptured states cannot advertise one.
   await assertDatabaseRejects(
     'UPDATE finance.payment SET captured_at = NULL WHERE id = $1',
