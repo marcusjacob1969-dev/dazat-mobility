@@ -212,7 +212,7 @@ export async function getReceiptByBooking(
             p.captured_amount_minor,
             p.refunded_amount_minor,
             p.currency,
-            COALESCE(p.provider_created_at, p.updated_at) AS captured_at
+            p.captured_at
        FROM finance.payment p
        JOIN finance.payment_intent pi ON pi.id = p.payment_intent_id
       WHERE pi.booking_id = $1 AND p.captured_amount_minor > 0
