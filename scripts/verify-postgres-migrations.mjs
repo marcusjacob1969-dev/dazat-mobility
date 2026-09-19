@@ -34,7 +34,7 @@ const migrations = readdirSync(migrationsDirectory)
   .filter((name) => /^\d{4}_[a-z0-9_]+\.sql$/.test(name))
   .sort();
 if (migrations.length !== 34 || migrations[0] !== '0001_foundation.sql' || migrations.at(-1) !== '0034_payment_intent_consistency.sql') {
-  fail('migration inventory must be the ordered 0001–0031 chain');
+  fail('migration inventory must be the ordered 0001–0034 chain');
 }
 
 function psql(args) {
