@@ -482,6 +482,9 @@ try {
   assert.equal(preparedPayment.json().providerActionAttempted, false);
   assert.equal(preparedPayment.json().productionChargingEnabled, false);
   assert.equal(preparedPayment.json().blindRetryAllowed, false);
+  // Phase 0.122: Finance mutation authority is payer-scoped; other authenticated roles cannot prepare payment for this booking.
+  expectCode(await post(`/v1/bookings/${successfulCreated.json().bookingId}/payment-intents`, tokens.outsider, undefined, 'phase-078-outsider-prepare-payment'), 403, 'FINANCE_FORBIDDEN');
+  expectCode(await post(`/v1/bookings/${successfulCreated.json().bookingId}/payment-intents`, tokens.operator, undefined, 'phase-078-operator-prepare-payment'), 403, 'FINANCE_FORBIDDEN');
   const preparedPaymentReplay = await post(`/v1/bookings/${successfulCreated.json().bookingId}/payment-intents`, registeredToken, undefined, 'phase-078-prepare-payment');
   expectCode(preparedPaymentReplay, 201);
   assert.deepEqual(preparedPaymentReplay.json(), preparedPayment.json());
