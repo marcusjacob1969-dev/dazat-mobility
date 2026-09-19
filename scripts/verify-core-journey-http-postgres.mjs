@@ -473,6 +473,12 @@ try {
   expectCode(releasedAvailability, 200);
   assert.equal(releasedAvailability.json().eligible, true);
 
+  // Phase 0.123: Finance input/authentication boundaries.
+  expectCode(await post('/v1/bookings/not-a-uuid/payment-intents', registeredToken, undefined, 'phase-123-invalid-booking'), 400, 'INVALID_BOOKING_ID');
+  expectCode(await post('/v1/bookings/' + successfulCreated.json().bookingId + '/payment-intents', registeredToken), 400, 'IDEMPOTENCY_KEY_REQUIRED');
+  expectCode(await post('/v1/bookings/' + successfulCreated.json().bookingId + '/payment-intents', undefined, undefined, 'phase-123-no-token'), 401, 'AUTHENTICATION_REQUIRED');
+  expectCode(await get('/v1/payments/not-a-uuid/status', registeredToken), 400, 'INVALID_PAYMENT_ID');
+  expectCode(await get('/v1/payments/not-a-uuid/status', undefined), 401, 'AUTHENTICATION_REQUIRED');
   const preparedPayment = await post(`/v1/bookings/${successfulCreated.json().bookingId}/payment-intents`, registeredToken, undefined, 'phase-078-prepare-payment');
   expectCode(preparedPayment, 201);
   assert.equal(preparedPayment.json().amountMinor, 1800);
