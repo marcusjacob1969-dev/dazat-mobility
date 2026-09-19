@@ -572,6 +572,16 @@ try {
     [ids.completedPayment]
   );
 
+  // Phase 0.133: captured Payment rows must retain an authoritative capture timestamp, and uncaptured states cannot advertise one.
+  await assertDatabaseRejects(
+    'UPDATE finance.payment SET captured_at = NULL WHERE id = $1',
+    [ids.completedPayment]
+  );
+  await assertDatabaseRejects(
+    "UPDATE finance.payment SET status = 'CREATED', captured_amount_minor = 0, captured_at = now() WHERE id = $1",
+    [ids.completedPayment]
+  );
+
   // Phase 0.125: a captured PaymentIntent is readable only through its authoritative projection.
   const completedPaymentStatus = await get('/v1/payments/' + ids.completedPayment + '/status', tokens.actor);
   expectCode(completedPaymentStatus, 200);
