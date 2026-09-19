@@ -566,6 +566,13 @@ try {
   expectCode(await get(`/v1/driver/bookings/${ids.privateBooking}/core-journey-progress`, tokens.actor), 404, 'CORE_JOURNEY_NOT_FOUND');
   expectCode(await get(`/v1/control-room/fatigue-handovers/${ids.handover}/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.outsider), 404, 'CORE_JOURNEY_NOT_FOUND');
   // Phase 0.119: every Core Journey surface requires an authenticated, non-expired session.
+  // Phase 0.120: route parameter validation must fail before any journey lookup.
+  expectCode(await get('/v1/bookings/not-a-uuid/core-journey-progress', tokens.actor), 400, 'INVALID_BOOKING_ID');
+  expectCode(await get('/v1/driver/bookings/not-a-uuid/core-journey-progress', tokens.actor), 400, 'INVALID_BOOKING_ID');
+  expectCode(await get('/v1/control-room/fatigue-handovers/not-a-uuid/bookings/' + ids.incidentBooking + '/core-journey-progress', tokens.operator), 400, 'INVALID_CONTROL_ROOM_JOURNEY_SCOPE');
+  expectCode(await get('/v1/control-room/fatigue-handovers/' + ids.handover + '/bookings/not-a-uuid/core-journey-progress', tokens.operator), 400, 'INVALID_CONTROL_ROOM_JOURNEY_SCOPE');
+  expectCode(await get('/v1/control-room/fatigue-handovers/' + ids.handover + '/bookings/' + ids.incidentBooking + '/core-journey-progress?unexpected=1', tokens.operator), 200);
+
   expectCode(await get(`/v1/driver/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.expired), 403, 'DRIVER_SESSION_REQUIRED');
   expectCode(await get(`/v1/control-room/fatigue-handovers/${ids.handover}/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.expired), 403, 'CONTROL_ROOM_SESSION_REQUIRED');
   expectCode(await get(`/v1/driver/bookings/${ids.incidentBooking}/core-journey-progress`), 401, 'AUTHENTICATION_REQUIRED');
