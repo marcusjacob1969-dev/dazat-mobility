@@ -545,6 +545,19 @@ try {
   assert.equal(driverCompleted.json().milestones.find((milestone) => milestone.name === 'FINANCE').status, 'COMPLETED');
 
   // Phase 0.115: completed Journey vertical proof across canonical and Finance surfaces.
+  // Phase 0.125: a captured PaymentIntent is readable only through its authoritative projection.
+  const completedPaymentStatus = await get('/v1/payments/' + ids.completedPayment + '/status', tokens.actor);
+  expectCode(completedPaymentStatus, 200);
+  assert.equal(completedPaymentStatus.json().bookingId, ids.completedBooking);
+  assert.equal(completedPaymentStatus.json().status, 'CAPTURED');
+  assert.equal(completedPaymentStatus.json().amountMinor, 3200);
+  assert.equal(completedPaymentStatus.json().currency, 'GBP');
+  assert.equal(completedPaymentStatus.json().productionChargingEnabled, false);
+  assert.equal(completedPaymentStatus.json().providerActionAttempted, false);
+  assert.equal(completedPaymentStatus.json().reconciliationRequired, false);
+  assert.equal(completedPaymentStatus.json().blindRetryAllowed, false);
+  expectCode(await get('/v1/payments/' + ids.completedPayment + '/status', tokens.outsider), 403, 'FINANCE_FORBIDDEN');
+
   const completedReceipt = await get('/v1/receipts/' + ids.completedBooking, tokens.actor);
   expectCode(completedReceipt, 200);
   assert.equal(completedReceipt.json().bookingId, ids.completedBooking);
