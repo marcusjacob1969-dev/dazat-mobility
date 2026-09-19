@@ -94,3 +94,12 @@ test('raw payment secret field names are rejected recursively', () => {
   assert.throws(() => assertNoRawPaymentSecrets({ card: { card_number: 'not-allowed' } }), /forbidden/);
   assert.throws(() => assertNoRawPaymentSecrets({ safe: [{ CVV: 'not-allowed' }] }), /forbidden/);
 });
+
+
+test('payment status contract cannot advertise provider action or blind retry', async () => {
+  const contracts = await import('../../packages/contracts/src/finance.ts');
+  assert.equal(typeof contracts, 'object');
+  const service = await import('../../services/api/src/modules/finance/finance-service.ts');
+  assert.match(service.getPaymentStatus.toString(), /providerActionAttempted: row\.provider_action_attempted/);
+  assert.match(service.getPaymentStatus.toString(), /blindRetryAllowed: false/);
+});
