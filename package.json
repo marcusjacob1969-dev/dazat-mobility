@@ -153,6 +153,7 @@
     "verify:phase-0-121": "node scripts/verify-phase-0-121.mjs",
     "verify:phase-0-123": "node scripts/verify-phase-0-123.mjs",
     "verify:phase-0-124": "node scripts/verify-phase-0-124.mjs",
-    "verify:phase-0-125": "node scripts/verify-phase-0-125.mjs"
+    "verify:phase-0-125": "node scripts/verify-phase-0-125.mjs",
+    "verify:phase-0-126": "node --test tests/domain/finance-source.test.mjs"
   }
 }
