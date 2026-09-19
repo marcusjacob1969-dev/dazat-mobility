@@ -12,7 +12,10 @@ for (const marker of [
   'Captured payment state requires a positive captured amount',
   'REFUNDED payment must have refunded amount equal to captured amount',
   'A CREATED PaymentIntent cannot have a captured Payment',
-  'CREATE TRIGGER payment_intent_consistency_guard'
+  'CREATE TRIGGER payment_intent_consistency_guard',
+  'PaymentIntent currency cannot change after a Payment exists',
+  'PaymentIntent amount cannot be reduced below existing payment amounts',
+  'CREATE TRIGGER payment_intent_amount_consistency_guard'
 ]) assert.ok(migration.includes(marker), marker);
 
 assert.ok(
