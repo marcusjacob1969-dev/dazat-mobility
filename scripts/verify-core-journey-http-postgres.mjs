@@ -504,6 +504,12 @@ try {
   assert.equal(financeProgress.json().milestones.find((milestone) => milestone.name === 'FINANCE').status, 'BLOCKED');
   expectCode(await del('/v1/identity/session', driverToken), 204);
 
+  // Phase 0.118: Control Room Core Journey access is task-scoped; a valid handover scope cannot be reused for another booking.
+  const controlWrongBooking = await get(`/v1/control-room/fatigue-handovers/${ids.handover}/bookings/${ids.completedBooking}/core-journey-progress`, tokens.operator);
+  expectCode(controlWrongBooking, 404, 'CORE_JOURNEY_NOT_FOUND');
+  const controlPrivateBooking = await get(`/v1/control-room/fatigue-handovers/${ids.handover}/bookings/${ids.privateBooking}/core-journey-progress`, tokens.operator);
+  expectCode(controlPrivateBooking, 404, 'CORE_JOURNEY_NOT_FOUND');
+
   const riderIncident = await get(`/v1/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.actor);
   const driverIncident = await get(`/v1/driver/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.actor);
   const controlIncident = await get(`/v1/control-room/fatigue-handovers/${ids.handover}/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.operator);
