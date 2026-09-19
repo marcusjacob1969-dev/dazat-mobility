@@ -33,7 +33,7 @@ const migrationsDirectory = join(root, 'database/migrations');
 const migrations = readdirSync(migrationsDirectory)
   .filter((name) => /^\d{4}_[a-z0-9_]+\.sql$/.test(name))
   .sort();
-if (migrations.length !== 31 || migrations[0] !== '0001_foundation.sql' || !migrations.at(-1)?.startsWith('0031_')) {
+if (migrations.length !== 34 || migrations[0] !== '0001_foundation.sql' || migrations.at(-1) !== '0034_payment_intent_consistency.sql') {
   fail('migration inventory must be the ordered 0001–0031 chain');
 }
 
@@ -65,10 +65,13 @@ const requiredRelations = [
   'identity.person', 'booking.booking', 'journey.journey', 'finance.payment',
   'communications.communication_request', 'organisation.organisation',
   'organisation.institutional_attention_item', 'organisation.institution_exit_plan',
-  'driver.driver_fatigue_observation', 'driver.current_fatigue_safety_projection'
+  'driver.driver_fatigue_observation', 'driver.current_fatigue_safety_projection', 'finance.payment_intent', 'finance.payment'
 ];
 const relationList = requiredRelations.map((relation) => `'${relation}'`).join(', ');
 const missing = psql(['--tuples-only', '--no-align', '--command', `SELECT string_agg(relation, ',') FROM unnest(ARRAY[${relationList}]) AS relation WHERE to_regclass(relation) IS NULL`]).trim();
 if (missing) fail(`migration chain completed but required relations are absent: ${missing}`);
+
+const guardCount = psql(['--tuples-only', '--no-align', '--command', `SELECT count(*) FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid JOIN pg_namespace n ON n.oid = c.relnamespace WHERE NOT t.tgisinternal AND n.nspname = 'finance' AND t.tgname IN ('payment_intent_consistency_guard', 'payment_intent_amount_consistency_guard')`]).trim();
+if (guardCount !== '2') fail(`expected both finance Payment consistency triggers after migration, found ${guardCount || '(none)'}`);
 
 console.log(`DAZAT PostgreSQL migration verification PASSED (${migrations.length} migrations against ${databaseName})`);
