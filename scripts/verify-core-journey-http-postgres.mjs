@@ -545,6 +545,33 @@ try {
   assert.equal(driverCompleted.json().milestones.find((milestone) => milestone.name === 'FINANCE').status, 'COMPLETED');
 
   // Phase 0.115: completed Journey vertical proof across canonical and Finance surfaces.
+  // Phase 0.128: database provider-state guards must reject same-status metadata corruption.
+  async function assertDatabaseRejects(sql, values = []) {
+    await client.query('SAVEPOINT phase_0128_guard');
+    try {
+      await assert.rejects(client.query(sql, values));
+    } finally {
+      await client.query('ROLLBACK TO SAVEPOINT phase_0128_guard');
+      await client.query('RELEASE SAVEPOINT phase_0128_guard');
+    }
+  }
+  await assertDatabaseRejects(
+    'UPDATE finance.payment_intent SET provider_action_attempted = true WHERE id = $1',
+    [ids.completedPayment]
+  );
+  await assertDatabaseRejects(
+    'UPDATE finance.payment_intent SET provider_code = \'example\' WHERE id = $1',
+    [ids.completedPayment]
+  );
+  await assertDatabaseRejects(
+    'UPDATE finance.payment_intent SET charging_eligibility = \'APPROVED_POLICY\' WHERE id = $1',
+    [ids.incidentPayment]
+  );
+  await assertDatabaseRejects(
+    'UPDATE finance.payment_intent SET status = \'STATUS_UNKNOWN\', reconciliation_required = false WHERE id = $1',
+    [ids.completedPayment]
+  );
+
   // Phase 0.125: a captured PaymentIntent is readable only through its authoritative projection.
   const completedPaymentStatus = await get('/v1/payments/' + ids.completedPayment + '/status', tokens.actor);
   expectCode(completedPaymentStatus, 200);
