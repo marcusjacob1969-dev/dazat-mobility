@@ -2,7 +2,9 @@
 
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
-Current checkpoint: **Engineering Phase 0.84**.
+Current checkpoint: **Engineering Phase 0.120**.
+
+Phase 0.120 proves malformed Core Journey UUID path parameters are rejected at the HTTP boundary while unauthenticated requests still hit the authentication boundary first. No new operational authority or external provider execution is enabled.
 
 Phase 0.25 separates API construction from network startup and adds executable runtime contracts for liveness, database readiness, privacy-minimised dependency failure, build metadata and clean database-pool shutdown. External providers and operational mutations remain disabled.
 
