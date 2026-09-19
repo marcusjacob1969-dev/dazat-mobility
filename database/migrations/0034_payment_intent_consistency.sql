@@ -32,6 +32,32 @@ BEGIN
   RETURN NEW;
 END $$;
 
+CREATE OR REPLACE FUNCTION finance.guard_payment_intent_amount_changes()
+RETURNS trigger LANGUAGE plpgsql AS $
+BEGIN
+  IF NEW.currency <> OLD.currency AND EXISTS (
+    SELECT 1 FROM finance.payment WHERE payment_intent_id = NEW.id
+  ) THEN
+    RAISE EXCEPTION 'PaymentIntent currency cannot change after a Payment exists';
+  END IF;
+
+  IF NEW.amount_minor <> OLD.amount_minor AND EXISTS (
+    SELECT 1 FROM finance.payment
+     WHERE payment_intent_id = NEW.id
+       AND (COALESCE(authorised_amount_minor, 0) > NEW.amount_minor
+            OR captured_amount_minor > NEW.amount_minor)
+  ) THEN
+    RAISE EXCEPTION 'PaymentIntent amount cannot be reduced below existing payment amounts';
+  END IF;
+
+  RETURN NEW;
+END $;
+
+DROP TRIGGER IF EXISTS payment_intent_amount_consistency_guard ON finance.payment_intent;
+CREATE TRIGGER payment_intent_amount_consistency_guard
+BEFORE UPDATE OF amount_minor, currency ON finance.payment_intent
+FOR EACH ROW EXECUTE FUNCTION finance.guard_payment_intent_amount_changes();
+
 DROP TRIGGER IF EXISTS payment_intent_consistency_guard ON finance.payment;
 CREATE TRIGGER payment_intent_consistency_guard
 BEFORE INSERT OR UPDATE OF payment_intent_id, status, authorised_amount_minor, captured_amount_minor, refunded_amount_minor, currency
