@@ -36,9 +36,9 @@ export interface PaymentStatusProjection {
   readonly status: PaymentProjectionStatus;
   readonly chargingEligibility: 'NOT_ELIGIBLE' | 'APPROVED_POLICY';
   readonly productionChargingEnabled: false;
-  readonly providerActionAttempted: boolean;
+  readonly providerActionAttempted: false;
   readonly reconciliationRequired: boolean;
-  readonly blindRetryAllowed: boolean;
+  readonly blindRetryAllowed: false;
   readonly guidance: string;
   readonly updatedAt: string;
 }
