@@ -5,6 +5,12 @@
 ALTER TABLE finance.payment
   ADD COLUMN IF NOT EXISTS captured_at timestamptz;
 
+UPDATE finance.payment
+   SET captured_at = COALESCE(provider_created_at, updated_at)
+ WHERE status IN ('CAPTURED','PARTIALLY_REFUNDED','REFUNDED','DISPUTED','CHARGEBACK')
+   AND captured_amount_minor > 0
+   AND captured_at IS NULL;
+
 CREATE OR REPLACE FUNCTION finance.guard_payment_capture_timestamp()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
