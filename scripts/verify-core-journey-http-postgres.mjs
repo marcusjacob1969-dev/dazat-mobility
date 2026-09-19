@@ -565,6 +565,11 @@ try {
   expectCode(await get(`/v1/bookings/${ids.privateBooking}/core-journey-progress`, tokens.actor), 404, 'CORE_JOURNEY_NOT_FOUND');
   expectCode(await get(`/v1/driver/bookings/${ids.privateBooking}/core-journey-progress`, tokens.actor), 404, 'CORE_JOURNEY_NOT_FOUND');
   expectCode(await get(`/v1/control-room/fatigue-handovers/${ids.handover}/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.outsider), 404, 'CORE_JOURNEY_NOT_FOUND');
+  // Phase 0.119: every Core Journey surface requires an authenticated, non-expired session.
+  expectCode(await get(`/v1/driver/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.expired), 403, 'DRIVER_SESSION_REQUIRED');
+  expectCode(await get(`/v1/control-room/fatigue-handovers/${ids.handover}/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.expired), 403, 'CONTROL_ROOM_SESSION_REQUIRED');
+  expectCode(await get(`/v1/driver/bookings/${ids.incidentBooking}/core-journey-progress`), 401, 'AUTHENTICATION_REQUIRED');
+  expectCode(await get(`/v1/control-room/fatigue-handovers/${ids.handover}/bookings/${ids.incidentBooking}/core-journey-progress`), 401, 'AUTHENTICATION_REQUIRED');
   expectCode(await get(`/v1/bookings/${ids.incidentBooking}/core-journey-progress`, tokens.expired), 403, 'RIDER_SESSION_REQUIRED');
   expectCode(await get(`/v1/bookings/${ids.incidentBooking}/core-journey-progress`), 401, 'AUTHENTICATION_REQUIRED');
   expectCode(await del('/v1/identity/session', registeredToken), 204);
