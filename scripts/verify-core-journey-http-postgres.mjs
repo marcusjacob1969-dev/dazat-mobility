@@ -675,7 +675,14 @@ try {
   expectCode(await del('/v1/identity/session', registeredToken), 204);
   expectCode(await get('/v1/identity/session', registeredToken), 401, 'SESSION_INVALID');
 
-  // Phase 0.141: a provider-disabled CREATED PaymentIntent cannot transition to a provider-actioned status directly.\n  for (const forbiddenStatus of ['PROCESSING', 'REQUIRES_ACTION', 'AUTHORISED', 'CAPTURED']) {\n    await assertDatabaseRejects(\n      "UPDATE finance.payment_intent SET status = $1, aggregate_version = aggregate_version + 1 WHERE id = $2",\n      [forbiddenStatus, preparedPayment.json().paymentIntentId]\n    );\n  }\n\n  // Phase 0.143: terminal Payment states cannot be rewound into earlier lifecycle states.
+  // Phase 0.141: a provider-disabled CREATED PaymentIntent cannot transition to a provider-actioned status directly.
+  for (const forbiddenStatus of ['PROCESSING', 'REQUIRES_ACTION', 'AUTHORISED', 'CAPTURED']) {
+    await assertDatabaseRejects(
+      "UPDATE finance.payment_intent SET status = $1, aggregate_version = aggregate_version + 1 WHERE id = $2",
+      [forbiddenStatus, preparedPayment.json().paymentIntentId]
+    );
+  }
+\n  // Phase 0.143: terminal Payment states cannot be rewound into earlier lifecycle states.
   await assertDatabaseRejects(
     "UPDATE finance.payment SET status = 'CREATED' WHERE id = $1",
     [ids.completedPayment]
