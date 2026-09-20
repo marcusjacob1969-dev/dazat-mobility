@@ -727,6 +727,35 @@ try {
     await client.query('RELEASE SAVEPOINT phase_0144_provenance');
   }
 
+  // Phase 0.148: Payment transition provenance must belong to the same PostgreSQL transaction.
+  await client.query('SAVEPOINT phase_0148_provenance_transaction');
+  try {
+    await client.query(
+      `INSERT INTO finance.payment_transition
+        (id, payment_id, from_status, to_status, reason_code, provenance_transaction_id)
+       VALUES ('70000000-0000-4000-8000-000000000148', $1, 'CAPTURED', 'DISPUTED', 'phase-0-148-stale-provenance', txid_current() - 1)`,
+      [ids.completedPayment]
+    );
+    await assertDatabaseRejects(
+      "UPDATE finance.payment SET status = 'DISPUTED' WHERE id = $1",
+      [ids.completedPayment]
+    );
+    await client.query(
+      `INSERT INTO finance.payment_transition
+        (id, payment_id, from_status, to_status, reason_code)
+       VALUES ('70000000-0000-4000-8000-000000000149', $1, 'CAPTURED', 'DISPUTED', 'phase-0-148-same-transaction')`,
+      [ids.completedPayment]
+    );
+    const governed = await client.query(
+      "UPDATE finance.payment SET status = 'DISPUTED' WHERE id = $1 RETURNING status",
+      [ids.completedPayment]
+    );
+    assert.equal(governed.rows[0].status, 'DISPUTED');
+  } finally {
+    await client.query('ROLLBACK TO SAVEPOINT phase_0148_provenance_transaction');
+    await client.query('RELEASE SAVEPOINT phase_0148_provenance_transaction');
+  }
+
   console.log('DAZAT core-journey database-backed HTTP verification PASSED');
 } finally {
   if (app) await app.close();
