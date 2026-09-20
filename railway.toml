@@ -1,0 +1,9 @@
+[build]
+builder = "RAILPACK"
+buildCommand = "npm run build:core && npm run build --workspace @dazat/api"
+
+[deploy]
+startCommand = "npm run start --workspace @dazat/api"
+healthcheckPath = "/health/live"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
