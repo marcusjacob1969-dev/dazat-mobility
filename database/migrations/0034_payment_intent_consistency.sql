@@ -33,7 +33,7 @@ BEGIN
 END $$;
 
 CREATE OR REPLACE FUNCTION finance.guard_payment_intent_amount_changes()
-RETURNS trigger LANGUAGE plpgsql AS $
+RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   IF NEW.currency <> OLD.currency AND EXISTS (
     SELECT 1 FROM finance.payment WHERE payment_intent_id = NEW.id
@@ -51,7 +51,7 @@ BEGIN
   END IF;
 
   RETURN NEW;
-END $;
+END $$;
 
 DROP TRIGGER IF EXISTS payment_intent_amount_consistency_guard ON finance.payment_intent;
 CREATE TRIGGER payment_intent_amount_consistency_guard
