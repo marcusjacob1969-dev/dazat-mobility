@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { createHash, randomBytes } from 'node:crypto';
 import pg from 'pg';
 import { buildApi } from '../services/api/dist/app.js';
