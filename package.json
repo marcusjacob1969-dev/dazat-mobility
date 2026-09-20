@@ -167,6 +167,7 @@
     "verify:phase-0-136": "node scripts/verify-phase-0-136.mjs",
     "verify:phase-0-137": "node scripts/verify-phase-0-137.mjs",
     "verify:phase-0-138": "node scripts/verify-phase-0-138.mjs",
-    "verify:phase-0-139": "node scripts/verify-phase-0-139.mjs"
+    "verify:phase-0-139": "node scripts/verify-phase-0-139.mjs",
+    "verify:phase-0-140": "node scripts/verify-phase-0-140.mjs"
   }
 }
