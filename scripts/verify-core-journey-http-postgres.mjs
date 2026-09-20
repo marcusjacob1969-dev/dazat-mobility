@@ -675,7 +675,7 @@ try {
   expectCode(await del('/v1/identity/session', registeredToken), 204);
   expectCode(await get('/v1/identity/session', registeredToken), 401, 'SESSION_INVALID');
 
-  console.log('DAZAT core-journey database-backed HTTP verification PASSED');
+  // Phase 0.141: a provider-disabled CREATED PaymentIntent cannot transition to a provider-actioned status directly.\n  for (const forbiddenStatus of ['PROCESSING', 'REQUIRES_ACTION', 'AUTHORISED', 'CAPTURED']) {\n    await assertDatabaseRejects(\n      "UPDATE finance.payment_intent SET status = $1, aggregate_version = aggregate_version + 1 WHERE id = $2",\n      [forbiddenStatus, preparedPayment.json().paymentIntentId]\n    );\n  }\n\n  console.log('DAZAT core-journey database-backed HTTP verification PASSED');
 } finally {
   if (app) await app.close();
   await client.query('ROLLBACK').catch(() => {});
