@@ -11,7 +11,7 @@
     "@dazat/contracts": "0.0.21"
   },
   "devDependencies": {
-    "typescript": "^5.8.0"
+    "typescript": "^7.0.2"
   },
   "scripts": {
     "dev": "expo start",
