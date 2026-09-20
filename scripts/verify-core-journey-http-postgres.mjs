@@ -685,6 +685,41 @@ try {
     [ids.completedPayment]
   );
 
+  // Phase 0.144: every Payment status change requires matching immutable transition provenance.
+  await assertDatabaseRejects(
+    "UPDATE finance.payment SET status = 'DISPUTED' WHERE id = $1",
+    [ids.completedPayment]
+  );
+
+  await client.query('SAVEPOINT phase_0144_provenance');
+  try {
+    await client.query(
+      `INSERT INTO finance.payment_transition
+        (id, payment_id, from_status, to_status, reason_code)
+       VALUES ('70000000-0000-4000-8000-000000000144', $1, 'CAPTURED', 'DISPUTED', 'phase-0-144-provenance-proof')`,
+      [ids.completedPayment]
+    );
+    const governedTransition = await client.query(
+      "UPDATE finance.payment SET status = 'DISPUTED' WHERE id = $1 RETURNING status",
+      [ids.completedPayment]
+    );
+    assert.equal(governedTransition.rows[0].status, 'DISPUTED');
+
+    await assert.rejects(
+      client.query(
+        "UPDATE finance.payment_transition SET reason_code = 'tampered' WHERE id = '70000000-0000-4000-8000-000000000144'"
+      )
+    );
+    await assert.rejects(
+      client.query(
+        "DELETE FROM finance.payment_transition WHERE id = '70000000-0000-4000-8000-000000000144'"
+      )
+    );
+  } finally {
+    await client.query('ROLLBACK TO SAVEPOINT phase_0144_provenance');
+    await client.query('RELEASE SAVEPOINT phase_0144_provenance');
+  }
+
   console.log('DAZAT core-journey database-backed HTTP verification PASSED');
 } finally {
   if (app) await app.close();
