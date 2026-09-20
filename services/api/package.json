@@ -17,7 +17,7 @@
     "@dazat/contracts": "0.0.21"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
+    "@types/node": "^26.5.0",
     "@types/pg": "^8.11.0",
     "tsx": "^4.19.0",
     "typescript": "^5.8.0"
