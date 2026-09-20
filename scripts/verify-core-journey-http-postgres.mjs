@@ -591,6 +591,12 @@ try {
     assert.equal(financeServiceSource.includes(forbidden), false, `Forbidden provider mutation surface found in finance service: ${forbidden}`);
   }
 
+  // Phase 0.140: a provider-disabled CREATED PaymentIntent cannot acquire a captured Payment directly in PostgreSQL.
+  await assertDatabaseRejects(
+    `INSERT INTO finance.payment (id, payment_intent_id, provider_code, provider_payment_reference, status, authorised_amount_minor, captured_amount_minor, refunded_amount_minor, currency, captured_at) VALUES ('70000000-0000-4000-8000-000000000140', $1, 'test-provider', 'phase-0-140-forbidden-capture', 'CAPTURED', 1800, 1800, 0, 'GBP', now())`,
+    [preparedPayment.json().paymentIntentId]
+  );
+
   // Phase 0.136: Payment/PaymentIntent monetary and currency consistency is enforced by PostgreSQL triggers.
   await assertDatabaseRejects("UPDATE finance.payment SET currency = 'EUR' WHERE id = $1", [ids.completedPayment]);
   await assertDatabaseRejects('UPDATE finance.payment SET authorised_amount_minor = 3201 WHERE id = $1', [ids.completedPayment]);
