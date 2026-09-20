@@ -187,7 +187,7 @@ export async function getPaymentStatus(
     status: row.status,
     chargingEligibility: row.charging_eligibility,
     productionChargingEnabled: false,
-    providerActionAttempted: row.provider_action_attempted,
+    providerActionAttempted: false,
     reconciliationRequired,
     blindRetryAllowed: false,
     guidance: reconciliationRequired
