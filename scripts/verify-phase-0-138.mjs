@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const migration = readFileSync(new URL('../database/migrations/0034_payment_intent_consistency.sql', import.meta.url), 'utf8');
+const verifier = readFileSync(new URL('./verify-core-journey-http-postgres.mjs', import.meta.url), 'utf8');
+assert.equal(migration.includes('AS $' + '\n'), false);
+assert.equal(migration.includes('END $;'), false);
+assert.ok(migration.includes('guard_payment_intent_amount_changes'));
+assert.equal(verifier.includes('\\n  for (const path'), false);
+assert.ok(verifier.includes('Phase 0.137: provider-disabled finance exposes no capture/charge/refund mutation surface'));
+console.log('DAZAT Phase 0.138 migration/verifier repair wiring PASSED');
