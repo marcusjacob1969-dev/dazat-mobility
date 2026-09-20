@@ -1,5 +1,17 @@
 # DAZAT Mobility
 
+## Working-app launch
+
+The repository now exposes explicit development and build commands for the three application surfaces:
+
+- Rider mobile app: `npm run dev:rider`
+- Driver mobile app: `npm run dev:driver`
+- Control Room web app: `npm run dev:control-room`
+- Full application build/typecheck: `npm run build:apps`
+
+Rider and Driver use Expo; Control Room uses Vite. Backend/provider integrations remain governed by the existing provider-disabled development boundaries. This launch surface is intended to make the existing Rider → Driver → Control Room vertical slice directly runnable rather than treating the repository as verifier-only source.
+
+
 Production engineering source created from the DAZAT Mobility Master Blueprint v0.4.
 
 Current checkpoint: **Engineering Phase 0.84**.
