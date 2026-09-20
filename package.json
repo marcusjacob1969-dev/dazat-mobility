@@ -180,6 +180,11 @@
     "verify:phase-0-149": "node scripts/verify-phase-0-149.mjs",
     "verify:phase-0-150": "node scripts/verify-phase-0-150.mjs",
     "verify:phase-0-151": "node scripts/verify-phase-0-151.mjs",
-    "verify:phase-0-152": "node scripts/verify-phase-0-152.mjs"
+    "verify:phase-0-152": "node scripts/verify-phase-0-152.mjs",
+    "dev:rider": "npm run dev --workspace @dazat/rider",
+    "dev:driver": "npm run dev --workspace @dazat/driver",
+    "dev:control-room": "npm run dev --workspace @dazat/control-room",
+    "build:apps": "npm run build:core && npm run build --workspace @dazat/api && npm run build --workspace @dazat/control-room && npm run typecheck --workspace @dazat/rider && npm run typecheck --workspace @dazat/driver",
+    "verify:phase-0-153": "node scripts/verify-phase-0-153.mjs"
   }
 }
