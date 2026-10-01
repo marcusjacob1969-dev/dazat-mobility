@@ -83,8 +83,28 @@ export function buildApi(config: ApiConfig, dependencies: ApiDependencies): Fast
     : dependencies.verificationDelivery;
   const pricing = dependencies.pricing ?? configuredPricing(config);
 
+  const corsAllowedOrigins = (process.env.DAZAT_CORS_ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   app.addHook('onRequest', async (request, reply) => {
     reply.header('x-request-id', request.id);
+
+    const origin = request.headers.origin;
+    if (origin && (corsAllowedOrigins.includes('*') || corsAllowedOrigins.includes(origin))) {
+      reply.header('access-control-allow-origin', corsAllowedOrigins.includes('*') ? '*' : origin);
+      reply.header('access-control-allow-headers', 'authorization, content-type, idempotency-key');
+      reply.header('access-control-allow-methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+      reply.header('vary', 'Origin');
+    }
+
+    if (request.method === 'OPTIONS') {
+      if (!origin || !(corsAllowedOrigins.includes('*') || corsAllowedOrigins.includes(origin))) {
+        return reply.code(403).send({ code: 'CORS_ORIGIN_NOT_ALLOWED' });
+      }
+      return reply.code(204).send();
+    }
   });
 
   app.addHook('onSend', async (_request, reply, payload) => {
