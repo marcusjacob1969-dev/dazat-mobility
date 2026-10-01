@@ -2,6 +2,7 @@ export interface ApiConfig {
   readonly port: number;
   readonly databaseUrl: string;
   readonly redisUrl: string;
+  readonly webCorsAllowedOrigins: readonly string[];
   readonly logLevel: string;
   readonly contactVerificationPepper: string;
   readonly contactVerificationTtlMinutes: number;
@@ -64,6 +65,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   const port = parseInteger(env, 'API_PORT', 3001, 1, 65535);
   const databaseUrl = env.DATABASE_URL;
   const redisUrl = env.REDIS_URL;
+  const webCorsAllowedOrigins = (env.WEB_CORS_ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
   if (!databaseUrl) throw new Error('DATABASE_URL is required');
   if (!redisUrl) throw new Error('REDIS_URL is required');
 
@@ -145,6 +150,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     port,
     databaseUrl,
     redisUrl,
+    webCorsAllowedOrigins,
     logLevel: env.LOG_LEVEL ?? 'info',
     contactVerificationPepper,
     contactVerificationTtlMinutes: parseInteger(env, 'CONTACT_VERIFICATION_TTL_MINUTES', 10, 1, 30),
