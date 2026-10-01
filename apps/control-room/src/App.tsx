@@ -4,7 +4,9 @@ import type { CoreJourneyProgressProjection } from '@dazat/contracts';
 import { readTaskScopedCoreJourneyProgress } from './core-journey-api.js';
 
 export function App() {
-  const [apiBaseUrl, setApiBaseUrl] = useState('http://localhost:3001');
+  const [apiBaseUrl, setApiBaseUrl] = useState(
+    import.meta.env.VITE_DAZAT_API_URL ?? 'http://localhost:3001'
+  );
   const [bearerToken, setBearerToken] = useState('');
   const [controlledHandoverId, setControlledHandoverId] = useState('');
   const [bookingId, setBookingId] = useState('');
