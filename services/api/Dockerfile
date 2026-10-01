@@ -9,6 +9,8 @@ COPY services/api/package.json services/api/package.json
 RUN npm ci --ignore-scripts
 
 COPY tsconfig.base.json ./
+COPY scripts/apply-postgres-migrations.mjs scripts/apply-postgres-migrations.mjs
+COPY database/migrations database/migrations
 COPY packages/domain packages/domain
 COPY packages/contracts packages/contracts
 COPY packages/design-system packages/design-system
@@ -28,9 +30,11 @@ COPY --from=build --chown=node:node /app/packages/contracts/package.json ./packa
 COPY --from=build --chown=node:node /app/packages/contracts/dist ./packages/contracts/dist
 COPY --from=build --chown=node:node /app/services/api/package.json ./services/api/package.json
 COPY --from=build --chown=node:node /app/services/api/dist ./services/api/dist
+COPY --from=build --chown=node:node /app/scripts/apply-postgres-migrations.mjs ./scripts/apply-postgres-migrations.mjs
+COPY --from=build --chown=node:node /app/database/migrations ./database/migrations
 
 USER node
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD ["node", "-e", "fetch('http://127.0.0.1:'+(process.env.API_PORT||3001)+'/health/live').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
-CMD ["node", "services/api/dist/main.js"]
+CMD ["sh", "-c", "node scripts/apply-postgres-migrations.mjs && node services/api/dist/main.js"]
