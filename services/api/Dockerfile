@@ -9,6 +9,8 @@ COPY services/api/package.json services/api/package.json
 RUN npm ci --ignore-scripts
 
 COPY tsconfig.base.json ./
+COPY scripts/apply-postgres-migrations.mjs scripts/apply-postgres-migrations.mjs
+COPY database/migrations database/migrations
 COPY packages/domain packages/domain
 COPY packages/contracts packages/contracts
 COPY packages/design-system packages/design-system
